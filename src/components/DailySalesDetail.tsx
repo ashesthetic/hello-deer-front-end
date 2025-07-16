@@ -28,19 +28,27 @@ const DailySalesDetail: React.FC<DailySalesDetailProps> = ({
     }).format(amount);
   };
 
+  const handleBack = () => {
+    onBack();
+  };
+
+  const handleEdit = () => {
+    onEdit();
+  };
+
   return (
     <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-lg">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-800">Daily Sale Details</h2>
         <div className="flex space-x-2">
           <button
-            onClick={onBack}
+            onClick={handleBack}
             className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
           >
             Back
           </button>
           <button
-            onClick={onEdit}
+            onClick={handleEdit}
             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
           >
             Edit
@@ -80,9 +88,13 @@ const DailySalesDetail: React.FC<DailySalesDetailProps> = ({
               <span className="text-sm font-medium text-gray-600">Total Counter Sale:</span>
               <p className="text-lg font-semibold text-blue-900">{formatCurrency(sale.total_counter_sale || 0)}</p>
             </div>
+            <div>
+              <span className="text-sm font-medium text-gray-600">Reported Total:</span>
+              <p className="text-lg font-semibold text-yellow-700">{formatCurrency(sale.reported_total || 0)}</p>
+            </div>
             <div className="border-t pt-3">
               <span className="text-sm font-medium text-gray-600">Grand Total:</span>
-              <p className="text-xl font-bold text-blue-900">{formatCurrency(sale.grand_total || 0)}</p>
+              <p className="text-xl font-bold text-blue-900">{formatCurrency(sale.reported_total || 0)}</p>
             </div>
           </div>
         </div>
@@ -94,15 +106,15 @@ const DailySalesDetail: React.FC<DailySalesDetailProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <span className="text-sm font-medium text-gray-600">Fuel Sale:</span>
-            <p className="text-lg font-semibold text-gray-900">{formatCurrency(sale.fuel_sale)}</p>
+            <p className="text-lg font-semibold text-gray-900">{formatCurrency(sale.fuel_sale || 0)}</p>
           </div>
           <div>
             <span className="text-sm font-medium text-gray-600">Store Sale:</span>
-            <p className="text-lg font-semibold text-gray-900">{formatCurrency(sale.store_sale)}</p>
+            <p className="text-lg font-semibold text-gray-900">{formatCurrency(sale.store_sale || 0)}</p>
           </div>
           <div>
             <span className="text-sm font-medium text-gray-600">GST:</span>
-            <p className="text-lg font-semibold text-gray-900">{formatCurrency(sale.gst)}</p>
+            <p className="text-lg font-semibold text-gray-900">{formatCurrency(sale.gst || 0)}</p>
           </div>
         </div>
       </div>
@@ -113,19 +125,19 @@ const DailySalesDetail: React.FC<DailySalesDetailProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
             <span className="text-sm font-medium text-gray-600">Card:</span>
-            <p className="text-lg font-semibold text-gray-900">{formatCurrency(sale.card)}</p>
+            <p className="text-lg font-semibold text-gray-900">{formatCurrency(sale.card || 0)}</p>
           </div>
           <div>
             <span className="text-sm font-medium text-gray-600">Cash:</span>
-            <p className="text-lg font-semibold text-gray-900">{formatCurrency(sale.cash)}</p>
+            <p className="text-lg font-semibold text-gray-900">{formatCurrency(sale.cash || 0)}</p>
           </div>
           <div>
             <span className="text-sm font-medium text-gray-600">Coupon:</span>
-            <p className="text-lg font-semibold text-gray-900">{formatCurrency(sale.coupon)}</p>
+            <p className="text-lg font-semibold text-gray-900">{formatCurrency(sale.coupon || 0)}</p>
           </div>
           <div>
             <span className="text-sm font-medium text-gray-600">Delivery:</span>
-            <p className="text-lg font-semibold text-gray-900">{formatCurrency(sale.delivery)}</p>
+            <p className="text-lg font-semibold text-gray-900">{formatCurrency(sale.delivery || 0)}</p>
           </div>
         </div>
       </div>

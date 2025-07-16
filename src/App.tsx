@@ -4,6 +4,8 @@ import { useAppSelector } from './hooks/useAppSelector';
 import LoginForm from './components/LoginForm';
 import Dashboard from './components/Dashboard';
 import DailySalesPage from './pages/DailySalesPage';
+import DailySalesViewPage from './pages/DailySalesViewPage';
+import DailySalesEditPage from './pages/DailySalesEditPage';
 import DailyFuelsPage from './pages/DailyFuelsPage';
 
 const App: React.FC = () => {
@@ -33,6 +35,18 @@ const App: React.FC = () => {
           <Route 
             path="/daily-sales" 
             element={isAuthenticated ? <DailySalesPage /> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/daily-sales/:id" 
+            element={isAuthenticated ? <DailySalesViewPage /> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/daily-sales/:id/edit" 
+            element={isAuthenticated ? <DailySalesEditPage /> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/daily-sales/new" 
+            element={isAuthenticated ? <DailySalesEditPage /> : <Navigate to="/login" />} 
           />
           <Route 
             path="/daily-fuels" 
