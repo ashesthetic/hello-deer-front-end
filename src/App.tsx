@@ -3,6 +3,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { useAppSelector } from './hooks/useAppSelector';
 import LoginForm from './components/LoginForm';
 import Dashboard from './components/Dashboard';
+import DailySalesPage from './pages/DailySalesPage';
+import DailyFuelsPage from './pages/DailyFuelsPage';
 
 const App: React.FC = () => {
   const { isAuthenticated, user } = useAppSelector((state) => state.auth);
@@ -27,6 +29,14 @@ const App: React.FC = () => {
           <Route 
             path="/dashboard" 
             element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/daily-sales" 
+            element={isAuthenticated ? <DailySalesPage /> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/daily-fuels" 
+            element={isAuthenticated ? <DailyFuelsPage /> : <Navigate to="/login" />} 
           />
           <Route 
             path="/" 

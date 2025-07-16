@@ -44,4 +44,12 @@ export const authApi = {
   getProfile: () => api.get('/user/profile'),
 };
 
+export const dailySalesApi = {
+  getAll: (page = 1) => api.get(`/daily-sales?page=${page}`),
+  getById: (id: number) => api.get(`/daily-sales/${id}`),
+  create: (data: any) => api.post('/daily-sales', data),
+  update: (id: number, data: any) => api.put(`/daily-sales/${id}`, data),
+  delete: (id: number) => api.delete(`/daily-sales/${id}`),
+};
+
 export default api; 
