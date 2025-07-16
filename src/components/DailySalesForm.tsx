@@ -75,47 +75,50 @@ const DailySalesForm: React.FC<DailySalesFormProps> = ({
           <h3 className="text-lg font-semibold mb-4 text-gray-800">Product Sale</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Fuel Sale *
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                required
-                value={formData.fuel_sale}
-                onChange={(e) => handleInputChange('fuel_sale', parseFloat(e.target.value) || 0)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+                               <label className="block text-sm font-medium text-gray-700 mb-2">
+                   Fuel Sale (CAD) *
+                 </label>
+                 <input
+                   type="number"
+                   step="0.01"
+                   min="0"
+                   required
+                   value={formData.fuel_sale}
+                   onChange={(e) => handleInputChange('fuel_sale', parseFloat(e.target.value) || 0)}
+                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                   placeholder="0.00"
+                 />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Store Sale *
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                required
-                value={formData.store_sale}
-                onChange={(e) => handleInputChange('store_sale', parseFloat(e.target.value) || 0)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                GST *
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                required
-                value={formData.gst}
-                onChange={(e) => handleInputChange('gst', parseFloat(e.target.value) || 0)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
+                         <div>
+               <label className="block text-sm font-medium text-gray-700 mb-2">
+                 Store Sale (CAD) *
+               </label>
+               <input
+                 type="number"
+                 step="0.01"
+                 min="0"
+                 required
+                 value={formData.store_sale}
+                 onChange={(e) => handleInputChange('store_sale', parseFloat(e.target.value) || 0)}
+                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                 placeholder="0.00"
+               />
+             </div>
+                         <div>
+               <label className="block text-sm font-medium text-gray-700 mb-2">
+                 GST (CAD) *
+               </label>
+               <input
+                 type="number"
+                 step="0.01"
+                 min="0"
+                 required
+                 value={formData.gst}
+                 onChange={(e) => handleInputChange('gst', parseFloat(e.target.value) || 0)}
+                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                 placeholder="0.00"
+               />
+             </div>
           </div>
         </div>
 
@@ -123,62 +126,66 @@ const DailySalesForm: React.FC<DailySalesFormProps> = ({
         <div className="bg-gray-50 p-4 rounded-lg">
           <h3 className="text-lg font-semibold mb-4 text-gray-800">Counter Sale</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Card *
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                required
-                value={formData.card}
-                onChange={(e) => handleInputChange('card', parseFloat(e.target.value) || 0)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Cash *
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                required
-                value={formData.cash}
-                onChange={(e) => handleInputChange('cash', parseFloat(e.target.value) || 0)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Coupon *
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                required
-                value={formData.coupon}
-                onChange={(e) => handleInputChange('coupon', parseFloat(e.target.value) || 0)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Delivery *
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                required
-                value={formData.delivery}
-                onChange={(e) => handleInputChange('delivery', parseFloat(e.target.value) || 0)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
+                         <div>
+               <label className="block text-sm font-medium text-gray-700 mb-2">
+                 Card (CAD) *
+               </label>
+               <input
+                 type="number"
+                 step="0.01"
+                 min="0"
+                 required
+                 value={formData.card}
+                 onChange={(e) => handleInputChange('card', parseFloat(e.target.value) || 0)}
+                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                 placeholder="0.00"
+               />
+             </div>
+                         <div>
+               <label className="block text-sm font-medium text-gray-700 mb-2">
+                 Cash (CAD) *
+               </label>
+               <input
+                 type="number"
+                 step="0.01"
+                 min="0"
+                 required
+                 value={formData.cash}
+                 onChange={(e) => handleInputChange('cash', parseFloat(e.target.value) || 0)}
+                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                 placeholder="0.00"
+               />
+             </div>
+                         <div>
+               <label className="block text-sm font-medium text-gray-700 mb-2">
+                 Coupon (CAD) *
+               </label>
+               <input
+                 type="number"
+                 step="0.01"
+                 min="0"
+                 required
+                 value={formData.coupon}
+                 onChange={(e) => handleInputChange('coupon', parseFloat(e.target.value) || 0)}
+                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                 placeholder="0.00"
+               />
+             </div>
+                         <div>
+               <label className="block text-sm font-medium text-gray-700 mb-2">
+                 Delivery (CAD) *
+               </label>
+               <input
+                 type="number"
+                 step="0.01"
+                 min="0"
+                 required
+                 value={formData.delivery}
+                 onChange={(e) => handleInputChange('delivery', parseFloat(e.target.value) || 0)}
+                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                 placeholder="0.00"
+               />
+             </div>
           </div>
         </div>
 
