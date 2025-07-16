@@ -1,46 +1,122 @@
-# Getting Started with Create React App
+# Hello Deer Panel - Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+React frontend for the Hello Deer Panel application with authentication features.
 
-## Available Scripts
+## Features
 
-In the project directory, you can run:
+- **React 18** with TypeScript
+- **Redux Toolkit** for state management
+- **Redux Saga** for async operations
+- **Tailwind CSS** for styling
+- **React Router** for navigation
+- **Axios** for API communication
 
-### `npm start`
+## Tech Stack
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+- React 18
+- TypeScript
+- Redux Toolkit
+- Redux Saga
+- Tailwind CSS
+- React Router DOM
+- Axios
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+## Project Structure
 
-### `npm test`
+```
+src/
+├── components/          # React components
+│   ├── LoginForm.tsx   # Login form component
+│   └── Dashboard.tsx   # Dashboard component
+├── hooks/              # Custom React hooks
+│   └── useAppSelector.ts
+├── services/           # API services
+│   └── api.ts
+├── store/              # Redux store
+│   ├── index.ts        # Store configuration
+│   ├── slices/         # Redux Toolkit slices
+│   │   └── authSlice.ts
+│   └── sagas/          # Redux Saga
+│       ├── index.ts
+│       └── authSaga.ts
+├── types/              # TypeScript type definitions
+│   └── index.ts
+└── App.tsx             # Main App component
+```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Getting Started
 
-### `npm run build`
+### Prerequisites
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+- Node.js 16+
+- npm or yarn
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### Installation
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-### `npm run eject`
+2. Start the development server:
+   ```bash
+   npm start
+   ```
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+The application will run on `http://localhost:3100`.
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### Build for Production
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+```bash
+npm run build
+```
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+## API Configuration
 
-## Learn More
+The frontend communicates with the Laravel backend API at `http://127.0.0.1:8000/api`.
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+### API Endpoints
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+- `POST /api/login` - User login
+- `POST /api/logout` - User logout
+- `GET /api/user/profile` - Get user profile
+
+## State Management
+
+The application uses Redux Toolkit with Redux Saga for state management:
+
+- **Auth Slice**: Handles authentication state (user, token, loading, errors)
+- **Auth Saga**: Handles async authentication operations
+
+## Styling
+
+The application uses Tailwind CSS for styling with custom configuration in `tailwind.config.js`.
+
+## Development
+
+### Available Scripts
+
+- `npm start` - Start development server
+- `npm run build` - Build for production
+- `npm test` - Run tests
+- `npm run eject` - Eject from Create React App
+
+### Environment Variables
+
+Create a `.env` file in the root directory:
+
+```
+PORT=3100
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
+
+## License
+
+This project is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
