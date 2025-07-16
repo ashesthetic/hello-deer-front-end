@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://127.0.0.1:8000/api';
+const API_BASE_URL = 'http://127.0.0.1:8001/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -46,6 +46,11 @@ export const authApi = {
 
 export const dailySalesApi = {
   getAll: (page = 1, perPage = 10) => api.get(`/daily-sales?page=${page}&per_page=${perPage}`),
+  getByMonth: (year?: number, month?: number) => {
+    const currentYear = year || new Date().getFullYear();
+    const currentMonth = month || new Date().getMonth() + 1;
+    return api.get(`/daily-sales/month/${currentYear}/${currentMonth}`);
+  },
   getById: (id: number) => api.get(`/daily-sales/${id}`),
   create: (data: any) => api.post('/daily-sales', data),
   update: (id: number, data: any) => api.put(`/daily-sales/${id}`, data),

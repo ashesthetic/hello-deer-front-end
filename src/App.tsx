@@ -7,6 +7,8 @@ import DailySalesPage from './pages/DailySalesPage';
 import DailySalesViewPage from './pages/DailySalesViewPage';
 import DailySalesEditPage from './pages/DailySalesEditPage';
 import DailyFuelsPage from './pages/DailyFuelsPage';
+import ReportGraphPage from './pages/ReportGraphPage';
+import DailySalesGraphPage from './pages/DailySalesGraphPage';
 
 const App: React.FC = () => {
   const { isAuthenticated, user } = useAppSelector((state) => state.auth);
@@ -51,6 +53,14 @@ const App: React.FC = () => {
           <Route 
             path="/daily-fuels" 
             element={isAuthenticated ? <DailyFuelsPage /> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/report-graph" 
+            element={isAuthenticated ? <ReportGraphPage /> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/daily-sales-graph" 
+            element={isAuthenticated ? <DailySalesGraphPage /> : <Navigate to="/login" />} 
           />
           <Route 
             path="/" 
