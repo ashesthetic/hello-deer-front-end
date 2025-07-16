@@ -2,6 +2,7 @@ export interface User {
   id: number;
   name: string;
   email: string;
+  role: 'admin' | 'editor' | 'viewer';
   email_verified_at?: string;
   created_at: string;
   updated_at: string;
@@ -26,6 +27,21 @@ export interface LoginResponse {
   message: string;
 }
 
+// User management types
+export interface CreateUserData {
+  name: string;
+  email: string;
+  password: string;
+  role: 'admin' | 'editor' | 'viewer';
+}
+
+export interface UpdateUserData {
+  name: string;
+  email: string;
+  password?: string;
+  role: 'admin' | 'editor' | 'viewer';
+}
+
 export interface DailySale {
   id?: number;
   date: string;
@@ -38,6 +54,8 @@ export interface DailySale {
   delivery: number;
   reported_total: number;
   notes?: string;
+  user_id?: number;
+  user?: User;
   created_at?: string;
   updated_at?: string;
   total_product_sale?: number;

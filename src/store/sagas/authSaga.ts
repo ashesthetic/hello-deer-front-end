@@ -10,8 +10,7 @@ interface LoginAction {
 
 function* loginSaga(action: LoginAction): Generator<CallEffect | PutEffect, void, any> {
   try {
-    const { email, password } = action.payload;
-    const response: any = yield call(authApi.login, email, password);
+    const response: any = yield call(authApi.login, action.payload);
     yield put(loginSuccess(response.data));
   } catch (error: any) {
     yield put(loginFailure(error.response?.data?.message || 'Login failed'));

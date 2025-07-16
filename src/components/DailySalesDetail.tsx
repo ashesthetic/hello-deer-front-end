@@ -13,11 +13,15 @@ const DailySalesDetail: React.FC<DailySalesDetailProps> = ({
   onEdit
 }) => {
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    // Split the date string and format it directly to avoid timezone issues
+    const [year, month, day] = dateString.split('T')[0].split('-');
+    const date = new Date(Date.UTC(parseInt(year), parseInt(month) - 1, parseInt(day)));
+    return date.toLocaleDateString('en-US', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
-      day: 'numeric'
+      day: 'numeric',
+      timeZone: 'UTC'
     });
   };
 
@@ -67,11 +71,11 @@ const DailySalesDetail: React.FC<DailySalesDetailProps> = ({
             </div>
             <div>
               <span className="text-sm font-medium text-gray-600">Created:</span>
-              <p className="text-gray-900">{sale.created_at ? new Date(sale.created_at).toLocaleString() : 'N/A'}</p>
+              <p className="text-gray-900">{sale.created_at ? new Date(sale.created_at).toLocaleString('en-US', { timeZone: 'UTC' }) : 'N/A'}</p>
             </div>
             <div>
               <span className="text-sm font-medium text-gray-600">Last Updated:</span>
-              <p className="text-gray-900">{sale.updated_at ? new Date(sale.updated_at).toLocaleString() : 'N/A'}</p>
+              <p className="text-gray-900">{sale.updated_at ? new Date(sale.updated_at).toLocaleString('en-US', { timeZone: 'UTC' }) : 'N/A'}</p>
             </div>
           </div>
         </div>
