@@ -23,6 +23,11 @@ import IncomePage from './pages/IncomePage';
 import ExpensePage from './pages/ExpensePage';
 import SettingsPage from './pages/SettingsPage';
 import UserManagementPage from './pages/UserManagementPage';
+import EmployeesPage from './pages/EmployeesPage';
+import AddEmployeePage from './pages/AddEmployeePage';
+import AddHoursPage from './pages/AddHoursPage';
+import EmployeeViewPage from './pages/EmployeeViewPage';
+import EmployeeEditPage from './pages/EmployeeEditPage';
 
 const App: React.FC = () => {
   const dispatch = useDispatch();
@@ -93,6 +98,28 @@ const App: React.FC = () => {
           <Route 
             path="/fuels/new" 
             element={isAuthenticated ? <Layout><DailyFuelEditPage /></Layout> : <Navigate to="/login" />} 
+          />
+          
+          {/* Employees Routes */}
+          <Route 
+            path="/employees" 
+            element={isAuthenticated ? <Layout><EmployeesPage /></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/employees/add" 
+            element={isAuthenticated ? <Layout><AddEmployeePage /></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/employees/hours" 
+            element={isAuthenticated ? <Layout><AddHoursPage /></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/employees/:id" 
+            element={isAuthenticated ? <Layout><EmployeeViewPage /></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/employees/:id/edit" 
+            element={isAuthenticated ? <Layout><EmployeeEditPage /></Layout> : <Navigate to="/login" />} 
           />
           
           {/* Reports Routes */}
