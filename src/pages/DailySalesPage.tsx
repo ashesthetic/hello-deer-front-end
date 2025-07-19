@@ -7,7 +7,7 @@ import { DailySale } from '../types';
 import DailySalesList from '../components/DailySalesList';
 import { canCreate } from '../utils/permissions';
 
-type SortField = 'date' | 'total_product_sale' | 'total_counter_sale' | 'reported_total';
+type SortField = 'date' | 'fuel_sale' | 'store_sale' | 'reported_total';
 type SortDirection = 'asc' | 'desc';
 
 const PER_PAGE_OPTIONS = [10, 25, 50, 100];
@@ -65,26 +65,22 @@ const DailySalesPage: React.FC = () => {
   };
 
   const handleCreate = () => {
-    navigate('/daily-sales/new');
+    navigate('/sales/new');
   };
 
   const handleView = (sale: DailySale) => {
     if (sale.id) {
-      navigate(`/daily-sales/${sale.id}`);
+      navigate(`/sales/${sale.id}`);
     }
   };
 
   const handleEdit = (sale: DailySale) => {
     if (sale.id) {
-      navigate(`/daily-sales/${sale.id}/edit`);
+      navigate(`/sales/${sale.id}/edit`);
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!window.confirm('Are you sure you want to delete this sale?')) {
-      return;
-    }
-
     setLoading(true);
     try {
       await dailySalesApi.delete(id);
@@ -129,15 +125,15 @@ const DailySalesPage: React.FC = () => {
     setCurrentPage(1);
   };
 
-  // Calculate totals for the current page
+    // Calculate totals for the current page
   const calculateTotals = () => {
     return sales.reduce((totals, sale) => ({
-      total_product_sale: totals.total_product_sale + (sale.total_product_sale || 0),
-      total_counter_sale: totals.total_counter_sale + (sale.total_counter_sale || 0),
-      reported_total: totals.reported_total + (sale.reported_total || 0),
+      fuel_sale: totals.fuel_sale + (parseFloat(sale.fuel_sale?.toString() || '0')),
+      store_sale: totals.store_sale + (parseFloat(sale.store_sale?.toString() || '0')),
+      reported_total: totals.reported_total + (parseFloat(sale.reported_total?.toString() || '0')),
     }), {
-      total_product_sale: 0,
-      total_counter_sale: 0,
+      fuel_sale: 0,
+      store_sale: 0,
       reported_total: 0,
     });
   };
@@ -148,13 +144,13 @@ const DailySalesPage: React.FC = () => {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="space-y-6">
           <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-gray-900">Daily Sales</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Sales</h1>
             {canCreate(currentUser) && (
               <button
                 onClick={handleCreate}
                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                Add New Sale
+                Add Sale
               </button>
             )}
           </div>
@@ -251,30 +247,21 @@ const DailySalesPage: React.FC = () => {
               <button
                 onClick={() => handlePageChange(currentPage - 1)}
                 disabled={currentPage === 1}
-                className="px-3 py-1 border rounded disabled:opacity-50"
+                className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Previous
               </button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <button
-                  key={page}
-                  onClick={() => handlePageChange(page)}
-                  className={`px-3 py-1 border rounded ${page === currentPage ? 'bg-blue-600 text-white' : ''}`}
-                >
-                  {page}
-                </button>
-              ))}
               <button
                 onClick={() => handlePageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                className="px-3 py-1 border rounded disabled:opacity-50"
+                className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Next
               </button>
             </div>
           </div>
         </div>
-      </div>
+    </div>
   );
 };
 

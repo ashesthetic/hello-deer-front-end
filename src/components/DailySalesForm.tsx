@@ -16,14 +16,14 @@ const DailySalesForm: React.FC<DailySalesFormProps> = ({
 }) => {
   const [formData, setFormData] = useState<DailySale>({
     date: '',
-    fuel_sale: 0,
-    store_sale: 0,
-    gst: 0,
-    card: 0,
-    cash: 0,
-    coupon: 0,
-    delivery: 0,
-    reported_total: 0,
+    fuel_sale: undefined,
+    store_sale: undefined,
+    gst: undefined,
+    card: undefined,
+    cash: undefined,
+    coupon: undefined,
+    delivery: undefined,
+    reported_total: undefined,
     notes: ''
   });
 
@@ -32,19 +32,19 @@ const DailySalesForm: React.FC<DailySalesFormProps> = ({
       setFormData({
         ...initialData,
         date: initialData.date.split('T')[0], // Convert to YYYY-MM-DD format
-        fuel_sale: Number(initialData.fuel_sale) || 0,
-        store_sale: Number(initialData.store_sale) || 0,
-        gst: Number(initialData.gst) || 0,
-        card: Number(initialData.card) || 0,
-        cash: Number(initialData.cash) || 0,
-        coupon: Number(initialData.coupon) || 0,
-        delivery: Number(initialData.delivery) || 0,
-        reported_total: Number(initialData.reported_total) || 0
+        fuel_sale: Number(initialData.fuel_sale) || undefined,
+        store_sale: Number(initialData.store_sale) || undefined,
+        gst: Number(initialData.gst) || undefined,
+        card: Number(initialData.card) || undefined,
+        cash: Number(initialData.cash) || undefined,
+        coupon: Number(initialData.coupon) || undefined,
+        delivery: Number(initialData.delivery) || undefined,
+        reported_total: Number(initialData.reported_total) || undefined
       });
     }
   }, [initialData]);
 
-  const handleInputChange = (field: keyof DailySale, value: string | number) => {
+  const handleInputChange = (field: keyof DailySale, value: string | number | undefined) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -109,8 +109,8 @@ const DailySalesForm: React.FC<DailySalesFormProps> = ({
                 step="0.01"
                 min="0"
                 required
-                value={formData.fuel_sale}
-                onChange={(e) => handleInputChange('fuel_sale', parseFloat(e.target.value) || 0)}
+                value={formData.fuel_sale ?? ''}
+                onChange={(e) => handleInputChange('fuel_sale', e.target.value === '' ? undefined : parseFloat(e.target.value))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="0.00"
               />
@@ -124,8 +124,8 @@ const DailySalesForm: React.FC<DailySalesFormProps> = ({
                 step="0.01"
                 min="0"
                 required
-                value={formData.store_sale}
-                onChange={(e) => handleInputChange('store_sale', parseFloat(e.target.value) || 0)}
+                value={formData.store_sale ?? ''}
+                onChange={(e) => handleInputChange('store_sale', e.target.value === '' ? undefined : parseFloat(e.target.value))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="0.00"
               />
@@ -139,8 +139,8 @@ const DailySalesForm: React.FC<DailySalesFormProps> = ({
                 step="0.01"
                 min="0"
                 required
-                value={formData.gst}
-                onChange={(e) => handleInputChange('gst', parseFloat(e.target.value) || 0)}
+                value={formData.gst ?? ''}
+                onChange={(e) => handleInputChange('gst', e.target.value === '' ? undefined : parseFloat(e.target.value))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="0.00"
               />
@@ -172,8 +172,8 @@ const DailySalesForm: React.FC<DailySalesFormProps> = ({
                 step="0.01"
                 min="0"
                 required
-                value={formData.card}
-                onChange={(e) => handleInputChange('card', parseFloat(e.target.value) || 0)}
+                value={formData.card ?? ''}
+                onChange={(e) => handleInputChange('card', e.target.value === '' ? undefined : parseFloat(e.target.value))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="0.00"
               />
@@ -187,8 +187,8 @@ const DailySalesForm: React.FC<DailySalesFormProps> = ({
                 step="0.01"
                 min="0"
                 required
-                value={formData.cash}
-                onChange={(e) => handleInputChange('cash', parseFloat(e.target.value) || 0)}
+                value={formData.cash ?? ''}
+                onChange={(e) => handleInputChange('cash', e.target.value === '' ? undefined : parseFloat(e.target.value))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="0.00"
               />
@@ -202,8 +202,8 @@ const DailySalesForm: React.FC<DailySalesFormProps> = ({
                 step="0.01"
                 min="0"
                 required
-                value={formData.coupon}
-                onChange={(e) => handleInputChange('coupon', parseFloat(e.target.value) || 0)}
+                value={formData.coupon ?? ''}
+                onChange={(e) => handleInputChange('coupon', e.target.value === '' ? undefined : parseFloat(e.target.value))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="0.00"
               />
@@ -217,8 +217,8 @@ const DailySalesForm: React.FC<DailySalesFormProps> = ({
                 step="0.01"
                 min="0"
                 required
-                value={formData.delivery}
-                onChange={(e) => handleInputChange('delivery', parseFloat(e.target.value) || 0)}
+                value={formData.delivery ?? ''}
+                onChange={(e) => handleInputChange('delivery', e.target.value === '' ? undefined : parseFloat(e.target.value))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="0.00"
               />
@@ -241,8 +241,8 @@ const DailySalesForm: React.FC<DailySalesFormProps> = ({
               step="0.01"
               min="0"
               required
-              value={formData.reported_total}
-              onChange={(e) => handleInputChange('reported_total', parseFloat(e.target.value) || 0)}
+              value={formData.reported_total ?? ''}
+              onChange={(e) => handleInputChange('reported_total', e.target.value === '' ? undefined : parseFloat(e.target.value))}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="0.00"
             />
