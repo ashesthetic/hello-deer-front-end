@@ -28,6 +28,7 @@ import AddEmployeePage from './pages/AddEmployeePage';
 import AddHoursPage from './pages/AddHoursPage';
 import EmployeeViewPage from './pages/EmployeeViewPage';
 import EmployeeEditPage from './pages/EmployeeEditPage';
+import EmployeeEarningsPage from './pages/EmployeeEarningsPage';
 
 const App: React.FC = () => {
   const dispatch = useDispatch();
@@ -112,6 +113,10 @@ const App: React.FC = () => {
           <Route 
             path="/employees/hours" 
             element={isAuthenticated ? <Layout><AddHoursPage /></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/employees/earnings" 
+            element={isAuthenticated ? <Layout><EmployeeEarningsPage /></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/employees/:id" 

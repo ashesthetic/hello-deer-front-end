@@ -94,6 +94,38 @@ export interface EmployeeStats {
   avg_tenure: string;
 }
 
+export interface EmployeeEarning {
+  id: number;
+  full_legal_name: string;
+  preferred_name?: string;
+  position: string;
+  department: string;
+  hourly_rate: string;
+  total_hours: number;
+  total_earnings: number;
+  work_days: number;
+  period_start: string;
+  period_end: string;
+  pay_day: string;
+}
+
+export interface PeriodInfo {
+  period_start: string;
+  period_end: string;
+  pay_day: string;
+  days_until_pay: number;
+}
+
+export interface PeriodData {
+  employees: EmployeeEarning[];
+  period_info: PeriodInfo;
+}
+
+export interface EarningsData {
+  current_period: PeriodData;
+  next_period: PeriodData;
+}
+
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
 
 // Create axios instance with default config
@@ -338,6 +370,19 @@ export const employeesApi = {
   },
   delete: (id: number) => api.delete(`/employees/${id}`),
   getStats: () => api.get('/employees/stats'),
+  getEarnings: () => api.get('/employees/earnings'),
+};
+
+// Work Hours API
+export const workHoursApi = {
+  getAll: () => api.get('/work-hours'),
+  getById: (id: number) => api.get(`/work-hours/${id}`),
+  create: (data: any) => api.post('/work-hours', data),
+  update: (id: number, data: any) => api.put(`/work-hours/${id}`, data),
+  delete: (id: number) => api.delete(`/work-hours/${id}`),
+  getRecent: () => api.get('/work-hours/recent'),
+  getSummary: (params?: any) => api.get('/work-hours/summary', { params }),
+  getEmployeeHours: (employeeId: number) => api.get(`/employees/${employeeId}/work-hours`),
 };
 
 // User Management API (Admin only)
