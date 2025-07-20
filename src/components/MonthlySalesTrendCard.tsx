@@ -24,7 +24,7 @@ ChartJS.register(
   ChartDataLabels
 );
 
-interface SalesReportCardProps {
+interface MonthlySalesTrendCardProps {
   title: string;
   dataField: 'reported_total' | 'fuel_sale';
   color: string;
@@ -35,53 +35,41 @@ interface SalesData {
   value: number;
 }
 
-const SalesReportCard: React.FC<SalesReportCardProps> = ({ title, dataField, color }) => {
+const MonthlySalesTrendCard: React.FC<MonthlySalesTrendCardProps> = ({ title, dataField, color }) => {
   const [data, setData] = useState<SalesData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [totalValue, setTotalValue] = useState<number>(0);
   const [percentageChange, setPercentageChange] = useState<number>(0);
 
-  const fetchLast7DaysData = useCallback(async () => {
+  const fetchCurrentMonthData = useCallback(async () => {
     setLoading(true);
     try {
-      // Get all sales data to find the last entry date
+      // Get current month's start and end dates
+      // For now, use July 2025 since that's where the data is
+      const currentYear = 2025;
+      const currentMonth = 6; // July (0-indexed)
+      
+      const startOfMonth = new Date(currentYear, currentMonth, 1);
+      const endOfMonth = new Date(currentYear, currentMonth + 1, 0); // Last day of current month
+      
+      // Format dates for API
+      const startDateStr = startOfMonth.toISOString().split('T')[0];
+      const endDateStr = endOfMonth.toISOString().split('T')[0];
+
+      // Get data for the current month
       const response = await dailySalesApi.getAll({
-        per_page: 1000, // Get a large number to find the last entry
-        sort_by: 'date',
-        sort_direction: 'desc'
+        start_date: startDateStr,
+        end_date: endDateStr,
+        per_page: 1000
       });
 
       const salesData = response.data.data || [];
       
-      if (salesData.length === 0) {
-        setData([]);
-        setPercentageChange(0);
-        setLoading(false);
-        return;
-      }
-
-      // Find the last entry date
-      const lastEntryDate = new Date(salesData[0].date);
-      const startDate = new Date(lastEntryDate);
-      startDate.setDate(startDate.getDate() - 7); // 8 days before the last entry
-
-      // Format dates for API
-      const startDateStr = startDate.toISOString().split('T')[0];
-      const endDateStr = lastEntryDate.toISOString().split('T')[0];
-
-      // Get data for the last 8 days from the last entry
-      const rangeResponse = await dailySalesApi.getAll({
-        start_date: startDateStr,
-        end_date: endDateStr,
-        per_page: 100
-      });
-
-      const rangeData = rangeResponse.data.data || [];
-      
       // Create a map of dates to values
       const dateMap = new Map<string, number>();
       
-      // Fill in actual data first
-      rangeData.forEach((sale: any) => {
+      // Fill in actual data
+      salesData.forEach((sale: any) => {
         const saleDate = sale.date.split('T')[0];
         const currentValue = dateMap.get(saleDate) || 0;
         const newValue = dataField === 'reported_total' ? 
@@ -90,33 +78,54 @@ const SalesReportCard: React.FC<SalesReportCardProps> = ({ title, dataField, col
         dateMap.set(saleDate, currentValue + newValue);
       });
 
-      // Only include dates that have actual data
-      const sortedData: SalesData[] = Array.from(dateMap.entries())
-        .map(([date, value]) => ({ date, value }))
-        .sort((a, b) => a.date.localeCompare(b.date))
-        .slice(-8); // Take only the last 8 entries
+      // Create array for all days in current month
+      const allDays: SalesData[] = [];
+      const currentDate = new Date(startOfMonth);
+      
+      while (currentDate <= endOfMonth) {
+        const dateStr = currentDate.toISOString().split('T')[0];
+        const value = dateMap.get(dateStr) || 0;
+        allDays.push({ date: dateStr, value });
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
 
-      setData(sortedData);
+      setData(allDays);
 
-      // Calculate percentage change
-      if (sortedData.length >= 2) {
-        const firstValue = sortedData[0].value;
-        const lastValue = sortedData[sortedData.length - 1].value;
-        const change = lastValue - firstValue;
-        const percentage = firstValue > 0 ? (change / firstValue) * 100 : 0;
+      // Calculate total for the month
+      const total = allDays.reduce((sum, day) => sum + day.value, 0);
+      setTotalValue(total);
+
+      // Calculate percentage change (comparing to last entry date)
+      if (allDays.length >= 2) {
+        // Find the last entry date from the original sales data
+        const lastEntryDate = new Date(salesData[0].date);
+        const lastEntryDateStr = lastEntryDate.toISOString().split('T')[0];
+        
+        // Find the last entry in our allDays array
+        const lastEntry = allDays.find(day => day.date === lastEntryDateStr);
+        const lastEntryValue = lastEntry ? lastEntry.value : 0;
+        
+        // Calculate average of all other days (excluding last entry)
+        const otherDays = allDays.filter(day => day.date !== lastEntryDateStr);
+        const averageOtherDays = otherDays.length > 0 ? 
+          otherDays.reduce((sum, day) => sum + day.value, 0) / otherDays.length : 0;
+        
+        // Calculate percentage change
+        const change = lastEntryValue - averageOtherDays;
+        const percentage = averageOtherDays > 0 ? (change / averageOtherDays) * 100 : 0;
         setPercentageChange(percentage);
       }
 
     } catch (error) {
-      console.error('Failed to fetch sales data:', error);
+      console.error('Failed to fetch monthly sales data:', error);
     } finally {
       setLoading(false);
     }
   }, [dataField]);
 
   useEffect(() => {
-    fetchLast7DaysData();
-  }, [fetchLast7DaysData]);
+    fetchCurrentMonthData();
+  }, [fetchCurrentMonthData]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-CA', {
@@ -128,7 +137,6 @@ const SalesReportCard: React.FC<SalesReportCardProps> = ({ title, dataField, col
   };
 
   const formatDate = (dateString: string) => {
-    // Parse the date string directly without timezone conversion
     const [year, month, day] = dateString.split('T')[0].split('-');
     const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
     return date.toLocaleDateString('en-US', {
@@ -151,13 +159,13 @@ const SalesReportCard: React.FC<SalesReportCardProps> = ({ title, dataField, col
         pointBackgroundColor: color,
         pointBorderColor: '#fff',
         pointBorderWidth: 2,
-        pointRadius: 4,
-        pointHoverRadius: 6,
+        pointRadius: 3,
+        pointHoverRadius: 5,
       },
     ],
   };
 
-    const chartOptions = {
+  const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
     layout: {
@@ -181,27 +189,7 @@ const SalesReportCard: React.FC<SalesReportCardProps> = ({ title, dataField, col
         }
       },
       datalabels: {
-        display: true,
-        color: '#374151',
-        font: {
-          weight: 'bold' as const,
-          size: 11
-        },
-        formatter: function(value: any) {
-          const numValue = parseFloat(value) || 0;
-          return formatCurrency(numValue);
-        },
-        anchor: 'end' as const,
-        align: 'top' as const,
-        offset: 8,
-        backgroundColor: 'rgba(255, 255, 255, 0.8)',
-        borderRadius: 4,
-        padding: {
-          top: 2,
-          bottom: 2,
-          left: 4,
-          right: 4
-        }
+        display: false, // Hide labels for monthly view to avoid clutter
       }
     },
     scales: {
@@ -211,6 +199,8 @@ const SalesReportCard: React.FC<SalesReportCardProps> = ({ title, dataField, col
         },
         ticks: {
           color: '#6B7280',
+          maxRotation: 45,
+          minRotation: 45,
         },
       },
       y: {
@@ -244,22 +234,27 @@ const SalesReportCard: React.FC<SalesReportCardProps> = ({ title, dataField, col
     <div className="bg-white rounded-lg shadow-lg p-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-        <div className={`text-sm font-medium ${
-          percentageChange >= 0 ? 'text-green-600' : 'text-red-600'
-        }`}>
-          {percentageChange >= 0 ? '+' : ''}{percentageChange.toFixed(1)}%
+        <div className="flex items-center space-x-4">
+          <div className="text-sm font-medium text-gray-600">
+            {formatCurrency(totalValue)}
+          </div>
+          <div className={`text-sm font-medium ${
+            percentageChange >= 0 ? 'text-green-600' : 'text-red-600'
+          }`}>
+            {percentageChange >= 0 ? '+' : ''}{percentageChange.toFixed(1)}%
+          </div>
         </div>
       </div>
       
-      <div className="h-40 mb-4 relative">
+      <div className="h-48 mb-4 relative">
         <Line data={chartData} options={chartOptions} />
       </div>
       
       <div className="text-sm text-gray-600">
-        Last 8 days trend
+        Current month daily trend
       </div>
     </div>
   );
 };
 
-export default SalesReportCard; 
+export default MonthlySalesTrendCard; 

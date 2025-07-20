@@ -5,6 +5,19 @@ import { RootState } from '../store';
 import { canCreate } from '../utils/permissions';
 import ConfirmationModal from '../components/ConfirmationModal';
 import { employeesApi, Employee as ApiEmployee } from '../services/api';
+
+// Get the storage URL from environment or derive from API URL
+const getStorageUrl = () => {
+  // Use dedicated storage URL if available
+  if (process.env.REACT_APP_STORAGE_URL) {
+    return process.env.REACT_APP_STORAGE_URL;
+  }
+  
+  // Otherwise derive from API URL
+  const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
+  // Remove /api from the end to get the base URL
+  return apiUrl.replace(/\/api$/, '');
+};
 const EmployeeViewPage: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
@@ -277,6 +290,95 @@ const EmployeeViewPage: React.FC = () => {
                       <label className="block text-sm font-medium text-gray-700 mb-1">Twitter</label>
                       <a href={employee.twitter} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">
                         {employee.twitter}
+                      </a>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Uploaded Files */}
+            {(employee.government_id_file || employee.work_permit_file || employee.resume_file || employee.photo_file || employee.void_cheque_file) && (
+              <div>
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Uploaded Files</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {employee.government_id_file && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Government ID</label>
+                      <a 
+                        href={`${getStorageUrl()}/storage/${employee.government_id_file}`} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                      >
+                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        View Government ID
+                      </a>
+                    </div>
+                  )}
+                  {employee.work_permit_file && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Work Permit</label>
+                      <a 
+                        href={`${getStorageUrl()}/storage/${employee.work_permit_file}`} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                      >
+                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        View Work Permit
+                      </a>
+                    </div>
+                  )}
+                  {employee.resume_file && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Resume</label>
+                      <a 
+                        href={`${getStorageUrl()}/storage/${employee.resume_file}`} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                      >
+                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        View Resume
+                      </a>
+                    </div>
+                  )}
+                  {employee.photo_file && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Photo</label>
+                      <a 
+                        href={`${getStorageUrl()}/storage/${employee.photo_file}`} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                      >
+                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        View Photo
+                      </a>
+                    </div>
+                  )}
+                  {employee.void_cheque_file && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Void Cheque</label>
+                      <a 
+                        href={`${getStorageUrl()}/storage/${employee.void_cheque_file}`} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                      >
+                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        View Void Cheque
                       </a>
                     </div>
                   )}
