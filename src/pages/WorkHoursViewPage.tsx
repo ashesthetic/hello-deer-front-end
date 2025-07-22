@@ -6,6 +6,7 @@ import { canUpdate, canDelete } from '../utils/permissions';
 import ConfirmationModal from '../components/ConfirmationModal';
 import { workHoursApi, WorkHour } from '../services/api';
 import { usePageTitle } from '../hooks/usePageTitle';
+import { formatTimeForDisplay, formatDateDetailed, formatDateTimeForDisplay } from '../utils/dateUtils';
 
 const WorkHoursViewPage: React.FC = () => {
   usePageTitle('Work Hours Details');
@@ -60,27 +61,7 @@ const WorkHoursViewPage: React.FC = () => {
     navigate('/work-hours');
   };
 
-  const formatTime = (time: string) => {
-    return new Date(`2000-01-01T${time}`).toLocaleTimeString('en-CA', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
-    });
-  };
-
-  const formatDate = (date: string) => {
-    // Extract just the date part (YYYY-MM-DD) from the ISO string to avoid timezone issues
-    const dateOnly = date.split('T')[0];
-    const [year, month, day] = dateOnly.split('-').map(Number);
-    const dateObj = new Date(year, month - 1, day); // month is 0-indexed
-    
-    return dateObj.toLocaleDateString('en-CA', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
+  // Using centralized date utilities from dateUtils.ts
 
   if (loading) {
     return (
@@ -117,7 +98,7 @@ const WorkHoursViewPage: React.FC = () => {
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Work Hours Details</h1>
             <p className="text-gray-600">
-              {workHour.employee?.full_legal_name} • {formatDate(workHour.date)}
+              {workHour.employee?.full_legal_name} • {formatDateDetailed(workHour.date)}
             </p>
           </div>
           <div className="flex space-x-3">
@@ -182,19 +163,19 @@ const WorkHoursViewPage: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
-                  <p className="text-gray-900">{formatDate(workHour.date)}</p>
+                  <p className="text-gray-900">{formatDateDetailed(workHour.date)}</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Day of Week</label>
-                  <p className="text-gray-900">{formatDate(workHour.date).split(',')[0]}</p>
+                  <p className="text-gray-900">{formatDateDetailed(workHour.date).split(',')[0]}</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
-                  <p className="text-gray-900">{formatTime(workHour.start_time)}</p>
+                  <p className="text-gray-900">{formatTimeForDisplay(workHour.start_time)}</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">End Time</label>
-                  <p className="text-gray-900">{formatTime(workHour.end_time)}</p>
+                  <p className="text-gray-900">{formatTimeForDisplay(workHour.end_time)}</p>
                 </div>
               </div>
             </div>
@@ -211,7 +192,7 @@ const WorkHoursViewPage: React.FC = () => {
                   <div>
                     <p className="text-sm text-blue-600">Time Range</p>
                     <p className="text-lg font-semibold text-blue-900">
-                      {formatTime(workHour.start_time)} - {formatTime(workHour.end_time)}
+                      {formatTimeForDisplay(workHour.start_time)} - {formatTimeForDisplay(workHour.end_time)}
                     </p>
                   </div>
                   <div>
@@ -257,26 +238,14 @@ const WorkHoursViewPage: React.FC = () => {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Recorded On</label>
                   <p className="text-gray-900">
-                                         {new Date(workHour.created_at).toLocaleDateString('en-CA', {
-                       year: 'numeric',
-                       month: 'long',
-                       day: 'numeric',
-                       hour: '2-digit',
-                       minute: '2-digit'
-                     })}
+                    {formatDateTimeForDisplay(workHour.created_at)}
                   </p>
                 </div>
                 {workHour.updated_at !== workHour.created_at && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Last Updated</label>
                     <p className="text-gray-900">
-                                             {new Date(workHour.updated_at).toLocaleDateString('en-CA', {
-                         year: 'numeric',
-                         month: 'long',
-                         day: 'numeric',
-                         hour: '2-digit',
-                         minute: '2-digit'
-                       })}
+                      {formatDateTimeForDisplay(workHour.updated_at)}
                     </p>
                   </div>
                 )}
@@ -292,7 +261,7 @@ const WorkHoursViewPage: React.FC = () => {
         onClose={() => setShowDeleteModal(false)}
         onConfirm={confirmDelete}
         title="Delete Work Hours"
-        message={`Are you sure you want to delete the work hours entry for ${workHour.employee?.full_legal_name} on ${formatDate(workHour.date)}? This action cannot be undone.`}
+        message={`Are you sure you want to delete the work hours entry for ${workHour.employee?.full_legal_name} on ${formatDateDetailed(workHour.date)}? This action cannot be undone.`}
         confirmText="Delete"
         cancelText="Cancel"
         confirmButtonClass="bg-red-600 hover:bg-red-700"
