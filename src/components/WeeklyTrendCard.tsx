@@ -12,6 +12,13 @@ import {
 } from 'chart.js';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { dailySalesApi } from '../services/api';
+import { ChartCard } from './common/ChartCard';
+import { 
+  lineChartOptions, 
+  createLineDataset, 
+  formatCurrency, 
+  formatWeek 
+} from '../utils/chartConfigs';
 import { parseDateSafely } from '../utils/dateUtils';
 
 ChartJS.register(
@@ -122,16 +129,9 @@ const WeeklyTrendCard: React.FC<WeeklyTrendCardProps> = ({ title, dataField, col
     fetchWeeklyTrendData();
   }, [fetchWeeklyTrendData]);
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-CA', {
-      style: 'currency',
-      currency: 'CAD',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(amount);
-  };
 
-  const formatWeek = (dateString: string) => {
+
+  const formatWeekCustom = (dateString: string) => {
     const date = parseDateSafely(dateString);
     const endOfWeek = new Date(date);
     endOfWeek.setDate(date.getDate() + 6);
@@ -140,131 +140,27 @@ const WeeklyTrendCard: React.FC<WeeklyTrendCardProps> = ({ title, dataField, col
   };
 
   const chartData = {
-    labels: data.map(item => formatWeek(item.week)),
-    datasets: [
-      {
-        label: title,
-        data: data.map(item => item.value),
-        borderColor: color,
-        backgroundColor: color + '20',
-        borderWidth: 2,
-        fill: true,
-        tension: 0.4,
-        pointBackgroundColor: color,
-        pointBorderColor: '#fff',
-        pointBorderWidth: 2,
-        pointRadius: 4,
-        pointHoverRadius: 6,
-      },
-    ],
+    labels: data.map(item => formatWeekCustom(item.week)),
+    datasets: [createLineDataset(title, data.map(item => item.value), color)],
   };
-
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    layout: {
-      padding: {
-        top: 50,
-        bottom: 20,
-        left: 15,
-        right: 15
-      }
-    },
-    plugins: {
-      legend: {
-        display: false,
-      },
-      tooltip: {
-        callbacks: {
-          label: function(context: any) {
-            const value = parseFloat(context.parsed.y) || 0;
-            return formatCurrency(value);
-          }
-        }
-      },
-      datalabels: {
-        display: true,
-        color: '#374151',
-        font: {
-          weight: 'bold' as const,
-          size: 9
-        },
-        formatter: function(value: any) {
-          const numValue = parseFloat(value) || 0;
-          return formatCurrency(numValue);
-        },
-        anchor: 'end' as const,
-        align: 'top' as const,
-        offset: 4,
-        backgroundColor: 'rgba(255, 255, 255, 0.9)',
-        borderRadius: 3,
-        padding: {
-          top: 1,
-          bottom: 1,
-          left: 3,
-          right: 3
-        }
-      }
-    },
-    scales: {
-      x: {
-        grid: {
-          display: false,
-        },
-        ticks: {
-          color: '#6B7280',
-          maxRotation: 45,
-          minRotation: 45
-        },
-      },
-      y: {
-        beginAtZero: true,
-        grid: {
-          color: '#E5E7EB',
-        },
-        ticks: {
-          color: '#6B7280',
-          stepSize: 500,
-          callback: function(value: any) {
-            const numValue = parseFloat(value) || 0;
-            return formatCurrency(numValue);
-          }
-        },
-      },
-    },
-  };
-
-  if (loading) {
-    return (
-      <div className="bg-white rounded-lg shadow-lg p-6">
-        <div className="animate-pulse">
-          <div className="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
-          <div className="h-32 bg-gray-200 rounded mb-4"></div>
-          <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-        <div className={`text-sm font-medium ${
-          percentageChange >= 0 ? 'text-green-600' : 'text-red-600'
-        }`}>
-          {percentageChange >= 0 ? '+' : ''}{percentageChange.toFixed(1)}%
+    <ChartCard 
+      title={
+        <div className="flex items-center justify-between">
+          <span>{title}</span>
+          <div className={`text-sm font-medium ${
+            percentageChange >= 0 ? 'text-green-600' : 'text-red-600'
+          }`}>
+            {percentageChange >= 0 ? '+' : ''}{percentageChange.toFixed(1)}%
+          </div>
         </div>
-      </div>
-      
-      <div className="h-56 mb-4 relative">
-        <Line data={chartData} options={chartOptions} />
-      </div>
-      
-      <div className="text-sm text-gray-600">
-        Last 4 weeks trend
-      </div>
-    </div>
+      }
+      subtitle="Last 4 weeks trend"
+      loading={loading}
+    >
+      <Line data={chartData} options={lineChartOptions} />
+    </ChartCard>
   );
 };
 
