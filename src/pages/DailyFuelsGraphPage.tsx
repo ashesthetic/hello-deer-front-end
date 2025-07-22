@@ -12,6 +12,7 @@ import {
 } from 'chart.js';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { dailyFuelsApi } from '../services/api';
+import { usePageTitle } from '../hooks/usePageTitle';
 
 ChartJS.register(
   CategoryScale,
@@ -24,6 +25,7 @@ ChartJS.register(
 );
 
 const DailyFuelsGraphPage: React.FC = () => {
+  usePageTitle('Daily Fuels Graph');
   const navigate = useNavigate();
   const [fuels, setFuels] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

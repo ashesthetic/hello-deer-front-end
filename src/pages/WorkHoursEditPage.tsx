@@ -4,8 +4,10 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 import { canUpdate } from '../utils/permissions';
 import { workHoursApi, employeesApi, WorkHour, WorkHourFormData, Employee } from '../services/api';
+import { usePageTitle } from '../hooks/usePageTitle';
 
 const WorkHoursEditPage: React.FC = () => {
+  usePageTitle('Edit Work Hours');
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const currentUser = useSelector((state: RootState) => (state as any).auth.user);

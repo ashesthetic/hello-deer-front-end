@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
+import { canUpdateDailyFuel, canDeleteDailyFuel } from '../utils/permissions';
 import { dailyFuelsApi } from '../services/api';
 import { DailyFuel } from '../types';
-import { canUpdateDailyFuel, canDelete } from '../utils/permissions';
+import { usePageTitle } from '../hooks/usePageTitle';
 
 const DailyFuelViewPage: React.FC = () => {
+  usePageTitle('Daily Fuel Details');
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const currentUser = useSelector((state: RootState) => (state as any).auth.user);
@@ -128,7 +130,7 @@ const DailyFuelViewPage: React.FC = () => {
                 Edit
               </button>
             )}
-            {canDelete(currentUser) && (
+            {canDeleteDailyFuel(currentUser, fuel) && (
               <button
                 onClick={handleDelete}
                 className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"

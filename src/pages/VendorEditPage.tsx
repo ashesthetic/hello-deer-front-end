@@ -5,8 +5,10 @@ import { RootState } from '../store';
 import { vendorsApi } from '../services/api';
 import { Vendor, UpdateVendorData } from '../types';
 import VendorForm from '../components/VendorForm';
+import { usePageTitle } from '../hooks/usePageTitle';
 
 const VendorEditPage: React.FC = () => {
+  usePageTitle('Edit Vendor');
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const currentUser = useSelector((state: RootState) => (state as any).auth.user);

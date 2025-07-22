@@ -4,8 +4,10 @@ import { RootState } from '../store';
 import { usersApi } from '../services/api';
 import { User, CreateUserData, UpdateUserData } from '../types';
 import { canManageUsers, getRoleDisplayName, getRoleColor } from '../utils/permissions';
+import { usePageTitle } from '../hooks/usePageTitle';
 
 const UserManagementPage: React.FC = () => {
+  usePageTitle('User Management');
   const currentUser = useSelector((state: RootState) => (state as any).auth.user);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);

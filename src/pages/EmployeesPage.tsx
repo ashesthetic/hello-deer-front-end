@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 import { canCreate } from '../utils/permissions';
+import { usePageTitle } from '../hooks/usePageTitle';
 import ConfirmationModal from '../components/ConfirmationModal';
 import { employeesApi, Employee as ApiEmployee } from '../services/api';
 
 const EmployeesPage: React.FC = () => {
+  usePageTitle('Employees');
   const navigate = useNavigate();
   const currentUser = useSelector((state: RootState) => (state as any).auth.user);
   const [showDeleteModal, setShowDeleteModal] = useState(false);

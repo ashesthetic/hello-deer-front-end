@@ -6,6 +6,7 @@ import { vendorsApi } from '../services/api';
 import { Vendor } from '../types';
 import VendorList from '../components/VendorList';
 import { canCreate } from '../utils/permissions';
+import { usePageTitle } from '../hooks/usePageTitle';
 
 type SortField = 'name' | 'payment_method' | 'created_at' | 'updated_at';
 type SortDirection = 'asc' | 'desc';
@@ -13,6 +14,7 @@ type SortDirection = 'asc' | 'desc';
 const PER_PAGE_OPTIONS = [10, 25, 50, 100];
 
 const VendorsPage: React.FC = () => {
+  usePageTitle('Vendors');
   const navigate = useNavigate();
   const currentUser = useSelector((state: RootState) => (state as any).auth.user);
   const [vendors, setVendors] = useState<Vendor[]>([]);

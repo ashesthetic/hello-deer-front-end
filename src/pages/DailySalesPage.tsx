@@ -6,6 +6,7 @@ import { dailySalesApi } from '../services/api';
 import { DailySale } from '../types';
 import DailySalesList from '../components/DailySalesList';
 import { canCreate } from '../utils/permissions';
+import { usePageTitle } from '../hooks/usePageTitle';
 
 type SortField = 'date' | 'fuel_sale' | 'store_sale' | 'reported_total';
 type SortDirection = 'asc' | 'desc';
@@ -13,6 +14,7 @@ type SortDirection = 'asc' | 'desc';
 const PER_PAGE_OPTIONS = [10, 25, 50, 100];
 
 const DailySalesPage: React.FC = () => {
+  usePageTitle('Daily Sales');
   const navigate = useNavigate();
   const currentUser = useSelector((state: RootState) => (state as any).auth.user);
   const [sales, setSales] = useState<DailySale[]>([]);

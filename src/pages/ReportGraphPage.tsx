@@ -1,7 +1,32 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Bar } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
+import { dailySalesApi } from '../services/api';
+import { DailySale } from '../types';
+import { usePageTitle } from '../hooks/usePageTitle';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  ChartDataLabels
+);
 
 const ReportGraphPage: React.FC = () => {
+  usePageTitle('Report Graph');
   const navigate = useNavigate();
 
   const handleNavigateToDailySalesGraph = () => {
