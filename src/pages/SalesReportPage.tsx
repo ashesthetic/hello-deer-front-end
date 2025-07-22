@@ -128,20 +128,19 @@ const SalesReportPage: React.FC = () => {
       return values.length > 0 ? values.reduce((sum, val) => sum + val, 0) / values.length : 0;
     });
     
-    // Find the top 3 days and their indices
-    const dataWithIndices = data.map((value, index) => ({ value, index }));
-    const sortedByValue = [...dataWithIndices].sort((a, b) => b.value - a.value);
-    const top3Indices = sortedByValue.slice(0, 3).map(item => item.index);
+    // Define consistent colors for each day of the week
+    const dayColors = {
+      'Mon': '#3B82F6', // Blue
+      'Tue': '#10B981', // Green
+      'Wed': '#F59E0B', // Orange
+      'Thu': '#8B5CF6', // Purple
+      'Fri': '#EF4444', // Red
+      'Sat': '#06B6D4', // Cyan
+      'Sun': '#84CC16'  // Lime
+    };
     
-    // Create background colors array
-    const backgroundColors = data.map((_, index) => {
-      if (top3Indices.includes(index)) {
-        const top3Rank = top3Indices.indexOf(index);
-        const top3Colors = ['#FF6B6B', '#4ECDC4', '#45B7D1']; // Red, Teal, Blue for top 3
-        return top3Colors[top3Rank];
-      }
-      return color; // Original color for other bars
-    });
+    // Create background colors array using consistent day colors
+    const backgroundColors = dayLabels.map(day => dayColors[day as keyof typeof dayColors]);
     
     return {
       labels: dayLabels,
@@ -209,19 +208,26 @@ const SalesReportPage: React.FC = () => {
       return `${day}`;
     });
     
-    // Find the top 3 values and their indices
-    const dataWithIndices = data.map((value, index) => ({ value, index }));
-    const sortedByValue = [...dataWithIndices].sort((a, b) => b.value - a.value);
-    const top3Indices = sortedByValue.slice(0, 3).map(item => item.index);
+    // Define consistent colors for each day of the week
+    const dayColors = {
+      'Mon': '#3B82F6', // Blue
+      'Tue': '#10B981', // Green
+      'Wed': '#F59E0B', // Orange
+      'Thu': '#8B5CF6', // Purple
+      'Fri': '#EF4444', // Red
+      'Sat': '#06B6D4', // Cyan
+      'Sun': '#84CC16'  // Lime
+    };
     
-    // Create background colors array
-    const backgroundColors = data.map((_, index) => {
-      if (top3Indices.includes(index)) {
-        const top3Rank = top3Indices.indexOf(index);
-        const top3Colors = ['#FF6B6B', '#4ECDC4', '#45B7D1']; // Red, Teal, Blue for top 3
-        return top3Colors[top3Rank];
+    // Create background colors array based on day of week
+    const backgroundColors = labels.map(label => {
+      // Extract day of week from label (e.g., "Jul 1\nTue" -> "Tue")
+      const dayMatch = label.match(/\n([A-Za-z]{3})$/);
+      if (dayMatch) {
+        const dayOfWeek = dayMatch[1];
+        return dayColors[dayOfWeek as keyof typeof dayColors] || color;
       }
-      return color; // Original color for other bars
+      return color; // Fallback to original color
     });
     
     return {
@@ -311,6 +317,43 @@ const SalesReportPage: React.FC = () => {
     },
   };
 
+  // Day of week legend component
+  const DayOfWeekLegend = () => {
+    const dayColors = {
+      'Mon': '#3B82F6',
+      'Tue': '#10B981', 
+      'Wed': '#F59E0B',
+      'Thu': '#8B5CF6',
+      'Fri': '#EF4444',
+      'Sat': '#06B6D4',
+      'Sun': '#84CC16'
+    };
+
+    const dayNames = {
+      'Mon': 'Monday',
+      'Tue': 'Tuesday',
+      'Wed': 'Wednesday', 
+      'Thu': 'Thursday',
+      'Fri': 'Friday',
+      'Sat': 'Saturday',
+      'Sun': 'Sunday'
+    };
+
+    return (
+      <div className="flex flex-wrap justify-center gap-4 mt-4">
+        {Object.entries(dayColors).map(([day, color]) => (
+          <div key={day} className="flex items-center space-x-2">
+            <div 
+              className="w-4 h-4 rounded"
+              style={{ backgroundColor: color }}
+            ></div>
+            <span className="text-sm text-gray-600">{dayNames[day as keyof typeof dayNames]}</span>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -371,6 +414,7 @@ const SalesReportPage: React.FC = () => {
               <div className="h-80">
                 <Bar data={createWeeklyGroupChartData('reported_total', 'Reported Total', '#3B82F6')} options={chartOptions} />
               </div>
+              <DayOfWeekLegend />
             </div>
 
             {/* Date vs Reported Total */}
@@ -419,6 +463,7 @@ const SalesReportPage: React.FC = () => {
               <div className="h-80">
                 <Bar data={createDayOfWeekChartData('reported_total', 'Reported Total', '#3B82F6')} options={chartOptions} />
               </div>
+              <DayOfWeekLegend />
             </div>
 
             {/* Day of Week vs Fuel Sale */}
@@ -427,6 +472,7 @@ const SalesReportPage: React.FC = () => {
               <div className="h-80">
                 <Bar data={createDayOfWeekChartData('fuel_sale', 'Fuel Sale', '#10B981')} options={chartOptions} />
               </div>
+              <DayOfWeekLegend />
             </div>
 
             {/* Day of Week vs Store Sale */}
@@ -435,6 +481,7 @@ const SalesReportPage: React.FC = () => {
               <div className="h-80">
                 <Bar data={createDayOfWeekChartData('store_sale', 'Store Sale', '#F59E0B')} options={chartOptions} />
               </div>
+              <DayOfWeekLegend />
             </div>
 
             {/* Day of Week vs Card */}
@@ -443,6 +490,7 @@ const SalesReportPage: React.FC = () => {
               <div className="h-80">
                 <Bar data={createDayOfWeekChartData('card', 'Card', '#8B5CF6')} options={chartOptions} />
               </div>
+              <DayOfWeekLegend />
             </div>
 
             {/* Day of Week vs Cash */}
@@ -451,6 +499,7 @@ const SalesReportPage: React.FC = () => {
               <div className="h-80">
                 <Bar data={createDayOfWeekChartData('cash', 'Cash', '#EF4444')} options={chartOptions} />
               </div>
+              <DayOfWeekLegend />
             </div>
 
             {/* Data Table View */}
