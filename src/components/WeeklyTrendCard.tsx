@@ -12,6 +12,7 @@ import {
 } from 'chart.js';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { dailySalesApi } from '../services/api';
+import { parseDateSafely } from '../utils/dateUtils';
 
 ChartJS.register(
   CategoryScale,
@@ -131,8 +132,7 @@ const WeeklyTrendCard: React.FC<WeeklyTrendCardProps> = ({ title, dataField, col
   };
 
   const formatWeek = (dateString: string) => {
-    const [year, month, day] = dateString.split('T')[0].split('-');
-    const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    const date = parseDateSafely(dateString);
     const endOfWeek = new Date(date);
     endOfWeek.setDate(date.getDate() + 6);
     
@@ -218,11 +218,13 @@ const WeeklyTrendCard: React.FC<WeeklyTrendCardProps> = ({ title, dataField, col
         },
       },
       y: {
+        beginAtZero: true,
         grid: {
           color: '#E5E7EB',
         },
         ticks: {
           color: '#6B7280',
+          stepSize: 500,
           callback: function(value: any) {
             const numValue = parseFloat(value) || 0;
             return formatCurrency(numValue);

@@ -1,0 +1,292 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import { Line } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
+import { dailyFuelsApi } from '../services/api';
+import { formatDateForDisplay, parseDateSafely } from '../utils/dateUtils';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  ChartDataLabels
+);
+
+interface FuelTrendCardProps {
+  title: string;
+  dataField: 'total_quantity' | 'total_amount';
+  color: string;
+}
+
+interface FuelData {
+  date: string;
+  value: number;
+}
+
+const FuelTrendCard: React.FC<FuelTrendCardProps> = ({ title, dataField, color }) => {
+  const [data, setData] = useState<FuelData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [percentageChange, setPercentageChange] = useState<number>(0);
+
+  // Helper functions
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-CA', {
+      style: 'currency',
+      currency: 'CAD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
+
+  const formatQuantity = (quantity: number) => {
+    return `${quantity.toFixed(2)} L`;
+  };
+
+  const formatDate = (dateString: string) => {
+    return formatDateForDisplay(dateString);
+  };
+
+  const fetchLast7DaysData = useCallback(async () => {
+    setLoading(true);
+    try {
+      // First, get the last entry date from the database
+      const lastEntryResponse = await dailyFuelsApi.getAll({
+        per_page: 1,
+        sort: 'date',
+        order: 'desc'
+      });
+
+      const lastEntry = lastEntryResponse.data.data?.[0];
+      if (!lastEntry) {
+        console.log('FuelTrendCard - No fuel data found');
+        setData([]);
+        setLoading(false);
+        return;
+      }
+
+      // Parse the last entry date
+      const lastEntryDate = parseDateSafely(lastEntry.date);
+      const lastEntryDateStr = lastEntryDate.toLocaleDateString('en-CA');
+
+      // Calculate 8 days before the last entry date
+      const rangeStartDate = new Date(lastEntryDate);
+      rangeStartDate.setDate(rangeStartDate.getDate() - 7); // 8 days total (including last entry date)
+      const startDateStr = rangeStartDate.toLocaleDateString('en-CA');
+
+
+
+
+
+      // Get data for the 8 days ending on the last entry date
+      const rangeResponse = await dailyFuelsApi.getAll({
+        start_date: startDateStr,
+        end_date: lastEntryDateStr,
+        per_page: 100
+      });
+
+      const rangeData = rangeResponse.data.data || [];
+      
+      // Create a map of dates to values
+      const dateMap = new Map<string, number>();
+      
+      // Fill in actual data first
+      rangeData.forEach((fuel: any) => {
+        const fuelDate = parseDateSafely(fuel.date).toLocaleDateString('en-CA');
+        const currentValue = dateMap.get(fuelDate) || 0;
+        let newValue = 0;
+        
+        if (dataField === 'total_quantity') {
+          newValue = parseFloat(fuel.regular_quantity || 0) + parseFloat(fuel.plus_quantity || 0) + parseFloat(fuel.sup_plus_quantity || 0) + parseFloat(fuel.diesel_quantity || 0);
+        } else if (dataField === 'total_amount') {
+          newValue = parseFloat(fuel.regular_total_sale || 0) + parseFloat(fuel.plus_total_sale || 0) + parseFloat(fuel.sup_plus_total_sale || 0) + parseFloat(fuel.diesel_total_sale || 0);
+        }
+        
+
+        
+        dateMap.set(fuelDate, currentValue + newValue);
+      });
+
+      // Create a continuous 8-day range and fill in zeros for missing dates
+      const allDates: FuelData[] = [];
+      const chartStartDate = parseDateSafely(startDateStr); // Use parseDateSafely for consistency
+      const currentDate = new Date(chartStartDate);
+      
+
+      
+      for (let i = 0; i < 8; i++) {
+        const dateStr = currentDate.toLocaleDateString('en-CA'); // YYYY-MM-DD format
+        const value = dateMap.get(dateStr) || 0;
+        allDates.push({ date: dateStr, value });
+        
+
+        
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+
+
+      
+      setData(allDates);
+
+      // Calculate percentage change
+      if (allDates.length >= 2) {
+        const currentValue = allDates[allDates.length - 1].value;
+        const previousValue = allDates[allDates.length - 2].value;
+        const change = previousValue !== 0 ? ((currentValue - previousValue) / previousValue) * 100 : 0;
+        setPercentageChange(change);
+      } else {
+        setPercentageChange(0);
+      }
+    } catch (error) {
+      console.error('Error fetching fuel trend data:', error);
+      setData([]);
+      setPercentageChange(0);
+    } finally {
+      setLoading(false);
+    }
+  }, [dataField]);
+
+  useEffect(() => {
+    fetchLast7DaysData();
+  }, [fetchLast7DaysData]);
+
+  const chartData = {
+    labels: data.map(item => formatDate(item.date)),
+    datasets: [
+      {
+        label: title,
+        data: data.map(item => item.value),
+        borderColor: color,
+        backgroundColor: color + '20',
+        borderWidth: 2,
+        fill: true,
+        tension: 0.4,
+        pointBackgroundColor: color,
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+      },
+    ],
+  };
+
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false,
+      },
+      tooltip: {
+        mode: 'index' as const,
+        intersect: false,
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        titleColor: '#fff',
+        bodyColor: '#fff',
+        borderColor: color,
+        borderWidth: 1,
+        callbacks: {
+          label: function(context: any) {
+            const value = context.parsed.y;
+            if (dataField === 'total_quantity') {
+              return `${context.dataset.label}: ${formatQuantity(value)}`;
+            } else {
+              return `${context.dataset.label}: ${formatCurrency(value)}`;
+            }
+          }
+        }
+      },
+      datalabels: {
+        display: false,
+      },
+    },
+    scales: {
+      x: {
+        display: true,
+        grid: {
+          display: false,
+        },
+        ticks: {
+          color: '#6B7280',
+          font: {
+            size: 12,
+          },
+        },
+      },
+      y: {
+        beginAtZero: true,
+        display: true,
+        grid: {
+          color: '#E5E7EB',
+        },
+        ticks: {
+          color: '#6B7280',
+          font: {
+            size: 12,
+          },
+          callback: function(value: any) {
+            if (dataField === 'total_quantity') {
+              return formatQuantity(value);
+            } else {
+              return formatCurrency(value);
+            }
+          }
+        },
+      },
+    },
+    interaction: {
+      mode: 'nearest' as const,
+      axis: 'x' as const,
+      intersect: false,
+    },
+  };
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-lg shadow-lg p-6">
+        <div className="animate-pulse">
+          <div className="h-4 bg-gray-200 rounded w-1/3 mb-4"></div>
+          <div className="h-64 bg-gray-200 rounded"></div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white rounded-lg shadow-lg p-6">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+        <div className={`flex items-center text-sm ${percentageChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+          <span className="font-medium">
+            {percentageChange >= 0 ? '+' : ''}{percentageChange.toFixed(1)}%
+          </span>
+          <svg
+            className={`w-4 h-4 ml-1 ${percentageChange >= 0 ? 'transform rotate-0' : 'transform rotate-180'}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+          </svg>
+        </div>
+      </div>
+      <div className="h-64">
+        <Line data={chartData} options={options} />
+      </div>
+    </div>
+  );
+};
+
+export default FuelTrendCard; 
