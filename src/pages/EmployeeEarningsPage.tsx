@@ -67,6 +67,7 @@ const EmployeeEarningsPage: React.FC = () => {
   const formatDate = (dateString: string) => {
     const date = parseDateSafely(dateString);
     return date.toLocaleDateString('en-CA', {
+      weekday: 'short',
       year: 'numeric',
       month: 'short',
       day: 'numeric'
