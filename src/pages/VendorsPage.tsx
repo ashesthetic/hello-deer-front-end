@@ -7,11 +7,11 @@ import { Vendor } from '../types';
 import VendorList from '../components/VendorList';
 import { canCreate } from '../utils/permissions';
 import { usePageTitle } from '../hooks/usePageTitle';
+import { useUrlState } from '../hooks/useUrlState';
 
 type SortField = 'name' | 'payment_method' | 'created_at' | 'updated_at';
-type SortDirection = 'asc' | 'desc';
 
-const PER_PAGE_OPTIONS = [10, 25, 50, 100];
+const PER_PAGE_OPTIONS = [50, 100, 150, 200];
 
 const VendorsPage: React.FC = () => {
   usePageTitle('Vendors');
@@ -20,13 +20,27 @@ const VendorsPage: React.FC = () => {
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
-  const [sortField, setSortField] = useState<SortField>('name');
-  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
-  const [perPage, setPerPage] = useState(10);
-  const [searchTerm, setSearchTerm] = useState('');
+  
+  // URL state management
+  const {
+    perPage,
+    currentPage,
+    sortField,
+    sortDirection,
+    searchTerm,
+    setPerPage,
+    setCurrentPage,
+    setSortField,
+    setSortDirection,
+    setSearchTerm,
+    clearFilters
+  } = useUrlState({
+    defaultPerPage: 50,
+    defaultSortField: 'name',
+    defaultSortDirection: 'asc'
+  });
 
   useEffect(() => {
     fetchVendors(currentPage);
@@ -99,22 +113,14 @@ const VendorsPage: React.FC = () => {
       setSortField(field);
       setSortDirection('asc');
     }
-    setCurrentPage(1); // Reset to first page when sorting
   };
 
   const handlePerPageChange = (newPerPage: number) => {
     setPerPage(newPerPage);
-    setCurrentPage(1); // Reset to first page when changing per page
   };
 
   const handleSearchChange = (term: string) => {
     setSearchTerm(term);
-    setCurrentPage(1); // Reset to first page when searching
-  };
-
-  const clearFilters = () => {
-    setSearchTerm('');
-    setCurrentPage(1);
   };
 
   return (
