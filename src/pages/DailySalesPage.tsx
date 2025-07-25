@@ -8,7 +8,7 @@ import DailySalesList from '../components/DailySalesList';
 import { canCreate } from '../utils/permissions';
 import { usePageTitle } from '../hooks/usePageTitle';
 
-type SortField = 'date' | 'fuel_sale' | 'store_sale' | 'reported_total';
+type SortField = 'date' | 'fuel_sale' | 'store_sale' | 'gst' | 'card' | 'cash' | 'coupon' | 'delivery' | 'reported_total';
 type SortDirection = 'asc' | 'desc';
 
 const PER_PAGE_OPTIONS = [10, 25, 50, 100];
@@ -132,10 +132,20 @@ const DailySalesPage: React.FC = () => {
     return sales.reduce((totals, sale) => ({
       fuel_sale: totals.fuel_sale + (parseFloat(sale.fuel_sale?.toString() || '0')),
       store_sale: totals.store_sale + (parseFloat(sale.store_sale?.toString() || '0')),
+      gst: totals.gst + (parseFloat(sale.gst?.toString() || '0')),
+      card: totals.card + (parseFloat(sale.card?.toString() || '0')),
+      cash: totals.cash + (parseFloat(sale.cash?.toString() || '0')),
+      coupon: totals.coupon + (parseFloat(sale.coupon?.toString() || '0')),
+      delivery: totals.delivery + (parseFloat(sale.delivery?.toString() || '0')),
       reported_total: totals.reported_total + (parseFloat(sale.reported_total?.toString() || '0')),
     }), {
       fuel_sale: 0,
       store_sale: 0,
+      gst: 0,
+      card: 0,
+      cash: 0,
+      coupon: 0,
+      delivery: 0,
       reported_total: 0,
     });
   };

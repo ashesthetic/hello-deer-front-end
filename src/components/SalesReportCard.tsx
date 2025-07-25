@@ -99,13 +99,21 @@ const SalesReportCard: React.FC<SalesReportCardProps> = ({ title, dataField, col
 
       setData(sortedData);
 
-      // Calculate percentage change
-      if (sortedData.length >= 2) {
-        const firstValue = sortedData[0].value;
+      // Calculate percentage change - compare last 4 days with previous 4 days for 8-day chart
+      if (sortedData.length >= 8) {
+        // Calculate sum of last 4 days
+        const last4DaysSum = sortedData.slice(-4).reduce((sum, item) => sum + item.value, 0);
+        // Calculate sum of previous 4 days
+        const previous4DaysSum = sortedData.slice(-8, -4).reduce((sum, item) => sum + item.value, 0);
+        
+        const change = previous4DaysSum !== 0 ? ((last4DaysSum - previous4DaysSum) / previous4DaysSum) * 100 : 0;
+        setPercentageChange(change);
+      } else if (sortedData.length >= 2) {
+        // Fallback: if we don't have 8 days, compare last day with previous day
         const lastValue = sortedData[sortedData.length - 1].value;
-        const change = lastValue - firstValue;
-        const percentage = firstValue > 0 ? (change / firstValue) * 100 : 0;
-        setPercentageChange(percentage);
+        const previousValue = sortedData[sortedData.length - 2].value;
+        const change = previousValue !== 0 ? ((lastValue - previousValue) / previousValue) * 100 : 0;
+        setPercentageChange(change);
       }
 
     } catch (error) {

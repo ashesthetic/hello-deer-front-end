@@ -11,6 +11,7 @@
 
 .table {
   @apply min-w-full divide-y divide-gray-200;
+  table-layout: fixed;
 }
 
 .table-header {
@@ -51,6 +52,47 @@
 
 .table-cell-actions {
   @apply px-6 py-4 whitespace-nowrap text-sm font-medium;
+}
+
+/* Compact table styles for sales table */
+.table-compact .table-header-cell,
+.table-compact .table-header-cell-sortable {
+  @apply px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider;
+}
+
+.table-compact .table-cell,
+.table-compact .table-cell-bold,
+.table-compact .table-cell-medium,
+.table-compact .table-cell-actions {
+  @apply px-3 py-2 whitespace-nowrap text-xs text-gray-900;
+}
+
+.table-compact .table-footer .table-cell {
+  @apply px-3 py-2 whitespace-nowrap text-xs font-semibold text-gray-900;
+}
+
+/* Specific column widths for sales table */
+.table-compact th:nth-child(1), .table-compact td:nth-child(1) { /* Date */
+  @apply w-20;
+}
+
+.table-compact th:nth-child(2), .table-compact td:nth-child(2), /* Fuel Sale */
+.table-compact th:nth-child(3), .table-compact td:nth-child(3), /* Store Sale */
+.table-compact th:nth-child(4), .table-compact td:nth-child(4), /* GST */
+.table-compact th:nth-child(5), .table-compact td:nth-child(5), /* Card Sale */
+.table-compact th:nth-child(6), .table-compact td:nth-child(6), /* Cash Sale */
+.table-compact th:nth-child(7), .table-compact td:nth-child(7), /* Coupon */
+.table-compact th:nth-child(8), .table-compact td:nth-child(8), /* Delivery */
+.table-compact th:nth-child(9), .table-compact td:nth-child(9) { /* Grand Total */
+  @apply w-24;
+}
+
+.table-compact th:nth-child(10), .table-compact td:nth-child(10) { /* Actions */
+  @apply w-32;
+}
+
+.table-footer {
+  @apply bg-gray-100;
 }
 
 .table-empty {

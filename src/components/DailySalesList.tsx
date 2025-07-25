@@ -1,12 +1,11 @@
 import React from 'react';
 import { DailySale, User } from '../types';
-import { canUpdateDailySale, canDelete, getRoleDisplayName } from '../utils/permissions';
-import Tooltip from './Tooltip';
+import { canUpdateDailySale, canDelete } from '../utils/permissions';
 import Modal from './Modal';
 import { DataTable, TableColumn, ActionButtons, ActionButton } from './common/DataTable';
 import { formatCurrency, formatDate } from '../utils/chartConfigs';
 
-type SortField = 'date' | 'fuel_sale' | 'store_sale' | 'reported_total';
+type SortField = 'date' | 'fuel_sale' | 'store_sale' | 'gst' | 'card' | 'cash' | 'coupon' | 'delivery' | 'reported_total';
 type SortDirection = 'asc' | 'desc';
 
 interface DailySalesListProps {
@@ -22,6 +21,11 @@ interface DailySalesListProps {
   totals?: {
     fuel_sale: number;
     store_sale: number;
+    gst: number;
+    card: number;
+    cash: number;
+    coupon: number;
+    delivery: number;
     reported_total: number;
   };
 }
@@ -87,25 +91,42 @@ const DailySalesList: React.FC<DailySalesListProps> = ({
       render: (sale: DailySale) => formatCurrency(sale.store_sale ?? 0)
     },
     {
+      key: 'gst',
+      header: 'GST',
+      sortable: !!onSort,
+      render: (sale: DailySale) => formatCurrency(sale.gst ?? 0)
+    },
+    {
+      key: 'card',
+      header: 'Card Sale',
+      sortable: !!onSort,
+      render: (sale: DailySale) => formatCurrency(sale.card ?? 0)
+    },
+    {
+      key: 'cash',
+      header: 'Cash Sale',
+      sortable: !!onSort,
+      render: (sale: DailySale) => formatCurrency(sale.cash ?? 0)
+    },
+    {
+      key: 'coupon',
+      header: 'Coupon',
+      sortable: !!onSort,
+      render: (sale: DailySale) => formatCurrency(sale.coupon ?? 0)
+    },
+    {
+      key: 'delivery',
+      header: 'Delivery',
+      sortable: !!onSort,
+      render: (sale: DailySale) => formatCurrency(sale.delivery ?? 0)
+    },
+    {
       key: 'reported_total',
       header: 'Grand Total',
       sortable: !!onSort,
       className: 'table-cell-bold',
       render: (sale: DailySale) => formatCurrency(sale.reported_total ?? 0)
     },
-    ...(currentUser && (currentUser.role === 'admin' || currentUser.role === 'editor') ? [{
-      key: 'user',
-      header: 'Created By',
-      render: (sale: DailySale) => sale.user ? (
-        <Tooltip content={getRoleDisplayName(sale.user.role)} position="top">
-          <span className="text-sm text-gray-900 cursor-help">
-            {sale.user.name}
-          </span>
-        </Tooltip>
-      ) : (
-        <span className="text-sm text-gray-500">Unknown</span>
-      )
-    }] : []),
     {
       key: 'actions',
       header: 'Actions',
@@ -151,19 +172,22 @@ const DailySalesList: React.FC<DailySalesListProps> = ({
         sortDirection={sortDirection}
         onSort={handleSort}
         rowKey={(sale) => sale.id!}
+        className="table-compact"
+        footer={totals && (
+          <tr className="table-row bg-gray-100 font-semibold">
+            <td className="table-cell">Total</td>
+            <td className="table-cell">{formatCurrency(totals.fuel_sale ?? 0)}</td>
+            <td className="table-cell">{formatCurrency(totals.store_sale ?? 0)}</td>
+            <td className="table-cell">{formatCurrency(totals.gst ?? 0)}</td>
+            <td className="table-cell">{formatCurrency(totals.card ?? 0)}</td>
+            <td className="table-cell">{formatCurrency(totals.cash ?? 0)}</td>
+            <td className="table-cell">{formatCurrency(totals.coupon ?? 0)}</td>
+            <td className="table-cell">{formatCurrency(totals.delivery ?? 0)}</td>
+            <td className="table-cell">{formatCurrency(totals.reported_total ?? 0)}</td>
+            <td className="table-cell"></td>
+          </tr>
+        )}
       />
-
-      {/* Totals Row */}
-      {totals && (
-        <div className="mt-4 p-4 bg-gray-100 rounded-lg">
-          <div className="grid grid-cols-4 gap-4 text-sm font-semibold">
-            <div>Total</div>
-            <div>{formatCurrency(totals.fuel_sale ?? 0)}</div>
-            <div>{formatCurrency(totals.store_sale ?? 0)}</div>
-            <div>{formatCurrency(totals.reported_total ?? 0)}</div>
-          </div>
-        </div>
-      )}
 
       {/* Delete Confirmation Modal */}
       <Modal
