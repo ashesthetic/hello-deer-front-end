@@ -424,6 +424,120 @@ export const workHoursApi = {
   getEmployeeHours: (employeeId: number) => api.get(`/employees/${employeeId}/work-hours`),
 };
 
+// Vendor Invoice interfaces
+export interface VendorInvoice {
+  id: number;
+  vendor_id: number;
+  invoice_date: string;
+  status: 'Paid' | 'Unpaid';
+  type: 'Income' | 'Expense';
+  payment_date?: string;
+  payment_method?: 'Card' | 'Cash' | 'Bank';
+  invoice_file_path?: string;
+  amount: number | string;
+  description?: string;
+  user_id: number;
+  created_at: string;
+  updated_at: string;
+  vendor?: {
+    id: number;
+    name: string;
+  };
+  user?: {
+    id: number;
+    name: string;
+    email: string;
+  };
+}
+
+export interface VendorInvoiceFormData {
+  vendor_id: number;
+  invoice_date: string;
+  status: 'Paid' | 'Unpaid';
+  type: 'Income' | 'Expense';
+  payment_date?: string;
+  payment_method?: 'Card' | 'Cash' | 'Bank';
+  invoice_file?: File;
+  amount: string;
+  description?: string;
+}
+
+// Vendor Invoice API
+export const vendorInvoicesApi = {
+  getAll: (params?: any) => api.get('/vendor-invoices', { params }),
+  getById: (id: number) => api.get(`/vendor-invoices/${id}`),
+  create: (data: VendorInvoiceFormData) => {
+    const formData = new FormData();
+    
+    // Add basic fields
+    formData.append('vendor_id', data.vendor_id.toString());
+    formData.append('invoice_date', data.invoice_date);
+    formData.append('status', data.status);
+    formData.append('type', data.type);
+    formData.append('amount', data.amount);
+    
+    // Add optional fields
+    if (data.payment_date) {
+      formData.append('payment_date', data.payment_date);
+    }
+    if (data.payment_method) {
+      formData.append('payment_method', data.payment_method);
+    }
+    if (data.description) {
+      formData.append('description', data.description);
+    }
+    
+    // Add file if provided
+    if (data.invoice_file) {
+      formData.append('invoice_file', data.invoice_file);
+    }
+    
+    return api.post('/vendor-invoices', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+  update: (id: number, data: VendorInvoiceFormData) => {
+    const formData = new FormData();
+    
+    // Add basic fields
+    formData.append('vendor_id', data.vendor_id.toString());
+    formData.append('invoice_date', data.invoice_date);
+    formData.append('status', data.status);
+    formData.append('type', data.type);
+    formData.append('amount', data.amount);
+    
+    // Add optional fields
+    if (data.payment_date) {
+      formData.append('payment_date', data.payment_date);
+    }
+    if (data.payment_method) {
+      formData.append('payment_method', data.payment_method);
+    }
+    if (data.description) {
+      formData.append('description', data.description);
+    }
+    
+    // Add file if provided
+    if (data.invoice_file) {
+      formData.append('invoice_file', data.invoice_file);
+    }
+
+    // Laravel fix: use POST with _method=PUT
+    formData.append('_method', 'PUT');
+    
+    return api.post(`/vendor-invoices/${id}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+  delete: (id: number) => api.delete(`/vendor-invoices/${id}`),
+  getVendors: () => api.get('/vendor-invoices/vendors'),
+  downloadFile: (id: number) => api.get(`/vendor-invoices/${id}/download`, { responseType: 'blob' }),
+};
+
 // User Management API (Admin only)
 export const usersApi = {
   getAll: (params?: any) => api.get('/users', { params }),

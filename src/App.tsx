@@ -34,6 +34,10 @@ import PayStubsPage from './pages/PayStubsPage';
 import WorkHoursListPage from './pages/WorkHoursListPage';
 import WorkHoursEditPage from './pages/WorkHoursEditPage';
 import WorkHoursViewPage from './pages/WorkHoursViewPage';
+import VendorInvoicesPage from './pages/VendorInvoicesPage';
+import VendorInvoiceAddPage from './pages/VendorInvoiceAddPage';
+import VendorInvoiceEditPage from './pages/VendorInvoiceEditPage';
+import VendorInvoiceViewPage from './pages/VendorInvoiceViewPage';
 
 const App: React.FC = () => {
   const dispatch = useDispatch();
@@ -192,6 +196,22 @@ const App: React.FC = () => {
           <Route 
             path="/accounting/expense" 
             element={isAuthenticated ? <Layout><ExpensePage /></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/accounting/vendor-invoices" 
+            element={isAuthenticated ? <Layout><VendorInvoicesPage /></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/accounting/vendor-invoices/add" 
+            element={isAuthenticated ? <Layout><VendorInvoiceAddPage /></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/accounting/vendor-invoices/:id" 
+            element={isAuthenticated ? <Layout><VendorInvoiceViewPage /></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/accounting/vendor-invoices/:id/edit" 
+            element={isAuthenticated ? <Layout><VendorInvoiceEditPage /></Layout> : <Navigate to="/login" />} 
           />
           
           {/* Users Route */}
