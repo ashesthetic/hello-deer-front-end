@@ -49,22 +49,66 @@ export interface UpdateUserData {
 export interface DailySale {
   id?: number;
   date: string;
+  
+  // Daily Total Section
   fuel_sale: number | undefined;
   store_sale: number | undefined;
+  store_discount: number | undefined;
   gst: number | undefined;
+  penny_rounding: number | undefined;
+  daily_total?: number;
+  
+  // Breakdown Section
   card: number | undefined;
   cash: number | undefined;
   coupon: number | undefined;
   delivery: number | undefined;
+  lottery_payout: number | undefined;
+  breakdown_total?: number;
+  
+  // General Section
   reported_total: number | undefined;
+  number_of_safedrops: number | undefined;
+  safedrops_amount: number | undefined;
+  cash_on_hand: number | undefined;
+  
+  // Card Transactions - POS Transaction
+  pos_visa: number | undefined;
+  pos_mastercard: number | undefined;
+  pos_amex: number | undefined;
+  pos_commercial: number | undefined;
+  pos_up_credit: number | undefined;
+  pos_discover: number | undefined;
+  pos_interac_debit: number | undefined;
+  
+  // Card Transactions - AFD Transaction
+  afd_visa: number | undefined;
+  afd_mastercard: number | undefined;
+  afd_amex: number | undefined;
+  afd_commercial: number | undefined;
+  afd_up_credit: number | undefined;
+  afd_discover: number | undefined;
+  afd_interac_debit: number | undefined;
+  
+  // Loyalty Section
+  journey_discount: number | undefined;
+  aeroplan_discount: number | undefined;
+  
+  // Calculated totals
+  total_pos_transactions?: number;
+  total_afd_transactions?: number;
+  total_loyalty_discounts?: number;
+  
+  // Legacy fields for backward compatibility
+  total_product_sale?: number;
+  total_counter_sale?: number;
+  grand_total?: number;
+  
   notes?: string;
   user_id?: number;
   user?: User;
   created_at?: string;
   updated_at?: string;
-  total_product_sale?: number;
-  total_counter_sale?: number;
-  grand_total?: number;
 }
 
 export interface DailyFuel {
