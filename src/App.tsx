@@ -38,6 +38,15 @@ import VendorInvoicesPage from './pages/VendorInvoicesPage';
 import VendorInvoiceAddPage from './pages/VendorInvoiceAddPage';
 import VendorInvoiceEditPage from './pages/VendorInvoiceEditPage';
 import VendorInvoiceViewPage from './pages/VendorInvoiceViewPage';
+import SettlementReportPage from './pages/SettlementReportPage';
+import ProvidersPage from './pages/ProvidersPage';
+import ProviderAddPage from './pages/ProviderAddPage';
+import ProviderEditPage from './pages/ProviderEditPage';
+import ProviderViewPage from './pages/ProviderViewPage';
+import ProviderBillsPage from './pages/ProviderBillsPage';
+import ProviderBillAddPage from './pages/ProviderBillAddPage';
+import ProviderBillEditPage from './pages/ProviderBillEditPage';
+import ProviderBillViewPage from './pages/ProviderBillViewPage';
 
 const App: React.FC = () => {
   const dispatch = useDispatch();
@@ -171,6 +180,10 @@ const App: React.FC = () => {
             path="/reports/fuels" 
             element={isAuthenticated ? <Layout><FuelsReportPage /></Layout> : <Navigate to="/login" />} 
           />
+          <Route 
+            path="/reports/settlement" 
+            element={isAuthenticated ? <Layout><SettlementReportPage /></Layout> : <Navigate to="/login" />} 
+          />
           
           {/* Accounting Routes */}
           <Route 
@@ -212,6 +225,42 @@ const App: React.FC = () => {
           <Route 
             path="/accounting/vendor-invoices/:id/edit" 
             element={isAuthenticated ? <Layout><VendorInvoiceEditPage /></Layout> : <Navigate to="/login" />} 
+          />
+          
+          {/* Provider Routes */}
+          <Route 
+            path="/accounting/providers" 
+            element={isAuthenticated ? <Layout><ProvidersPage /></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/accounting/providers/add" 
+            element={isAuthenticated ? <Layout><ProviderAddPage /></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/accounting/providers/:id" 
+            element={isAuthenticated ? <Layout><ProviderViewPage /></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/accounting/providers/:id/edit" 
+            element={isAuthenticated ? <Layout><ProviderEditPage /></Layout> : <Navigate to="/login" />} 
+          />
+          
+          {/* Provider Bill Routes */}
+          <Route 
+            path="/accounting/provider-bills" 
+            element={isAuthenticated ? <Layout><ProviderBillsPage /></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/accounting/provider-bills/add" 
+            element={isAuthenticated ? <Layout><ProviderBillAddPage /></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/accounting/provider-bills/:id" 
+            element={isAuthenticated ? <Layout><ProviderBillViewPage /></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/accounting/provider-bills/:id/edit" 
+            element={isAuthenticated ? <Layout><ProviderBillEditPage /></Layout> : <Navigate to="/login" />} 
           />
           
           {/* Users Route */}

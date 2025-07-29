@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -13,6 +13,7 @@ import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { dailySalesApi } from '../services/api';
 import { DailySale } from '../types';
 import { usePageTitle } from '../hooks/usePageTitle';
+import { exportSalesReportToPDF } from '../utils/pdfExport';
 
 ChartJS.register(
   CategoryScale,
@@ -29,6 +30,8 @@ const SalesReportPage: React.FC = () => {
   const [sales, setSales] = useState<DailySale[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
+  const reportRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchCurrentMonthSales();
@@ -50,6 +53,27 @@ const SalesReportPage: React.FC = () => {
       setLoading(false);
     }
   };
+
+  const handleExportPDF = async () => {
+    if (!reportRef.current) {
+      alert('Report content not found');
+      return;
+    }
+
+    setExporting(true);
+    try {
+      const currentDate = new Date();
+      const monthName = currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      await exportSalesReportToPDF(reportRef.current, monthName);
+    } catch (error) {
+      console.error('Export failed:', error);
+      alert('Failed to export PDF. Please try again.');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const currentMonthName = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
   const formatDate = (dateString: string) => {
     // Split the date string and format it directly to avoid timezone issues
@@ -391,14 +415,33 @@ const SalesReportPage: React.FC = () => {
     );
   }
 
-  const currentMonthName = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Sales Report</h1>
-          <p className="text-gray-600">Comprehensive analysis of daily sales performance - {currentMonthName}</p>
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Sales Report</h1>
+            <p className="text-gray-600">Comprehensive analysis of daily sales performance - {currentMonthName}</p>
+          </div>
+          <button
+            onClick={handleExportPDF}
+            disabled={exporting || loading || sales.length === 0}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+          >
+            {exporting ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                <span>Exporting...</span>
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <span>Export PDF</span>
+              </>
+            )}
+          </button>
         </div>
 
         {sales.length === 0 ? (
@@ -406,7 +449,7 @@ const SalesReportPage: React.FC = () => {
             <p className="text-gray-500 text-center">No sales data available for the current month.</p>
           </div>
         ) : (
-          <div className="space-y-6">
+          <div ref={reportRef} className="space-y-6">
             {/* Weekly Groups vs Reported Total */}
             <div className="bg-white rounded-lg shadow-lg p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Weekly Groups vs Reported Total (Average)</h3>

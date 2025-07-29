@@ -170,7 +170,7 @@ const DailySalesDetail: React.FC<DailySalesDetailProps> = ({
         {/* POS Transaction Sub-section */}
         <div className="mb-6">
           <h4 className="text-md font-semibold mb-3 text-gray-700">POS Transaction</h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-8 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">VISA</label>
               <p className="font-semibold text-purple-600">{formatCurrencyValue(sale.pos_visa)}</p>
@@ -199,6 +199,10 @@ const DailySalesDetail: React.FC<DailySalesDetailProps> = ({
               <label className="block text-sm font-medium text-gray-700">INTERAC DEBIT</label>
               <p className="font-semibold text-purple-600">{formatCurrencyValue(sale.pos_interac_debit)}</p>
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">NUMBER OF DEBIT TRANSACTION</label>
+              <p className="font-semibold text-purple-600">{sale.pos_debit_transaction_count || 0}</p>
+            </div>
           </div>
                       <div className="mt-2 text-right">
             <span className="text-sm text-gray-600">POS Total: {formatCurrency(totalPosTransactions)}</span>
@@ -208,7 +212,7 @@ const DailySalesDetail: React.FC<DailySalesDetailProps> = ({
         {/* AFD Transaction Sub-section */}
         <div>
           <h4 className="text-md font-semibold mb-3 text-gray-700">AFD Transaction</h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-8 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">VISA</label>
               <p className="font-semibold text-purple-600">{formatCurrencyValue(sale.afd_visa)}</p>
@@ -236,6 +240,10 @@ const DailySalesDetail: React.FC<DailySalesDetailProps> = ({
             <div>
               <label className="block text-sm font-medium text-gray-700">INTERAC DEBIT</label>
               <p className="font-semibold text-purple-600">{formatCurrencyValue(sale.afd_interac_debit)}</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">NUMBER OF DEBIT TRANSACTION</label>
+              <p className="font-semibold text-purple-600">{sale.afd_debit_transaction_count || 0}</p>
             </div>
           </div>
                       <div className="mt-2 text-right">

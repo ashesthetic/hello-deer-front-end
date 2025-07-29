@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Bar } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -12,6 +12,7 @@ import {
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { dailyFuelsApi } from '../services/api';
 import { usePageTitle } from '../hooks/usePageTitle';
+import { exportSalesReportToPDF } from '../utils/pdfExport';
 
 ChartJS.register(
   CategoryScale,
@@ -28,8 +29,10 @@ const FuelsReportPage: React.FC = () => {
   const [fuels, setFuels] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth() + 1);
+  const reportRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchFuels();
@@ -99,6 +102,24 @@ const FuelsReportPage: React.FC = () => {
     const now = new Date();
     setCurrentYear(now.getFullYear());
     setCurrentMonth(now.getMonth() + 1);
+  };
+
+  const handleExportPDF = async () => {
+    if (!reportRef.current) {
+      alert('Report content not found');
+      return;
+    }
+
+    setExporting(true);
+    try {
+      const monthName = `${getMonthName(currentMonth)} ${currentYear}`;
+      await exportSalesReportToPDF(reportRef.current, `fuels-report-${monthName.toLowerCase().replace(' ', '-')}`);
+    } catch (error) {
+      console.error('Export failed:', error);
+      alert('Failed to export PDF. Please try again.');
+    } finally {
+      setExporting(false);
+    }
   };
 
   // Prepare chart data for amounts
@@ -325,8 +346,29 @@ const FuelsReportPage: React.FC = () => {
             <p className="text-gray-600">Comprehensive analysis of daily fuel sales and quantities</p>
           </div>
           
-          {/* Month Navigation */}
-          <div className="flex items-center space-x-4">
+            {/* Export PDF Button */}
+            <button
+              onClick={handleExportPDF}
+              disabled={exporting || loading || fuels.length === 0}
+              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+            >
+              {exporting ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <span>Exporting...</span>
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <span>Export PDF</span>
+                </>
+              )}
+            </button>
+            
+            {/* Month Navigation */}
+            <div className="flex items-center space-x-4">
             <button
               onClick={handlePreviousMonth}
               className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -356,8 +398,10 @@ const FuelsReportPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Report Content */}
+        <div ref={reportRef} className="space-y-6">
+          {/* Summary Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="bg-white rounded-lg shadow-lg p-6">
             <h3 className="text-sm font-medium text-gray-500">Total Quantity</h3>
             <p className="text-2xl font-bold text-gray-900">{formatQuantity(totals.total_quantity)}</p>
@@ -492,6 +536,7 @@ const FuelsReportPage: React.FC = () => {
               </tbody>
             </table>
           </div>
+        </div>
         </div>
       </div>
     </div>

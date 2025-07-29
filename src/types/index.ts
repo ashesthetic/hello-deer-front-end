@@ -80,6 +80,7 @@ export interface DailySale {
   pos_up_credit: number | undefined;
   pos_discover: number | undefined;
   pos_interac_debit: number | undefined;
+  pos_debit_transaction_count: number | undefined;
   
   // Card Transactions - AFD Transaction
   afd_visa: number | undefined;
@@ -89,6 +90,7 @@ export interface DailySale {
   afd_up_credit: number | undefined;
   afd_discover: number | undefined;
   afd_interac_debit: number | undefined;
+  afd_debit_transaction_count: number | undefined;
   
   // Loyalty Section
   journey_discount: number | undefined;

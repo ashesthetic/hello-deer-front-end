@@ -38,6 +38,7 @@ const DailySalesForm: React.FC<DailySalesFormProps> = ({
     pos_up_credit: undefined,
     pos_discover: undefined,
     pos_interac_debit: undefined,
+    pos_debit_transaction_count: undefined,
     afd_visa: undefined,
     afd_mastercard: undefined,
     afd_amex: undefined,
@@ -45,6 +46,7 @@ const DailySalesForm: React.FC<DailySalesFormProps> = ({
     afd_up_credit: undefined,
     afd_discover: undefined,
     afd_interac_debit: undefined,
+    afd_debit_transaction_count: undefined,
     journey_discount: undefined,
     aeroplan_discount: undefined,
     notes: ''
@@ -76,6 +78,7 @@ const DailySalesForm: React.FC<DailySalesFormProps> = ({
         pos_up_credit: initialData.pos_up_credit,
         pos_discover: initialData.pos_discover,
         pos_interac_debit: initialData.pos_interac_debit,
+        pos_debit_transaction_count: initialData.pos_debit_transaction_count,
         afd_visa: initialData.afd_visa,
         afd_mastercard: initialData.afd_mastercard,
         afd_amex: initialData.afd_amex,
@@ -83,6 +86,7 @@ const DailySalesForm: React.FC<DailySalesFormProps> = ({
         afd_up_credit: initialData.afd_up_credit,
         afd_discover: initialData.afd_discover,
         afd_interac_debit: initialData.afd_interac_debit,
+        afd_debit_transaction_count: initialData.afd_debit_transaction_count,
         journey_discount: initialData.journey_discount,
         aeroplan_discount: initialData.aeroplan_discount,
       });
@@ -142,6 +146,7 @@ const DailySalesForm: React.FC<DailySalesFormProps> = ({
       pos_up_credit: formData.pos_up_credit || 0,
       pos_discover: formData.pos_discover || 0,
       pos_interac_debit: formData.pos_interac_debit || 0,
+      pos_debit_transaction_count: formData.pos_debit_transaction_count || 0,
       afd_visa: formData.afd_visa || 0,
       afd_mastercard: formData.afd_mastercard || 0,
       afd_amex: formData.afd_amex || 0,
@@ -149,6 +154,7 @@ const DailySalesForm: React.FC<DailySalesFormProps> = ({
       afd_up_credit: formData.afd_up_credit || 0,
       afd_discover: formData.afd_discover || 0,
       afd_interac_debit: formData.afd_interac_debit || 0,
+      afd_debit_transaction_count: formData.afd_debit_transaction_count || 0,
       journey_discount: formData.journey_discount || 0,
       aeroplan_discount: formData.aeroplan_discount || 0,
     };
@@ -435,7 +441,7 @@ const DailySalesForm: React.FC<DailySalesFormProps> = ({
           {/* POS Transaction Sub-section */}
           <div className="mb-6">
             <h4 className="text-md font-semibold mb-3 text-gray-700">POS Transaction</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-8 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">VISA</label>
                 <input
@@ -513,6 +519,18 @@ const DailySalesForm: React.FC<DailySalesFormProps> = ({
                   placeholder="0.00"
                 />
               </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">NUMBER OF DEBIT TRANSACTION</label>
+                <input
+                  type="number"
+                  min="0"
+                  required
+                  value={formData.pos_debit_transaction_count ?? ''}
+                  onChange={(e) => handleInputChange('pos_debit_transaction_count', e.target.value === '' ? undefined : parseInt(e.target.value))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="0"
+                />
+              </div>
             </div>
             <div className="mt-2 text-right">
               <span className="text-sm text-gray-600">POS Total: {formatCurrency(totalPosTransactions)}</span>
@@ -522,7 +540,7 @@ const DailySalesForm: React.FC<DailySalesFormProps> = ({
           {/* AFD Transaction Sub-section */}
           <div>
             <h4 className="text-md font-semibold mb-3 text-gray-700">AFD Transaction</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-8 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">VISA</label>
                 <input
@@ -598,6 +616,18 @@ const DailySalesForm: React.FC<DailySalesFormProps> = ({
                   onChange={(e) => handleCurrencyInputChange('afd_interac_debit', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="0.00"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">NUMBER OF DEBIT TRANSACTION</label>
+                <input
+                  type="number"
+                  min="0"
+                  required
+                  value={formData.afd_debit_transaction_count ?? ''}
+                  onChange={(e) => handleInputChange('afd_debit_transaction_count', e.target.value === '' ? undefined : parseInt(e.target.value))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="0"
                 />
               </div>
             </div>

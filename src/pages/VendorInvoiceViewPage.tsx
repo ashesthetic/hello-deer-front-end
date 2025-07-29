@@ -172,9 +172,15 @@ const VendorInvoiceViewPage: React.FC = () => {
             {/* Vendor Information */}
             <div>
               <h3 className="text-lg font-medium text-gray-900 mb-4">Vendor Information</h3>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Vendor Name</label>
-                <p className="text-gray-900">{invoice.vendor?.name}</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Vendor Name</label>
+                  <p className="text-gray-900">{invoice.vendor?.name}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Invoice Number</label>
+                  <p className="text-gray-900">{invoice.invoice_number || 'Not specified'}</p>
+                </div>
               </div>
             </div>
 
@@ -187,8 +193,16 @@ const VendorInvoiceViewPage: React.FC = () => {
                   <p className="text-gray-900">{formatDateDetailed(invoice.invoice_date)}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Amount</label>
-                  <p className="text-2xl font-bold text-gray-900">{formatCurrency(Number(invoice.amount))}</p>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Total</label>
+                  <p className="text-2xl font-bold text-gray-900">{formatCurrency(Number(invoice.total))}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">GST</label>
+                  <p className="text-gray-900">{formatCurrency(Number(invoice.gst))}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Subtotal</label>
+                  <p className="text-gray-900">{formatCurrency(Number(invoice.subtotal))}</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
@@ -238,6 +252,17 @@ const VendorInvoiceViewPage: React.FC = () => {
                   >
                     Download
                   </button>
+                </div>
+              </div>
+            )}
+
+            {/* Notes */}
+            {invoice.notes && (
+              <div>
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Notes</h3>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                  <p className="text-gray-900 whitespace-pre-wrap">{invoice.notes}</p>
                 </div>
               </div>
             )}

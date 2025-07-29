@@ -9,7 +9,7 @@ import { useUrlState } from '../hooks/useUrlState';
 import { formatDateForDisplay, formatCurrency } from '../utils/dateUtils';
 import ConfirmationModal from '../components/ConfirmationModal';
 
-type SortField = 'invoice_date' | 'status' | 'type' | 'amount' | 'payment_date' | 'created_at' | 'updated_at';
+type SortField = 'invoice_date' | 'status' | 'type' | 'total' | 'payment_date' | 'created_at' | 'updated_at';
 
 const PER_PAGE_OPTIONS = [50, 100, 150, 200];
 
@@ -301,6 +301,12 @@ const VendorInvoicesPage: React.FC = () => {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    #
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Invoice No.
+                  </th>
                   <th 
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                     onClick={() => handleSort('invoice_date')}
@@ -315,10 +321,10 @@ const VendorInvoicesPage: React.FC = () => {
                   </th>
                   <th 
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                    onClick={() => handleSort('amount')}
+                    onClick={() => handleSort('total')}
                   >
-                    Amount
-                    {sortField === 'amount' && (
+                    Total
+                    {sortField === 'total' && (
                       <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
                     )}
                   </th>
@@ -351,13 +357,13 @@ const VendorInvoicesPage: React.FC = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {loading ? (
                   <tr>
-                    <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
+                    <td colSpan={9} className="px-6 py-4 text-center text-gray-500">
                       Loading...
                     </td>
                   </tr>
                 ) : invoices.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
+                    <td colSpan={9} className="px-6 py-4 text-center text-gray-500">
                       No vendor invoices found
                     </td>
                   </tr>
@@ -365,13 +371,19 @@ const VendorInvoicesPage: React.FC = () => {
                   invoices.map((invoice) => (
                     <tr key={invoice.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {invoice.id}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {invoice.invoice_number || '-'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {formatDateForDisplay(invoice.invoice_date)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {invoice.vendor?.name}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {formatCurrency(Number(invoice.amount))}
+                        {formatCurrency(Number(invoice.total))}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getTypeBadgeClass(invoice.type)}`}>

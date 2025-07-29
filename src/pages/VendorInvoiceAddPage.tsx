@@ -28,12 +28,15 @@ const VendorInvoiceAddPage: React.FC = () => {
 
   const [formData, setFormData] = useState<VendorInvoiceFormData>({
     vendor_id: 0,
+    invoice_number: '',
     invoice_date: getTodayString(),
     status: 'Unpaid',
     type: 'Expense',
     payment_date: '',
     payment_method: undefined,
-    amount: '',
+    gst: '',
+    total: '',
+    notes: '',
     description: '',
   });
 
@@ -96,8 +99,13 @@ const VendorInvoiceAddPage: React.FC = () => {
       return;
     }
 
-    if (!formData.amount || parseFloat(formData.amount) <= 0) {
-      setError('Please enter a valid amount');
+    if (!formData.total || parseFloat(formData.total) <= 0) {
+      setError('Please enter a valid total amount');
+      return;
+    }
+
+    if (!formData.gst || parseFloat(formData.gst) < 0) {
+      setError('Please enter a valid GST amount');
       return;
     }
 
@@ -198,6 +206,22 @@ const VendorInvoiceAddPage: React.FC = () => {
               </select>
             </div>
 
+            {/* Invoice Number */}
+            <div>
+              <label htmlFor="invoice_number" className="block text-sm font-medium text-gray-700 mb-1">
+                Vendor Invoice Number
+              </label>
+              <input
+                type="text"
+                id="invoice_number"
+                name="invoice_number"
+                value={formData.invoice_number}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter invoice number"
+              />
+            </div>
+
             {/* Invoice Date */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -224,24 +248,6 @@ const VendorInvoiceAddPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Amount */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Amount <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="number"
-                name="amount"
-                value={formData.amount}
-                onChange={handleInputChange}
-                step="0.01"
-                min="0"
-                required
-                placeholder="0.00"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
             {/* Type */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -257,6 +263,60 @@ const VendorInvoiceAddPage: React.FC = () => {
                 <option value="Expense">Expense</option>
                 <option value="Income">Income</option>
               </select>
+            </div>
+
+            {/* Subtotal (Read-only) */}
+            <div>
+              <label htmlFor="subtotal" className="block text-sm font-medium text-gray-700 mb-1">
+                Subtotal (Calculated)
+              </label>
+              <input
+                type="number"
+                id="subtotal"
+                name="subtotal"
+                value={formData.total && formData.gst ? (Number(formData.total) - Number(formData.gst)).toFixed(2) : ''}
+                readOnly
+                className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-600 cursor-not-allowed"
+                placeholder="Calculated automatically"
+              />
+            </div>
+
+            {/* GST */}
+            <div>
+              <label htmlFor="gst" className="block text-sm font-medium text-gray-700 mb-1">
+                GST <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="number"
+                id="gst"
+                name="gst"
+                value={formData.gst}
+                onChange={handleInputChange}
+                required
+                min="0"
+                step="0.01"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="0.00"
+              />
+            </div>
+
+            {/* Total */}
+            <div>
+              <label htmlFor="total" className="block text-sm font-medium text-gray-700 mb-1">
+                Total <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="number"
+                id="total"
+                name="total"
+                value={formData.total}
+                onChange={handleInputChange}
+                required
+                min="0"
+                step="0.01"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="0.00"
+              />
             </div>
 
             {/* Status */}
@@ -324,6 +384,22 @@ const VendorInvoiceAddPage: React.FC = () => {
                 </select>
               </div>
             )}
+
+            {/* Notes */}
+            <div className="md:col-span-2">
+              <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">
+                Notes
+              </label>
+              <textarea
+                id="notes"
+                name="notes"
+                value={formData.notes}
+                onChange={handleInputChange}
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter any additional notes..."
+              />
+            </div>
 
             {/* Invoice File Upload */}
             <div className="md:col-span-2">

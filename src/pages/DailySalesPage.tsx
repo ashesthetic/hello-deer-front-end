@@ -162,14 +162,22 @@ const DailySalesPage: React.FC = () => {
         <div className="space-y-6">
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold text-gray-900">Sales</h1>
-            {canCreate(currentUser) && (
+            <div className="flex space-x-3">
               <button
-                onClick={handleCreate}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onClick={() => navigate('/reports/settlement')}
+                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
               >
-                Add Sale
+                Generate Settlement Report
               </button>
-            )}
+              {canCreate(currentUser) && (
+                <button
+                  onClick={handleCreate}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  Add Sale
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Filters Section */}
