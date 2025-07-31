@@ -21,6 +21,7 @@ import VendorEditPage from './pages/VendorEditPage';
 import VendorViewPage from './pages/VendorViewPage';
 import IncomePage from './pages/IncomePage';
 import ExpensePage from './pages/ExpensePage';
+import BalancePage from './pages/BalancePage';
 import SettingsPage from './pages/SettingsPage';
 import UserManagementPage from './pages/UserManagementPage';
 import EmployeesPage from './pages/EmployeesPage';
@@ -32,6 +33,8 @@ import EmployeeEarningsPage from './pages/EmployeeEarningsPage';
 import WorkHourReportPage from './pages/WorkHourReportPage';
 import PayStubsPage from './pages/PayStubsPage';
 import WorkHoursListPage from './pages/WorkHoursListPage';
+import ExpenseReportPage from './pages/ExpenseReportPage';
+import IncomeReportPage from './pages/IncomeReportPage';
 import WorkHoursEditPage from './pages/WorkHoursEditPage';
 import WorkHoursViewPage from './pages/WorkHoursViewPage';
 import VendorInvoicesPage from './pages/VendorInvoicesPage';
@@ -184,6 +187,14 @@ const App: React.FC = () => {
             path="/reports/settlement" 
             element={isAuthenticated ? <Layout><SettlementReportPage /></Layout> : <Navigate to="/login" />} 
           />
+          <Route 
+            path="/reports/expense" 
+            element={isAuthenticated ? <Layout><ExpenseReportPage /></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/reports/income" 
+            element={isAuthenticated ? <Layout><IncomeReportPage /></Layout> : <Navigate to="/login" />} 
+          />
           
           {/* Accounting Routes */}
           <Route 
@@ -209,6 +220,10 @@ const App: React.FC = () => {
           <Route 
             path="/accounting/expense" 
             element={isAuthenticated ? <Layout><ExpensePage /></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/accounting/balance" 
+            element={isAuthenticated ? <Layout><BalancePage /></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/accounting/vendor-invoices" 
