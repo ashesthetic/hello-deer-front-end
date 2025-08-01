@@ -210,6 +210,7 @@ export interface SettlementReportResponse {
   data: SettlementReportEntry[];
   from_date: string;
   to_date: string;
+  specific_dates: string[];
   total_entries: number;
 }
 
@@ -224,8 +225,12 @@ export const dailySalesApi = {
     const url = year && month ? `/daily-sales/month/${year}/${month}` : '/daily-sales/month';
     return api.get(url);
   },
-  generateSettlementReport: (fromDate: string, toDate: string) => 
-    api.post('/daily-sales/settlement-report', { from_date: fromDate, to_date: toDate }),
+  generateSettlementReport: (fromDate: string, toDate: string, specificDates?: string[]) => 
+    api.post('/daily-sales/settlement-report', { 
+      from_date: fromDate, 
+      to_date: toDate, 
+      specific_dates: specificDates || [] 
+    }),
 };
 
 // Daily Fuels API

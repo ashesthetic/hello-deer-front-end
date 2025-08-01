@@ -10,6 +10,8 @@ const SettlementReportPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [fromDate, setFromDate] = useState(searchParams.get('from') || '');
   const [toDate, setToDate] = useState(searchParams.get('to') || '');
+  const [specificDates, setSpecificDates] = useState<string[]>([]);
+  const [newSpecificDate, setNewSpecificDate] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
@@ -33,7 +35,7 @@ const SettlementReportPage: React.FC = () => {
     setError(null);
 
     try {
-      const response = await dailySalesApi.generateSettlementReport(fromDate, toDate);
+      const response = await dailySalesApi.generateSettlementReport(fromDate, toDate, specificDates);
       setReportData(response.data.data);
       setShowReport(true);
       
@@ -44,6 +46,25 @@ const SettlementReportPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const addSpecificDate = () => {
+    if (newSpecificDate && !specificDates.includes(newSpecificDate)) {
+      // Validate date format
+      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+      if (!dateRegex.test(newSpecificDate)) {
+        setError('Please enter a valid date in YYYY-MM-DD format');
+        return;
+      }
+      
+      setSpecificDates([...specificDates, newSpecificDate]);
+      setNewSpecificDate('');
+      setError(null);
+    }
+  };
+
+  const removeSpecificDate = (dateToRemove: string) => {
+    setSpecificDates(specificDates.filter(date => date !== dateToRemove));
   };
 
   const formatCurrency = (amount: number) => {
@@ -128,7 +149,9 @@ const SettlementReportPage: React.FC = () => {
         {/* Form Section */}
         <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Generate Settlement Report</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+          
+          {/* Date Range Section */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end mb-6">
             <div>
               <label htmlFor="fromDate" className="block text-sm font-medium text-gray-700 mb-1">
                 From Date
@@ -165,6 +188,58 @@ const SettlementReportPage: React.FC = () => {
               </button>
             </div>
           </div>
+
+          {/* Specific Dates Section */}
+          <div className="border-t border-gray-200 pt-6">
+            <h3 className="text-md font-medium text-gray-900 mb-3">Additional Specific Dates (Optional)</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Add specific dates to include in the report in addition to the date range above.
+            </p>
+            
+            <div className="flex flex-wrap gap-2 mb-4">
+              {specificDates.map((date, index) => (
+                <span
+                  key={index}
+                  className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800"
+                >
+                  {date}
+                  <button
+                    type="button"
+                    onClick={() => removeSpecificDate(date)}
+                    className="ml-2 text-blue-600 hover:text-blue-800 focus:outline-none"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </span>
+              ))}
+            </div>
+
+            <div className="flex gap-2">
+              <input
+                type="date"
+                value={newSpecificDate}
+                onChange={(e) => setNewSpecificDate(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addSpecificDate();
+                  }
+                }}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Select a date"
+              />
+              <button
+                type="button"
+                onClick={addSpecificDate}
+                disabled={!newSpecificDate}
+                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Add Date
+              </button>
+            </div>
+          </div>
         </div>
 
         {error && (
@@ -183,8 +258,18 @@ const SettlementReportPage: React.FC = () => {
                 </h3>
                 <div className="text-sm text-gray-600">
                   {fromDate} to {toDate}
+                  {specificDates.length > 0 && (
+                    <span className="ml-2 text-blue-600">
+                      + {specificDates.length} specific date{specificDates.length > 1 ? 's' : ''}
+                    </span>
+                  )}
                 </div>
               </div>
+              {specificDates.length > 0 && (
+                <div className="mt-2 text-xs text-gray-500">
+                  Additional dates: {specificDates.join(', ')}
+                </div>
+              )}
             </div>
 
             <div className="overflow-x-auto">
