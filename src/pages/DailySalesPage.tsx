@@ -9,7 +9,7 @@ import { canCreate } from '../utils/permissions';
 import { usePageTitle } from '../hooks/usePageTitle';
 import { useUrlState } from '../hooks/useUrlState';
 
-type SortField = 'date' | 'fuel_sale' | 'store_sale' | 'gst' | 'card' | 'cash' | 'coupon' | 'delivery' | 'reported_total';
+type SortField = 'date' | 'fuel_sale' | 'store_sale' | 'gst' | 'card' | 'cash' | 'reported_total' | 'approximate_profit';
 
 const PER_PAGE_OPTIONS = [50, 100, 150, 200];
 
@@ -140,18 +140,16 @@ const DailySalesPage: React.FC = () => {
       gst: totals.gst + (parseFloat(sale.gst?.toString() || '0')),
       card: totals.card + (parseFloat(sale.card?.toString() || '0')),
       cash: totals.cash + (parseFloat(sale.cash?.toString() || '0')),
-      coupon: totals.coupon + (parseFloat(sale.coupon?.toString() || '0')),
-      delivery: totals.delivery + (parseFloat(sale.delivery?.toString() || '0')),
       reported_total: totals.reported_total + (parseFloat(sale.reported_total?.toString() || '0')),
+      approximate_profit: totals.approximate_profit + (parseFloat(sale.approximate_profit?.toString() || '0')),
     }), {
       fuel_sale: 0,
       store_sale: 0,
       gst: 0,
       card: 0,
       cash: 0,
-      coupon: 0,
-      delivery: 0,
       reported_total: 0,
+      approximate_profit: 0,
     });
   };
 

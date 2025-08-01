@@ -96,10 +96,19 @@ export interface DailySale {
   journey_discount: number | undefined;
   aeroplan_discount: number | undefined;
   
+  // Low Margin Items Section
+  tobacco_25: number | undefined;
+  tobacco_20: number | undefined;
+  lottery: number | undefined;
+  prepay: number | undefined;
+  
   // Calculated totals
   total_pos_transactions?: number;
   total_afd_transactions?: number;
   total_loyalty_discounts?: number;
+  total_low_margin_items?: number;
+  store_sale_calculated?: number;
+  approximate_profit?: number;
   
   // Legacy fields for backward compatibility
   total_product_sale?: number;
