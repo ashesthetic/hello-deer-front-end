@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { DailySale, DailyFuel, LoginCredentials, CreateUserData, UpdateUserData, Vendor, CreateVendorData, UpdateVendorData } from '../types';
+import { DailySale, DailyFuel, FuelVolume, LoginCredentials, CreateUserData, UpdateUserData, Vendor, CreateVendorData, UpdateVendorData } from '../types';
 
 // Employee interfaces
 export interface Employee {
@@ -242,6 +242,23 @@ export const dailyFuelsApi = {
   delete: (id: number) => api.delete(`/daily-fuels/${id}`),
   getByMonth: (year?: number, month?: number) => {
     const url = year && month ? `/daily-fuels/month/${year}/${month}` : '/daily-fuels/month';
+    return api.get(url);
+  },
+};
+
+// Fuel Volume API
+export const fuelVolumeApi = {
+  index: (params?: string) => api.get(`/fuel-volumes${params ? `?${params}` : ''}`),
+  show: (id: number) => api.get(`/fuel-volumes/${id}`),
+  store: (data: Omit<FuelVolume, 'id'>) => api.post('/fuel-volumes', data),
+  update: (id: number, data: Partial<FuelVolume>) => api.put(`/fuel-volumes/${id}`, data),
+  delete: (id: number) => api.delete(`/fuel-volumes/${id}`),
+  getByMonth: (year?: number, month?: number) => {
+    const url = year && month ? `/fuel-volumes/month/${year}/${month}` : '/fuel-volumes/month';
+    return api.get(url);
+  },
+  getDailySummary: (date?: string) => {
+    const url = date ? `/fuel-volumes/daily-summary/${date}` : '/fuel-volumes/daily-summary';
     return api.get(url);
   },
 };

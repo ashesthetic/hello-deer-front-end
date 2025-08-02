@@ -13,6 +13,9 @@ import DailySalesEditPage from './pages/DailySalesEditPage';
 import DailyFuelsPage from './pages/DailyFuelsPage';
 import DailyFuelViewPage from './pages/DailyFuelViewPage';
 import DailyFuelEditPage from './pages/DailyFuelEditPage';
+import FuelVolumesPage from './pages/FuelVolumesPage';
+import FuelVolumeViewPage from './pages/FuelVolumeViewPage';
+import FuelVolumeEditPage from './pages/FuelVolumeEditPage';
 import SalesReportPage from './pages/SalesReportPage';
 import FuelsReportPage from './pages/FuelsReportPage';
 import VendorsPage from './pages/VendorsPage';
@@ -120,6 +123,24 @@ const App: React.FC = () => {
           <Route 
             path="/fuels/new" 
             element={isAuthenticated ? <Layout><DailyFuelEditPage /></Layout> : <Navigate to="/login" />} 
+          />
+          
+          {/* Fuel Volume Routes */}
+          <Route 
+            path="/fuel-volumes" 
+            element={isAuthenticated ? <Layout><FuelVolumesPage /></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/fuel-volumes/:id" 
+            element={isAuthenticated ? <Layout><FuelVolumeViewPage /></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/fuel-volumes/:id/edit" 
+            element={isAuthenticated ? <Layout><FuelVolumeEditPage /></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/fuel-volumes/new" 
+            element={isAuthenticated ? <Layout><FuelVolumeEditPage /></Layout> : <Navigate to="/login" />} 
           />
           
           {/* Employees Routes */}
