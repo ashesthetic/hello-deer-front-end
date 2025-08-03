@@ -85,16 +85,44 @@ const WeeklyFuelTrendCard: React.FC<WeeklyFuelTrendCardProps> = ({ title, dataFi
       rangeData.forEach((fuel: any) => {
         const fuelDate = new Date(fuel.date);
         const weekStart = new Date(fuelDate);
-        weekStart.setDate(weekStart.getDate() - fuelDate.getDay()); // Start of week (Sunday)
-        const weekKey = weekStart.toISOString().split('T')[0];
+        // Calculate Monday as start of week (0 = Sunday, 1 = Monday, etc.)
+        const dayOfWeek = fuelDate.getDay();
+        const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // If Sunday, go back 6 days; otherwise go back (dayOfWeek - 1) days
+        weekStart.setDate(weekStart.getDate() - daysToMonday);
+        
+        // Use timezone-aware date formatting for the week key
+        const weekKey = weekStart.toLocaleDateString('en-CA', {
+          timeZone: 'America/Edmonton',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        }).replace(/\//g, '-');
         
         const currentValue = weekMap.get(weekKey) || 0;
         let newValue = 0;
         
+        // Debug logging
+        console.log('Processing fuel data:', {
+          date: fuel.date,
+          dataField,
+          total_amount: fuel.total_amount,
+          total_quantity: fuel.total_quantity,
+          regular_total_sale: fuel.regular_total_sale,
+          plus_total_sale: fuel.plus_total_sale,
+          sup_plus_total_sale: fuel.sup_plus_total_sale,
+          diesel_total_sale: fuel.diesel_total_sale,
+          regular_quantity: fuel.regular_quantity,
+          plus_quantity: fuel.plus_quantity,
+          sup_plus_quantity: fuel.sup_plus_quantity,
+          diesel_quantity: fuel.diesel_quantity
+        });
+        
         if (dataField === 'total_amount') {
-          newValue = (fuel.regular_total || 0) + (fuel.plus_total || 0) + (fuel.sup_plus_total || 0) + (fuel.diesel_total || 0);
+          // Use calculated total_amount if available, otherwise calculate from individual fields
+          newValue = fuel.total_amount || (fuel.regular_total_sale || 0) + (fuel.plus_total_sale || 0) + (fuel.sup_plus_total_sale || 0) + (fuel.diesel_total_sale || 0);
         } else if (dataField === 'total_quantity') {
-          newValue = (fuel.regular_quantity || 0) + (fuel.plus_quantity || 0) + (fuel.sup_plus_quantity || 0) + (fuel.diesel_quantity || 0);
+          // Use calculated total_quantity if available, otherwise calculate from individual fields
+          newValue = fuel.total_quantity || (fuel.regular_quantity || 0) + (fuel.plus_quantity || 0) + (fuel.sup_plus_quantity || 0) + (fuel.diesel_quantity || 0);
         } else if (dataField === 'regular_total_sale') {
           newValue = fuel.regular_total_sale || 0;
         } else if (dataField === 'plus_total_sale') {
@@ -105,6 +133,7 @@ const WeeklyFuelTrendCard: React.FC<WeeklyFuelTrendCardProps> = ({ title, dataFi
           newValue = fuel.diesel_total_sale || 0;
         }
         
+        console.log('Calculated newValue:', newValue);
         weekMap.set(weekKey, currentValue + newValue);
       });
 
@@ -124,8 +153,13 @@ const WeeklyFuelTrendCard: React.FC<WeeklyFuelTrendCardProps> = ({ title, dataFi
         setPercentageChange(change);
       }
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to fetch weekly trend data:', error);
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
     } finally {
       setLoading(false);
     }
@@ -155,9 +189,9 @@ const WeeklyFuelTrendCard: React.FC<WeeklyFuelTrendCardProps> = ({ title, dataFi
     const [year, month, day] = dateString.split('T')[0].split('-');
     const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
     const endOfWeek = new Date(date);
-    endOfWeek.setDate(date.getDate() + 6);
+    endOfWeek.setDate(date.getDate() + 6); // Monday + 6 days = Sunday
     
-    return `${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${endOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+    return `${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'America/Edmonton' })} - ${endOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'America/Edmonton' })}`;
   };
 
   const isQuantityField = dataField === 'total_quantity';

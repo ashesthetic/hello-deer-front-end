@@ -60,14 +60,34 @@ const SalesReportCard: React.FC<SalesReportCardProps> = ({ title, dataField, col
         return;
       }
 
-      // Find the last entry date
-      const lastEntryDate = new Date(salesData[0].date);
+      // Find the last entry date - ensure it's in Alberta timezone
+      const lastEntryDateStr = salesData[0].date.split('T')[0]; // Get just the date part
+      const lastEntryDate = new Date(lastEntryDateStr + 'T00:00:00'); // Create date at midnight
       const startDate = new Date(lastEntryDate);
       startDate.setDate(startDate.getDate() - 7); // 8 days before the last entry
 
-      // Format dates for API
-      const startDateStr = startDate.toISOString().split('T')[0];
-      const endDateStr = lastEntryDate.toISOString().split('T')[0];
+      // Format dates for API using timezone-aware formatting
+      const startDateStr = startDate.toLocaleDateString('en-CA', {
+        timeZone: 'America/Edmonton',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      }).replace(/\//g, '-');
+      const endDateStr = lastEntryDate.toLocaleDateString('en-CA', {
+        timeZone: 'America/Edmonton',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      }).replace(/\//g, '-');
+
+      console.log('SalesReportCard - Date range:', {
+        originalLastEntryDate: salesData[0].date,
+        lastEntryDateStr,
+        startDateStr,
+        endDateStr,
+        startDate: startDate.toISOString(),
+        lastEntryDate: lastEntryDate.toISOString()
+      });
 
       // Get data for the last 8 days from the last entry
       const rangeResponse = await dailySalesApi.getAll({
@@ -96,6 +116,12 @@ const SalesReportCard: React.FC<SalesReportCardProps> = ({ title, dataField, col
         .map(([date, value]) => ({ date, value }))
         .sort((a, b) => a.date.localeCompare(b.date))
         .slice(-8); // Take only the last 8 entries
+
+      console.log('SalesReportCard - Final data:', {
+        rangeDataCount: rangeData.length,
+        dateMapEntries: Array.from(dateMap.entries()),
+        sortedData: sortedData.map(item => ({ date: item.date, value: item.value, formattedDate: formatDateForDisplay(item.date) }))
+      });
 
       setData(sortedData);
 

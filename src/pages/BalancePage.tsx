@@ -4,6 +4,7 @@ import { dailySalesApi, vendorInvoicesApi, providerBillsApi, VendorInvoice, Prov
 import { DailySale } from '../types';
 import { formatCurrency } from '../utils/currencyUtils';
 import { Pagination } from '../components/common/Pagination';
+import { formatDateForDisplay } from '../utils/dateUtils';
 
 interface BalanceItem {
   id: number;
@@ -41,18 +42,14 @@ interface FilterOption {
 
 // Utility function to get today's date in YYYY-MM-DD format using local timezone
 const getTodayDate = (): string => {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+  return new Date().toISOString().split('T')[0];
 };
 
 // Test function to verify date calculation
 const testDateCalculation = () => {
   const today = getTodayDate();
   const utcToday = new Date().toISOString().split('T')[0];
-  const localDate = new Date().toLocaleDateString('en-CA');
+  const localDate = formatDateForDisplay(new Date().toISOString().split('T')[0]);
   
   console.log('=== Date Calculation Test ===');
   console.log('Local Today (YYYY-MM-DD):', today);
@@ -102,12 +99,12 @@ const BalancePage: React.FC = () => {
   useEffect(() => {
     // Set to show last 2 years of data by default
     const now = new Date();
-    const twoYearsAgo = new Date(now.getFullYear() - 2, 0, 1);
-    const today = new Date();
+    const twoYearsAgo = `${now.getFullYear() - 2}-01-01`;
+    const today = now.toISOString().split('T')[0]; // Use local date for API
     
     setDateRange({
-      startDate: twoYearsAgo.toISOString().split('T')[0],
-      endDate: today.toISOString().split('T')[0]
+      startDate: twoYearsAgo,
+      endDate: today
     });
   }, []);
 
@@ -153,6 +150,8 @@ const BalancePage: React.FC = () => {
         includeToday,
         dateTest 
       });
+      
+
 
       // Build query parameters for daily sales (safedrops)
       const dailySalesParams: any = {
@@ -168,10 +167,10 @@ const BalancePage: React.FC = () => {
       const vendorInvoicesParams: any = {
         page: currentPage,
         per_page: perPage,
-        sort_by: 'date',
+        sort_by: 'payment_date',
         sort_direction: 'desc',
-        start_date: dateRange.startDate,
-        end_date: dateRange.endDate,
+        payment_start_date: dateRange.startDate,
+        payment_end_date: dateRange.endDate,
         status: 'Paid'
       };
 
@@ -179,10 +178,10 @@ const BalancePage: React.FC = () => {
       const providerBillsParams: any = {
         page: currentPage,
         per_page: perPage,
-        sort_by: 'date',
+        sort_by: 'date_paid',
         sort_direction: 'desc',
-        start_date: dateRange.startDate,
-        end_date: dateRange.endDate,
+        payment_start_date: dateRange.startDate,
+        payment_end_date: dateRange.endDate,
         status: 'Paid'
       };
 
@@ -258,6 +257,21 @@ const BalancePage: React.FC = () => {
       const vendorInvoices: VendorInvoice[] = vendorInvoicesResponse.data.data || [];
       const providerBills: ProviderBill[] = providerBillsResponse.data.data || [];
 
+      console.log('Debug - Daily Sales Count:', dailySales.length);
+      console.log('Debug - Vendor Invoices Count:', vendorInvoices.length);
+      console.log('Debug - Provider Bills Count:', providerBills.length);
+      
+      // Debug: Show some sample dates from the API
+      if (dailySales.length > 0) {
+        console.log('Debug - Sample Daily Sales dates:', dailySales.slice(0, 3).map(sale => ({ id: sale.id, date: sale.date, safedrops: sale.safedrops_amount })));
+      }
+      if (vendorInvoices.length > 0) {
+        console.log('Debug - Sample Vendor Invoice dates:', vendorInvoices.slice(0, 3).map(invoice => ({ id: invoice.id, invoice_date: invoice.invoice_date, payment_date: invoice.payment_date })));
+      }
+      if (providerBills.length > 0) {
+        console.log('Debug - Sample Provider Bill dates:', providerBills.slice(0, 3).map(bill => ({ id: bill.id, billing_date: bill.billing_date, date_paid: bill.date_paid })));
+      }
+
       // Helper function to extract date from datetime string
       const extractDateFromDateTime = (dateTimeString: string): string => {
         if (!dateTimeString) return '';
@@ -270,7 +284,13 @@ const BalancePage: React.FC = () => {
 
       // Transform daily sales to balance items (safedrops - income)
       const safedropsItems: BalanceItem[] = dailySales
-        .filter(sale => sale.safedrops_amount && sale.safedrops_amount > 0)
+        .filter(sale => {
+          if (!sale.safedrops_amount || sale.safedrops_amount <= 0) return false;
+          
+          // Filter by date range
+          const saleDate = extractDateFromDateTime(sale.date);
+          return saleDate >= dateRange.startDate && saleDate <= dateRange.endDate;
+        })
         .map(sale => {
           const saleDate = extractDateFromDateTime(sale.date);
           return {
@@ -278,7 +298,7 @@ const BalancePage: React.FC = () => {
             date: saleDate,
             type: 'Safedrops' as const,
             category: 'Income' as const,
-            description: `Safedrops for ${new Date(saleDate).toLocaleDateString('en-CA')}`,
+            description: `Safedrops for ${formatDateForDisplay(saleDate)}`,
             number_of_safedrops: sale.number_of_safedrops || 0,
             safedrops_amount: typeof sale.safedrops_amount === 'string' ? parseFloat(sale.safedrops_amount) : (sale.safedrops_amount || 0),
             total: typeof sale.safedrops_amount === 'string' ? parseFloat(sale.safedrops_amount) : (sale.safedrops_amount || 0),
@@ -289,17 +309,18 @@ const BalancePage: React.FC = () => {
       console.log('Debug - Safedrops items created:', safedropsItems.length);
       console.log('Debug - Safedrops dates:', safedropsItems.map(item => item.date));
       console.log('Debug - Safedrops dates (original):', dailySales.map(sale => sale.date));
+      
+      // Debug: Show filtered items with their dates
+      console.log('Debug - Filtered Safedrops:', safedropsItems.slice(0, 3).map(item => ({ 
+        id: item.id, 
+        date: item.date, 
+        description: item.description,
+        amount: item.total 
+      })));
 
       // Transform vendor invoices to balance items (paid income and expense)
-      // Filter by payment_date if available, otherwise use invoice_date
+      // Backend now filters by payment_date, so we just need to map the data
       const vendorInvoiceItems: BalanceItem[] = vendorInvoices
-        .filter(invoice => {
-          if (invoice.status !== 'Paid') return false;
-          
-          // Use payment_date if available, otherwise use invoice_date
-          const paymentDate = extractDateFromDateTime(invoice.payment_date || invoice.invoice_date);
-          return paymentDate >= dateRange.startDate && paymentDate <= dateRange.endDate;
-        })
         .map(invoice => {
           const paymentDate = extractDateFromDateTime(invoice.payment_date || invoice.invoice_date);
           return {
@@ -317,16 +338,19 @@ const BalancePage: React.FC = () => {
           };
         });
 
+      console.log('Debug - Vendor Invoice items created:', vendorInvoiceItems.length);
+      if (vendorInvoiceItems.length > 0) {
+        console.log('Debug - Filtered Vendor Invoices:', vendorInvoiceItems.slice(0, 3).map(item => ({ 
+          id: item.id, 
+          date: item.date, 
+          description: item.description,
+          amount: item.total 
+        })));
+      }
+
       // Transform provider bills to balance items (paid - expense)
-      // Filter by date_paid if available, otherwise use billing_date
+      // Backend now filters by date_paid, so we just need to map the data
       const providerBillItems: BalanceItem[] = providerBills
-        .filter(bill => {
-          if (bill.status !== 'Paid') return false;
-          
-          // Use date_paid if available, otherwise use billing_date
-          const paymentDate = extractDateFromDateTime(bill.date_paid || bill.billing_date);
-          return paymentDate >= dateRange.startDate && paymentDate <= dateRange.endDate;
-        })
         .map(bill => {
           const paymentDate = extractDateFromDateTime(bill.date_paid || bill.billing_date);
           return {
@@ -343,12 +367,32 @@ const BalancePage: React.FC = () => {
           };
         });
 
+      console.log('Debug - Provider Bill items created:', providerBillItems.length);
+      if (providerBillItems.length > 0) {
+        console.log('Debug - Filtered Provider Bills:', providerBillItems.slice(0, 3).map(item => ({ 
+          id: item.id, 
+          date: item.date, 
+          description: item.description,
+          amount: item.total 
+        })));
+      }
+
       // Combine and sort by date
       const allItems = [...safedropsItems, ...vendorInvoiceItems, ...providerBillItems]
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
       console.log('Debug - Total items after combining:', allItems.length);
       console.log('Debug - All item dates:', allItems.map(item => ({ date: item.date, type: item.type })));
+      
+      // Debug: Show final items with their display dates
+      console.log('Debug - Final Items (first 5):', allItems.slice(0, 5).map(item => ({ 
+        id: item.id, 
+        date: item.date, 
+        displayDate: formatDateForDisplay(item.date),
+        type: item.type,
+        description: item.description,
+        amount: item.total 
+      })));
 
       setBalanceData(allItems);
 
@@ -429,41 +473,41 @@ const BalancePage: React.FC = () => {
 
   const handleQuickDateSelect = (range: 'currentMonth' | 'lastMonth' | 'last3Months' | 'last6Months' | 'currentYear' | 'allTime') => {
     const now = new Date();
-    let startDate: Date;
-    let endDate: Date;
+    let startDate: string;
+    let endDate: string;
 
     switch (range) {
       case 'currentMonth':
-        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-        endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        startDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+        endDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()}`;
         break;
       case 'lastMonth':
-        startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-        endDate = new Date(now.getFullYear(), now.getMonth(), 0);
+        startDate = `${now.getFullYear()}-${String(now.getMonth()).padStart(2, '0')}-01`;
+        endDate = `${now.getFullYear()}-${String(now.getMonth()).padStart(2, '0')}-${new Date(now.getFullYear(), now.getMonth(), 0).getDate()}`;
         break;
       case 'last3Months':
-        startDate = new Date(now.getFullYear(), now.getMonth() - 3, 1);
-        endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        startDate = `${now.getFullYear()}-${String(now.getMonth() - 2).padStart(2, '0')}-01`;
+        endDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()}`;
         break;
       case 'last6Months':
-        startDate = new Date(now.getFullYear(), now.getMonth() - 6, 1);
-        endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        startDate = `${now.getFullYear()}-${String(now.getMonth() - 5).padStart(2, '0')}-01`;
+        endDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()}`;
         break;
       case 'currentYear':
-        startDate = new Date(now.getFullYear(), 0, 1);
-        endDate = new Date(now.getFullYear(), 11, 31);
+        startDate = `${now.getFullYear()}-01-01`;
+        endDate = `${now.getFullYear()}-12-31`;
         break;
       case 'allTime':
-        startDate = new Date(2020, 0, 1); // Start from 2020
-        endDate = now;
+        startDate = '2020-01-01'; // Start from 2020
+        endDate = new Date().toISOString().split('T')[0]; // Use local date for API
         break;
       default:
         return;
     }
 
     setDateRange({
-      startDate: startDate.toISOString().split('T')[0],
-      endDate: endDate.toISOString().split('T')[0]
+      startDate,
+      endDate
     });
     setCurrentPage(1);
   };
@@ -477,7 +521,7 @@ const BalancePage: React.FC = () => {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-CA');
+    return formatDateForDisplay(dateString);
   };
 
   // Create combined filter options

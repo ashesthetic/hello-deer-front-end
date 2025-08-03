@@ -91,8 +91,18 @@ const WeeklyTrendCard: React.FC<WeeklyTrendCardProps> = ({ title, dataField, col
       rangeData.forEach((sale: any) => {
         const saleDate = new Date(sale.date);
         const weekStart = new Date(saleDate);
-        weekStart.setDate(weekStart.getDate() - saleDate.getDay()); // Start of week (Sunday)
-        const weekKey = weekStart.toISOString().split('T')[0];
+        // Calculate Monday as start of week (0 = Sunday, 1 = Monday, etc.)
+        const dayOfWeek = saleDate.getDay();
+        const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // If Sunday, go back 6 days; otherwise go back (dayOfWeek - 1) days
+        weekStart.setDate(weekStart.getDate() - daysToMonday);
+        
+        // Use timezone-aware date formatting for the week key
+        const weekKey = weekStart.toLocaleDateString('en-CA', {
+          timeZone: 'America/Edmonton',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        }).replace(/\//g, '-');
         
         const currentValue = weekMap.get(weekKey) || 0;
         const newValue = dataField === 'reported_total' ? 
@@ -133,9 +143,9 @@ const WeeklyTrendCard: React.FC<WeeklyTrendCardProps> = ({ title, dataField, col
   const formatWeekCustom = (dateString: string) => {
     const date = parseDateSafely(dateString);
     const endOfWeek = new Date(date);
-    endOfWeek.setDate(date.getDate() + 6);
+    endOfWeek.setDate(date.getDate() + 6); // Monday + 6 days = Sunday
     
-    return `${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${endOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+    return `${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'America/Edmonton' })} - ${endOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'America/Edmonton' })}`;
   };
 
   const chartData = {
