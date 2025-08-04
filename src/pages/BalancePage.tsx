@@ -837,13 +837,13 @@ const BalancePage: React.FC = () => {
                       Category
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Description
-                    </th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Number of Safedrops
+                      Source
                     </th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Amount
+                      Debit
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Credit
                     </th>
                   </tr>
                 </thead>
@@ -875,37 +875,42 @@ const BalancePage: React.FC = () => {
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-900">
                         {item.type === 'Safedrops' 
-                          ? item.description
-                          : `${item.description}${item.vendor ? ` - ${item.vendor}` : ''}${item.provider ? ` - ${item.provider}` : ''}`
+                          ? 'Safedrops'
+                          : item.type === 'Vendor Invoice'
+                          ? `${item.vendor || 'Vendor'}: ${item.invoice_number || 'No Invoice'}`
+                          : `${item.provider || 'Provider'}: ${item.invoice_number || 'No Invoice'}`
                         }
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                        {item.type === 'Safedrops' ? item.number_of_safedrops : '-'}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-red-600 text-right">
+                        {item.category === 'Expense' ? formatCurrency(item.total || 0) : '-'}
                       </td>
-                      <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium text-right ${
-                        item.category === 'Income' ? 'text-green-600' : 'text-red-600'
-                      }`}>
-                        {item.category === 'Income' ? '+' : '-'}{formatCurrency(item.total || 0)}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600 text-right">
+                        {item.category === 'Income' ? formatCurrency(item.total || 0) : '-'}
                       </td>
                     </tr>
                   ))}
                 </tbody>
                 <tfoot className="bg-gray-50">
                   <tr>
-                    <td colSpan={4} className="px-6 py-4 text-sm font-medium text-gray-900">
+                    <td colSpan={3} className="px-6 py-4 text-sm font-medium text-gray-900">
                       Totals
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
-                      {balanceData.filter(item => item.type === 'Safedrops').reduce((sum, item) => sum + (item.number_of_safedrops || 0), 0)}
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                      {/* Source column - empty for totals */}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 text-right">
-                      <div className="space-y-1">
-                        <div className="text-green-600">+{formatCurrency(totals.totalIncome)}</div>
-                        <div className="text-red-600">-{formatCurrency(totals.totalExpense)}</div>
-                        <div className={`border-t pt-1 ${totals.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          = {formatCurrency(totals.balance)}
-                        </div>
-                      </div>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600 text-right">
+                      {formatCurrency(totals.totalExpense)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600 text-right">
+                      {formatCurrency(totals.totalIncome)}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td colSpan={4} className="px-6 py-4 text-sm font-medium text-gray-900">
+                      Balance
+                    </td>
+                    <td colSpan={2} className={`px-6 py-4 whitespace-nowrap text-sm font-bold text-right ${totals.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      {formatCurrency(totals.balance)}
                     </td>
                   </tr>
                 </tfoot>
