@@ -12,6 +12,7 @@ const FuelVolumesPage: React.FC = () => {
   const navigate = useNavigate();
   const currentUser = useSelector((state: RootState) => (state as any).auth.user);
   const [fuelVolumes, setFuelVolumes] = useState<FuelVolume[]>([]);
+  const [allFuelVolumes, setAllFuelVolumes] = useState<FuelVolume[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState({
@@ -34,8 +35,9 @@ const FuelVolumesPage: React.FC = () => {
   const fetchFuelVolumes = async () => {
     try {
       setLoading(true);
-      const params = new URLSearchParams();
       
+      // Fetch paginated data for display
+      const params = new URLSearchParams();
       Object.entries(filters).forEach(([key, value]) => {
         if (value) {
           params.append(key, value.toString());
@@ -50,6 +52,17 @@ const FuelVolumesPage: React.FC = () => {
         total: response.data.total,
         per_page: response.data.per_page
       });
+
+      // Fetch all data for volume difference calculations (without pagination)
+      const allDataParams = new URLSearchParams();
+      if (filters.start_date) allDataParams.append('start_date', filters.start_date);
+      if (filters.end_date) allDataParams.append('end_date', filters.end_date);
+      if (filters.shift) allDataParams.append('shift', filters.shift);
+      allDataParams.append('per_page', '1000'); // Get a large number to ensure we have enough data
+
+      const allDataResponse = await fuelVolumeApi.index(allDataParams.toString());
+      setAllFuelVolumes(allDataResponse.data.data || []);
+      
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to fetch fuel volumes');
     } finally {
@@ -89,6 +102,87 @@ const FuelVolumesPage: React.FC = () => {
       return fuelVolume.volume_end_of_day;
     }
     return null;
+  };
+
+  const getVolumeDifference = (currentFuelVolume: FuelVolume, allFuelVolumes: FuelVolume[]) => {
+    // Only calculate for evening shifts
+    if (currentFuelVolume.shift !== 'evening') {
+      return null;
+    }
+
+    // Get previous day's date - handle both date string and datetime formats
+    const currentDate = new Date(currentFuelVolume.date);
+    const previousDate = new Date(currentDate);
+    previousDate.setDate(previousDate.getDate() - 1);
+    const previousDateString = previousDate.toISOString().split('T')[0];
+
+    console.log('Debug - Looking for previous day:', {
+      currentDate: currentFuelVolume.date,
+      previousDateString,
+      currentData: {
+        regular: currentFuelVolume.regular_tc_volume,
+        premium: currentFuelVolume.premium_tc_volume,
+        diesel: currentFuelVolume.diesel_tc_volume
+      }
+    });
+
+    // Find previous day's evening shift - normalize date comparison
+    const previousEveningShift = allFuelVolumes.find(fv => {
+      const fvDate = new Date(fv.date).toISOString().split('T')[0];
+      return fvDate === previousDateString && fv.shift === 'evening';
+    });
+
+    console.log('Debug - Previous evening shift found:', previousEveningShift);
+
+    if (!previousEveningShift) {
+      console.log('Debug - No previous evening shift found. Available dates:', 
+        allFuelVolumes.map(fv => ({ 
+          date: fv.date, 
+          normalizedDate: new Date(fv.date).toISOString().split('T')[0],
+          shift: fv.shift 
+        }))
+      );
+      return null;
+    }
+
+    console.log('Debug - Previous day data:', {
+      previousDate: previousEveningShift.date,
+      previousData: {
+        regular: previousEveningShift.regular_tc_volume,
+        premium: previousEveningShift.premium_tc_volume,
+        diesel: previousEveningShift.diesel_tc_volume
+      }
+    });
+
+    // Simple subtraction: Current - Previous
+    const result = {
+      regular: (currentFuelVolume.regular_tc_volume || 0) - (previousEveningShift.regular_tc_volume || 0),
+      premium: (currentFuelVolume.premium_tc_volume || 0) - (previousEveningShift.premium_tc_volume || 0),
+      diesel: (currentFuelVolume.diesel_tc_volume || 0) - (previousEveningShift.diesel_tc_volume || 0)
+    };
+
+    console.log('Debug - Calculated difference:', result);
+    return result;
+  };
+
+  const formatVolumeDifference = (difference: number | null) => {
+    if (difference === null || isNaN(difference)) {
+      return '-';
+    }
+    const sign = difference >= 0 ? '+' : '';
+    return `${sign}${difference.toFixed(2)}`;
+  };
+
+  const getVolumeDifferenceColor = (difference: number | null) => {
+    if (difference === null || isNaN(difference)) {
+      return 'text-gray-400';
+    }
+    if (difference > 0) {
+      return 'text-green-600';
+    } else if (difference < 0) {
+      return 'text-red-600';
+    }
+    return 'text-gray-600';
   };
 
   const handleDelete = (fuelVolume: FuelVolume) => {
@@ -255,7 +349,7 @@ const FuelVolumesPage: React.FC = () => {
                       Volume End of Day
                     </th>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      User
+                      Volume Difference
                     </th>
                     <th scope="col" className="relative px-6 py-3">
                       <span className="sr-only">Actions</span>
@@ -265,6 +359,7 @@ const FuelVolumesPage: React.FC = () => {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {fuelVolumes.map((fuelVolume) => {
                     const endOfDay = getVolumeEndOfDay(fuelVolume);
+                    const difference = getVolumeDifference(fuelVolume, allFuelVolumes);
                     return (
                       <tr key={fuelVolume.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
@@ -308,8 +403,27 @@ const FuelVolumesPage: React.FC = () => {
                           )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {fuelVolume.user?.name || 'Unknown'}
+                          {fuelVolume.shift === 'evening' ? (
+                            difference ? (
+                              <div>
+                                <div className={getVolumeDifferenceColor(difference.regular)}>
+                                  R: {formatVolumeDifference(difference.regular)}
+                                </div>
+                                <div className={getVolumeDifferenceColor(difference.premium)}>
+                                  P: {formatVolumeDifference(difference.premium)}
+                                </div>
+                                <div className={getVolumeDifferenceColor(difference.diesel)}>
+                                  D: {formatVolumeDifference(difference.diesel)}
+                                </div>
+                              </div>
+                            ) : (
+                              <span className="text-gray-400">No prev. data</span>
+                            )
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
                         </td>
+
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <button
                             onClick={() => navigate(`/fuel-volumes/${fuelVolume.id}`)}

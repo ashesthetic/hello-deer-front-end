@@ -9,7 +9,7 @@ import { formatDateForDisplay } from '../utils/dateUtils';
 interface BalanceItem {
   id: number;
   date: string;
-  type: 'Safedrops' | 'Vendor Invoice' | 'Provider Bill';
+  type: 'Safedrops' | 'Vendor Invoice' | 'Provider Bill' | 'Cash on Hand';
   category: 'Income' | 'Expense';
   description: string;
   vendor?: string;
@@ -17,6 +17,7 @@ interface BalanceItem {
   invoice_number?: string;
   number_of_safedrops?: number;
   safedrops_amount?: number;
+  cash_on_hand?: number;
   subtotal?: number;
   gst?: number;
   total?: number;
@@ -306,12 +307,43 @@ const BalancePage: React.FC = () => {
           };
         });
 
+      // Transform daily sales to cash on hand items (income)
+      const cashOnHandItems: BalanceItem[] = dailySales
+        .filter(sale => {
+          if (!sale.cash_on_hand || sale.cash_on_hand <= 0) return false;
+          
+          // Filter by date range
+          const saleDate = extractDateFromDateTime(sale.date);
+          return saleDate >= dateRange.startDate && saleDate <= dateRange.endDate;
+        })
+        .map(sale => {
+          const saleDate = extractDateFromDateTime(sale.date);
+          return {
+            id: sale.id || 0,
+            date: saleDate,
+            type: 'Cash on Hand' as const,
+            category: 'Income' as const,
+            description: `Cash on Hand for ${formatDateForDisplay(saleDate)}`,
+            cash_on_hand: typeof sale.cash_on_hand === 'string' ? parseFloat(sale.cash_on_hand) : (sale.cash_on_hand || 0),
+            total: typeof sale.cash_on_hand === 'string' ? parseFloat(sale.cash_on_hand) : (sale.cash_on_hand || 0),
+            user: sale.user?.name
+          };
+        });
+
       console.log('Debug - Safedrops items created:', safedropsItems.length);
+      console.log('Debug - Cash on Hand items created:', cashOnHandItems.length);
       console.log('Debug - Safedrops dates:', safedropsItems.map(item => item.date));
+      console.log('Debug - Cash on Hand dates:', cashOnHandItems.map(item => item.date));
       console.log('Debug - Safedrops dates (original):', dailySales.map(sale => sale.date));
       
       // Debug: Show filtered items with their dates
       console.log('Debug - Filtered Safedrops:', safedropsItems.slice(0, 3).map(item => ({ 
+        id: item.id, 
+        date: item.date, 
+        description: item.description,
+        amount: item.total 
+      })));
+      console.log('Debug - Filtered Cash on Hand:', cashOnHandItems.slice(0, 3).map(item => ({ 
         id: item.id, 
         date: item.date, 
         description: item.description,
@@ -378,7 +410,7 @@ const BalancePage: React.FC = () => {
       }
 
       // Combine and sort by date
-      const allItems = [...safedropsItems, ...vendorInvoiceItems, ...providerBillItems]
+      const allItems = [...safedropsItems, ...cashOnHandItems, ...vendorInvoiceItems, ...providerBillItems]
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
       console.log('Debug - Total items after combining:', allItems.length);
@@ -847,6 +879,8 @@ const BalancePage: React.FC = () => {
                             ? 'bg-green-100 text-green-800'
                             : item.type === 'Vendor Invoice'
                             ? 'bg-blue-100 text-blue-800'
+                            : item.type === 'Cash on Hand'
+                            ? 'bg-yellow-100 text-yellow-800'
                             : 'bg-purple-100 text-purple-800'
                         }`}>
                           {item.type}
@@ -863,6 +897,8 @@ const BalancePage: React.FC = () => {
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-900">
                         {item.type === 'Safedrops' 
+                          ? item.description
+                          : item.type === 'Cash on Hand'
                           ? item.description
                           : `${item.description}${item.vendor ? ` - ${item.vendor}` : ''}${item.provider ? ` - ${item.provider}` : ''}`
                         }

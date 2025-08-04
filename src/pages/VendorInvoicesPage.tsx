@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 import { vendorInvoicesApi, VendorInvoice } from '../services/api';
+import { Vendor } from '../types';
 import { canCreate } from '../utils/permissions';
 import { usePageTitle } from '../hooks/usePageTitle';
 import { useUrlState } from '../hooks/useUrlState';
@@ -22,6 +23,7 @@ const VendorInvoicesPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
+  const [vendors, setVendors] = useState<Vendor[]>([]);
   
   // URL state management
   const {
@@ -30,11 +32,21 @@ const VendorInvoicesPage: React.FC = () => {
     sortField,
     sortDirection,
     searchTerm,
+    statusFilter,
+    typeFilter,
+    vendorFilter,
+    startDate: startDateFilter,
+    endDate: endDateFilter,
     setPerPage,
     setCurrentPage,
     setSortField,
     setSortDirection,
     setSearchTerm,
+    setStatusFilter,
+    setTypeFilter,
+    setVendorFilter,
+    setStartDate: setStartDateFilter,
+    setEndDate: setEndDateFilter,
     clearFilters
   } = useUrlState({
     defaultPerPage: 50,
@@ -42,16 +54,22 @@ const VendorInvoicesPage: React.FC = () => {
     defaultSortDirection: 'desc'
   });
 
-  // Additional filter states
-  const [statusFilter, setStatusFilter] = useState<string>('');
-  const [typeFilter, setTypeFilter] = useState<string>('');
-  const [vendorFilter, setVendorFilter] = useState<string>('');
-  const [startDateFilter, setStartDateFilter] = useState<string>('');
-  const [endDateFilter, setEndDateFilter] = useState<string>('');
-  
   // Delete modal state
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [invoiceToDelete, setInvoiceToDelete] = useState<VendorInvoice | null>(null);
+
+  // Fetch vendors for filter dropdown
+  useEffect(() => {
+    const fetchVendors = async () => {
+      try {
+        const response = await vendorInvoicesApi.getVendors();
+        setVendors(response.data || []);
+      } catch (err) {
+        console.error('Error fetching vendors:', err);
+      }
+    };
+    fetchVendors();
+  }, []);
 
   useEffect(() => {
     fetchInvoices(currentPage);
@@ -154,11 +172,6 @@ const VendorInvoicesPage: React.FC = () => {
 
   const clearAllFilters = () => {
     clearFilters();
-    setStatusFilter('');
-    setTypeFilter('');
-    setVendorFilter('');
-    setStartDateFilter('');
-    setEndDateFilter('');
   };
 
   const getStatusBadgeClass = (status: string) => {
@@ -235,6 +248,23 @@ const VendorInvoicesPage: React.FC = () => {
               </select>
             </div>
 
+            {/* Vendor Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Vendor</label>
+              <select
+                value={vendorFilter || ''}
+                onChange={(e) => setVendorFilter(e.target.value || '')}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">All Vendors</option>
+                {vendors.map((vendor) => (
+                  <option key={vendor.id} value={vendor.id}>
+                    {vendor.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             {/* Date Range */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
@@ -301,14 +331,14 @@ const VendorInvoicesPage: React.FC = () => {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
                     #
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
                     Invoice No.
                   </th>
                   <th 
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 w-24"
                     onClick={() => handleSort('invoice_date')}
                   >
                     Invoice Date
@@ -316,11 +346,11 @@ const VendorInvoicesPage: React.FC = () => {
                       <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
                     )}
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-0">
                     Vendor
                   </th>
                   <th 
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 w-20"
                     onClick={() => handleSort('total')}
                   >
                     Total
@@ -329,7 +359,7 @@ const VendorInvoicesPage: React.FC = () => {
                     )}
                   </th>
                   <th 
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 w-20"
                     onClick={() => handleSort('type')}
                   >
                     Type
@@ -338,7 +368,7 @@ const VendorInvoicesPage: React.FC = () => {
                     )}
                   </th>
                   <th 
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 w-20"
                     onClick={() => handleSort('status')}
                   >
                     Status
@@ -346,10 +376,10 @@ const VendorInvoicesPage: React.FC = () => {
                       <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
                     )}
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
                     Payment Date
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
                     Actions
                   </th>
                 </tr>
@@ -357,64 +387,66 @@ const VendorInvoicesPage: React.FC = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {loading ? (
                   <tr>
-                    <td colSpan={9} className="px-6 py-4 text-center text-gray-500">
+                    <td colSpan={9} className="px-3 py-4 text-center text-gray-500">
                       Loading...
                     </td>
                   </tr>
                 ) : invoices.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="px-6 py-4 text-center text-gray-500">
+                    <td colSpan={9} className="px-3 py-4 text-center text-gray-500">
                       No vendor invoices found
                     </td>
                   </tr>
                 ) : (
                   invoices.map((invoice) => (
                     <tr key={invoice.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
                         {invoice.id}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
                         {invoice.invoice_number || '-'}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
                         {formatDateForDisplay(invoice.invoice_date)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {invoice.vendor?.name}
+                      <td className="px-3 py-4 text-sm text-gray-900">
+                        <div className="truncate max-w-xs" title={invoice.vendor?.name}>
+                          {invoice.vendor?.name}
+                        </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      <td className="px-3 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {formatCurrency(Number(invoice.total))}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-3 py-4 whitespace-nowrap">
                         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getTypeBadgeClass(invoice.type)}`}>
                           {invoice.type}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-3 py-4 whitespace-nowrap">
                         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeClass(invoice.status)}`}>
                           {invoice.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
                         {invoice.payment_date ? formatDateForDisplay(invoice.payment_date) : '-'}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex space-x-2">
+                      <td className="px-3 py-4 whitespace-nowrap text-sm font-medium">
+                        <div className="flex space-x-1">
                           <button
                             onClick={() => handleViewInvoice(invoice)}
-                            className="text-blue-600 hover:text-blue-900"
+                            className="text-blue-600 hover:text-blue-900 text-xs"
                           >
                             View
                           </button>
                           <button
                             onClick={() => handleEditInvoice(invoice)}
-                            className="text-indigo-600 hover:text-indigo-900"
+                            className="text-indigo-600 hover:text-indigo-900 text-xs"
                           >
                             Edit
                           </button>
                           <button
                             onClick={() => handleDeleteInvoice(invoice)}
-                            className="text-red-600 hover:text-red-900"
+                            className="text-red-600 hover:text-red-900 text-xs"
                           >
                             Delete
                           </button>
