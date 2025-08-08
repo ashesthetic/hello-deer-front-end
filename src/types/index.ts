@@ -99,6 +99,21 @@ export interface DailySale {
   // Low Margin Items Section
   tobacco_25: number | undefined;
   tobacco_20: number | undefined;
+  tobacco_30: number | undefined;
+  tobacco_35: number | undefined;
+  tobacco_40: number | undefined;
+  tobacco_45: number | undefined;
+  tobacco_50: number | undefined;
+  tobacco_55: number | undefined;
+  tobacco_60: number | undefined;
+  tobacco_65: number | undefined;
+  tobacco_70: number | undefined;
+  tobacco_75: number | undefined;
+  tobacco_80: number | undefined;
+  tobacco_85: number | undefined;
+  tobacco_90: number | undefined;
+  tobacco_95: number | undefined;
+  tobacco_100: number | undefined;
   lottery: number | undefined;
   prepay: number | undefined;
   
@@ -173,7 +188,6 @@ export interface FuelVolume {
   morning_shift?: FuelVolume;
 }
 
-// Vendor types
 export interface Vendor {
   id?: number;
   name: string;
@@ -236,4 +250,131 @@ export interface UpdateVendorData {
   order_before_days: string[];
   possible_delivery_days: string[];
   notes?: string;
+}
+
+// Owner types
+export interface Owner {
+  id?: number;
+  name: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  province?: string;
+  postal_code?: string;
+  country?: string;
+  ownership_percentage: number;
+  notes?: string;
+  is_active: boolean;
+  user_id?: number;
+  user?: User;
+  created_at?: string;
+  updated_at?: string;
+  total_equity?: number;
+  total_contributions?: number;
+  total_withdrawals?: number;
+  total_distributions?: number;
+  equity_transactions?: OwnerEquity[];
+  canBeUpdatedBy?: (user: User) => boolean;
+  canBeDeletedBy?: (user: User) => boolean;
+}
+
+export interface CreateOwnerData {
+  name: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  province?: string;
+  postal_code?: string;
+  country?: string;
+  ownership_percentage: number;
+  notes?: string;
+  is_active?: boolean;
+}
+
+export interface UpdateOwnerData {
+  name: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  province?: string;
+  postal_code?: string;
+  country?: string;
+  ownership_percentage: number;
+  notes?: string;
+  is_active?: boolean;
+}
+
+// Owner Equity types
+export interface OwnerEquity {
+  id?: number;
+  owner_id: number;
+  transaction_type: 'contribution' | 'withdrawal' | 'distribution' | 'adjustment';
+  amount: number;
+  transaction_date: string;
+  reference_number?: string;
+  payment_method?: string;
+  description?: string;
+  notes?: string;
+  user_id?: number;
+  owner?: Owner;
+  user?: User;
+  created_at?: string;
+  updated_at?: string;
+  formatted_transaction_date?: string;
+  formatted_amount?: string;
+  transaction_type_display?: string;
+  is_positive?: boolean;
+  is_negative?: boolean;
+  canBeUpdatedBy?: (user: User) => boolean;
+  canBeDeletedBy?: (user: User) => boolean;
+}
+
+export interface CreateOwnerEquityData {
+  owner_id: number;
+  transaction_type: 'contribution' | 'withdrawal' | 'distribution' | 'adjustment';
+  amount: number;
+  transaction_date: string;
+  reference_number?: string;
+  payment_method?: string;
+  description?: string;
+  notes?: string;
+}
+
+export interface UpdateOwnerEquityData {
+  owner_id: number;
+  transaction_type: 'contribution' | 'withdrawal' | 'distribution' | 'adjustment';
+  amount: number;
+  transaction_date: string;
+  reference_number?: string;
+  payment_method?: string;
+  description?: string;
+  notes?: string;
+}
+
+export interface OwnerEquitySummary {
+  total_owners: number;
+  active_owners: number;
+  total_equity: number;
+  total_contributions: number;
+  total_withdrawals: number;
+  total_distributions: number;
+  owners: Array<{
+    id: number;
+    name: string;
+    ownership_percentage: number;
+    total_equity: number;
+    is_active: boolean;
+  }>;
+}
+
+export interface OwnerSummary {
+  owner: Owner;
+  total_equity: number;
+  total_contributions: number;
+  total_withdrawals: number;
+  total_distributions: number;
+  recent_transactions: OwnerEquity[];
 } 

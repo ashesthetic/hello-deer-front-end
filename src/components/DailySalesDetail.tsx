@@ -75,8 +75,7 @@ const DailySalesDetail: React.FC<DailySalesDetailProps> = ({
   
   const totalLoyaltyDiscounts = safeNumber(sale.journey_discount) + safeNumber(sale.aeroplan_discount);
   
-  const totalLowMarginItems = safeNumber(sale.tobacco_25) + safeNumber(sale.tobacco_20) + 
-                              safeNumber(sale.lottery) + safeNumber(sale.prepay);
+  const totalLowMarginItems = safeNumber(sale.tobacco_25) + safeNumber(sale.tobacco_20) + safeNumber(sale.lottery) + safeNumber(sale.prepay);
 
   return (
     <div className="max-w-6xl mx-auto p-6 bg-white rounded-lg shadow-lg">

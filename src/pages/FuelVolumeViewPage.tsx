@@ -35,8 +35,11 @@ const FuelVolumeViewPage: React.FC = () => {
     }
   }, [id]);
 
-  const formatNumber = (value: number | null) => {
-    return value ? value.toFixed(2) : '0.00';
+  const formatNumber = (value: number | null | undefined) => {
+    if (value === null || value === undefined || isNaN(value)) {
+      return '0.00';
+    }
+    return Number(value).toFixed(2);
   };
 
   const formatDate = (dateString: string) => {
