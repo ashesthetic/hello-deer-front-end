@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ownerEquitiesApi } from '../services/api';
 import { OwnerEquity } from '../types';
 import { usePageTitle } from '../hooks/usePageTitle';
-import { formatCurrency } from '../utils/dateUtils';
+
 
 const OwnerEquityViewPage: React.FC = () => {
   usePageTitle('Equity Transaction Details');

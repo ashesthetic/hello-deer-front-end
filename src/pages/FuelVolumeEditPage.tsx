@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-import { RootState } from '../store';
+
 import { fuelVolumeApi } from '../services/api';
 import { getTodayAlberta } from '../utils/dateUtils';
 
@@ -22,7 +21,7 @@ interface FuelVolumeForm {
 const FuelVolumeEditPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const currentUser = useSelector((state: RootState) => (state as any).auth.user);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState<FuelVolumeForm>({
@@ -41,13 +40,7 @@ const FuelVolumeEditPage: React.FC = () => {
 
   const isEditing = Boolean(id);
 
-  useEffect(() => {
-    if (isEditing && id) {
-      fetchFuelVolume();
-    }
-  }, [id, isEditing]);
-
-  const fetchFuelVolume = async () => {
+  const fetchFuelVolume = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fuelVolumeApi.show(parseInt(id!));
@@ -71,7 +64,13 @@ const FuelVolumeEditPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    if (isEditing && id) {
+      fetchFuelVolume();
+    }
+  }, [id, isEditing, fetchFuelVolume]);
 
   const handleInputChange = (field: keyof FuelVolumeForm, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));

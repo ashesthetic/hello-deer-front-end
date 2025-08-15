@@ -27,6 +27,7 @@ const EmployeeViewPage: React.FC = () => {
   const [employee, setEmployee] = useState<ApiEmployee | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   useEffect(() => {

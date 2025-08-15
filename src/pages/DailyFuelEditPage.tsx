@@ -1,17 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-import { RootState } from '../store';
+
 import { dailyFuelsApi } from '../services/api';
 import { DailyFuel } from '../types';
-import { canUpdateDailyFuel } from '../utils/permissions';
+
 import { usePageTitle } from '../hooks/usePageTitle';
 
 const DailyFuelEditPage: React.FC = () => {
   usePageTitle('Edit Daily Fuel');
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const currentUser = useSelector((state: RootState) => (state as any).auth.user);
+
   const isEditing = Boolean(id);
   
   const [formData, setFormData] = useState<Partial<DailyFuel>>({

@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-import { RootState } from '../store';
-import { canUpdate, canDelete } from '../utils/permissions';
-import ConfirmationModal from '../components/ConfirmationModal';
+
 import { dailySalesApi } from '../services/api';
 import { DailySale } from '../types';
 import { usePageTitle } from '../hooks/usePageTitle';

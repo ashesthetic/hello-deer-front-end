@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { employeesApi, Employee, EmployeeFormData } from '../services/api';
+import { employeesApi, EmployeeFormData } from '../services/api';
 import { usePageTitle } from '../hooks/usePageTitle';
 
 const EmployeeEditPage: React.FC = () => {

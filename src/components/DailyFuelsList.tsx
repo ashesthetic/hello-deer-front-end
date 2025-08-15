@@ -1,7 +1,6 @@
 import React from 'react';
 import { DailyFuel, User } from '../types';
-import { canUpdateDailyFuel, canDeleteDailyFuel, getRoleDisplayName } from '../utils/permissions';
-import Tooltip from './Tooltip';
+import { canUpdateDailyFuel, canDeleteDailyFuel } from '../utils/permissions';
 import Modal from './Modal';
 
 type SortField = 'date' | 'total_quantity' | 'total_amount' | 'regular_total_sale' | 'plus_total_sale' | 'sup_plus_total_sale' | 'diesel_total_sale';
@@ -79,28 +78,7 @@ const DailyFuelsList: React.FC<DailyFuelsListProps> = ({
     }).format(amount);
   };
 
-  const renderSortableHeader = (field: SortField, label: string) => {
-    if (!onSort) {
-      return <span>{label}</span>;
-    }
 
-    const isActive = sortField === field;
-    const isAsc = sortDirection === 'asc';
-    
-    return (
-      <button
-        onClick={() => onSort(field)}
-        className="flex items-center space-x-1 hover:text-blue-600 focus:outline-none focus:text-blue-600"
-      >
-        <span>{label}</span>
-        {isActive && (
-          <span className="text-blue-600">
-            {isAsc ? '↑' : '↓'}
-          </span>
-        )}
-      </button>
-    );
-  };
 
   const [deleteModalOpen, setDeleteModalOpen] = React.useState(false);
   const [fuelToDelete, setFuelToDelete] = React.useState<DailyFuel | null>(null);
