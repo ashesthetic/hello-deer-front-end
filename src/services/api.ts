@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { DailySale, DailyFuel, FuelVolume, LoginCredentials, CreateUserData, UpdateUserData, Vendor, CreateVendorData, UpdateVendorData, Owner, CreateOwnerData, UpdateOwnerData, OwnerEquity, CreateOwnerEquityData, UpdateOwnerEquityData, OwnerEquitySummary, OwnerSummary } from '../types';
+import { DailySale, DailyFuel, FuelVolume, LoginCredentials, CreateUserData, UpdateUserData, CreateVendorData, UpdateVendorData, CreateOwnerData, UpdateOwnerData, CreateOwnerEquityData, UpdateOwnerEquityData } from '../types';
 
 // Employee interfaces
 export interface Employee {

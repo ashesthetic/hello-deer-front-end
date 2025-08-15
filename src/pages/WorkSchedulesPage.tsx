@@ -47,7 +47,7 @@ const WorkSchedulesPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [weekFilter, setWeekFilter] = useState('all');
+
 
   useEffect(() => {
     fetchWorkSchedules();

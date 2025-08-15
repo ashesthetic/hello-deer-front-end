@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Bar } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -37,11 +37,9 @@ const FuelsReportPage: React.FC = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth() + 1);
   const reportRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    fetchFuelsData();
-  }, [reportMode, currentYear, currentMonth]);
 
-  const fetchFuelsData = async () => {
+
+  const fetchFuelsData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -80,7 +78,11 @@ const FuelsReportPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [reportMode, currentYear, currentMonth]);
+
+  useEffect(() => {
+    fetchFuelsData();
+  }, [reportMode, currentYear, currentMonth, fetchFuelsData]);
 
   const formatDate = (dateString: string) => {
     const [year, month, day] = dateString.split('T')[0].split('-');

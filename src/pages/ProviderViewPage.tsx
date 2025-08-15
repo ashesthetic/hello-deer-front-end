@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { providersApi, Provider } from '../services/api';
 
@@ -8,13 +8,9 @@ const ProviderViewPage: React.FC = () => {
   const [provider, setProvider] = useState<Provider | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (id) {
-      fetchProvider();
-    }
-  }, [id]);
 
-  const fetchProvider = async () => {
+
+  const fetchProvider = useCallback(async () => {
     try {
       setLoading(true);
       const response = await providersApi.getById(parseInt(id!));
@@ -26,7 +22,13 @@ const ProviderViewPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, navigate]);
+
+  useEffect(() => {
+    if (id) {
+      fetchProvider();
+    }
+  }, [id, fetchProvider]);
 
   const getPaymentMethodColor = (method: string) => {
     switch (method) {

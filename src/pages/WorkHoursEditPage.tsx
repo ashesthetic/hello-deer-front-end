@@ -1,16 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-import { RootState } from '../store';
-import { canUpdate } from '../utils/permissions';
-import { workHoursApi, employeesApi, WorkHour, WorkHourFormData, Employee } from '../services/api';
+
+import { workHoursApi, employeesApi, WorkHourFormData, Employee } from '../services/api';
 import { usePageTitle } from '../hooks/usePageTitle';
 
 const WorkHoursEditPage: React.FC = () => {
   usePageTitle('Edit Work Hours');
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const currentUser = useSelector((state: RootState) => (state as any).auth.user);
+
   const isEditing = Boolean(id);
   
   const [formData, setFormData] = useState<WorkHourFormData>({
@@ -28,25 +26,18 @@ const WorkHoursEditPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
-  useEffect(() => {
-    fetchEmployees();
-    if (isEditing) {
-      fetchWorkHour();
-    } else {
-      setLoading(false);
-    }
-  }, [id]);
 
-  const fetchEmployees = async () => {
+
+  const fetchEmployees = useCallback(async () => {
     try {
       const response = await employeesApi.getAll();
       setEmployees(response.data.data);
     } catch (err: any) {
       setError('Failed to load employees');
     }
-  };
+  }, []);
 
-  const fetchWorkHour = async () => {
+  const fetchWorkHour = useCallback(async () => {
     if (!id) return;
     
     try {
@@ -67,7 +58,16 @@ const WorkHoursEditPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    fetchEmployees();
+    if (isEditing) {
+      fetchWorkHour();
+    } else {
+      setLoading(false);
+    }
+  }, [id, isEditing, fetchEmployees, fetchWorkHour]);
 
   const validateForm = (): boolean => {
     const errors: Record<string, string> = {};

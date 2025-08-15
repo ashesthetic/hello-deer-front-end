@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
@@ -47,18 +47,9 @@ const WorkScheduleCreatePage: React.FC = () => {
   const [daySchedules, setDaySchedules] = useState<DaySchedule[]>([]);
   const isAddingShift = useRef(false);
 
-  useEffect(() => {
-    fetchEmployees();
-    fetchWeekOptions();
-  }, []);
 
-  useEffect(() => {
-    if (selectedWeek) {
-      generateDaySchedules();
-    }
-  }, [selectedWeek]);
 
-  const fetchEmployees = async () => {
+  const fetchEmployees = useCallback(async () => {
     try {
       const response = await employeesApi.getAll({ status: 'active' });
       // Filter only active employees
@@ -68,16 +59,16 @@ const WorkScheduleCreatePage: React.FC = () => {
       console.error('Employees error:', err);
       setError('Failed to fetch employees: ' + (err.response?.data?.message || err.message));
     }
-  };
+  }, []);
 
-  const fetchWeekOptions = async () => {
+  const fetchWeekOptions = useCallback(async () => {
     // Always use client-side generation for now to ensure correct dates
     const fallbackWeeks = generateWeekOptions();
     setWeekOptions(fallbackWeeks);
     if (fallbackWeeks.length > 0) {
       setSelectedWeek(fallbackWeeks[0].value);
     }
-  };
+  }, []);
 
   const generateWeekOptions = (): WeekOption[] => {
     const weeks = [];
@@ -105,14 +96,14 @@ const WorkScheduleCreatePage: React.FC = () => {
     return weeks;
   };
 
-  const generateDaySchedules = () => {
+  const generateDaySchedules = useCallback(() => {
     if (!selectedWeek) return;
 
     // Parse the selected week date correctly to avoid timezone issues
     const [year, month, day] = selectedWeek.split('-').map(Number);
     const weekStart = new Date(year, month - 1, day); // Month is 0-indexed
     
-    const dayNames = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+
     
     const schedules: DaySchedule[] = [];
     
@@ -123,14 +114,25 @@ const WorkScheduleCreatePage: React.FC = () => {
       const dateString = dayDate.toISOString().split('T')[0];
       
       schedules.push({
-        day_of_week: dayNames[i],
+        day_of_week: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'][i],
         date: dateString,
         shifts: []
       });
     }
     
     setDaySchedules(schedules);
-  };
+  }, [selectedWeek]);
+
+  useEffect(() => {
+    fetchEmployees();
+    fetchWeekOptions();
+  }, [fetchEmployees, fetchWeekOptions]);
+
+  useEffect(() => {
+    if (selectedWeek) {
+      generateDaySchedules();
+    }
+  }, [selectedWeek, generateDaySchedules]);
 
   const getDayName = (dateString: string) => {
     // Parse the date string correctly to avoid timezone issues
@@ -324,7 +326,7 @@ const WorkScheduleCreatePage: React.FC = () => {
     }
   };
 
-  const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">

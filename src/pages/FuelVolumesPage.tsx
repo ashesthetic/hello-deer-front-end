@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
@@ -32,7 +32,7 @@ const FuelVolumesPage: React.FC = () => {
   const [fuelVolumeToDelete, setFuelVolumeToDelete] = useState<FuelVolume | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  const fetchFuelVolumes = async () => {
+  const fetchFuelVolumes = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -68,11 +68,11 @@ const FuelVolumesPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters]);
 
   useEffect(() => {
     fetchFuelVolumes();
-  }, [filters]);
+  }, [filters, fetchFuelVolumes]);
 
   const handleFilterChange = (key: string, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }));

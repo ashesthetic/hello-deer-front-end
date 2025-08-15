@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { providerBillsApi, ProviderBill } from '../services/api';
 
@@ -8,13 +8,9 @@ const ProviderBillViewPage: React.FC = () => {
   const [providerBill, setProviderBill] = useState<ProviderBill | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (id) {
-      fetchProviderBill();
-    }
-  }, [id]);
 
-  const fetchProviderBill = async () => {
+
+  const fetchProviderBill = useCallback(async () => {
     try {
       setLoading(true);
       const response = await providerBillsApi.getById(parseInt(id!));
@@ -26,7 +22,13 @@ const ProviderBillViewPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, navigate]);
+
+  useEffect(() => {
+    if (id) {
+      fetchProviderBill();
+    }
+  }, [id, fetchProviderBill]);
 
   const handleDownloadInvoice = async () => {
     if (!providerBill?.invoice_file_path) {

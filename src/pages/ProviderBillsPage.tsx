@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
@@ -18,11 +18,9 @@ const ProviderBillsPage: React.FC = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [perPage] = useState(10);
 
-  useEffect(() => {
-    fetchProviderBills();
-  }, [searchTerm, statusFilter, sortBy, sortDirection, currentPage]);
 
-  const fetchProviderBills = async () => {
+
+  const fetchProviderBills = useCallback(async () => {
     try {
       setLoading(true);
       const params: any = {
@@ -48,7 +46,11 @@ const ProviderBillsPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchTerm, statusFilter, sortBy, sortDirection, currentPage, perPage]);
+
+  useEffect(() => {
+    fetchProviderBills();
+  }, [searchTerm, statusFilter, sortBy, sortDirection, currentPage, fetchProviderBills]);
 
   const handleDelete = async (id: number) => {
     if (!canDelete(currentUser)) {

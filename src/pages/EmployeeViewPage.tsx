@@ -26,7 +26,7 @@ const EmployeeViewPage: React.FC = () => {
   const currentUser = useSelector((state: RootState) => (state as any).auth.user);
   const [employee, setEmployee] = useState<ApiEmployee | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
@@ -38,9 +38,9 @@ const EmployeeViewPage: React.FC = () => {
         setLoading(true);
         const employeeResponse = await employeesApi.getById(parseInt(id));
         setEmployee(employeeResponse.data.data);
-        setError(null);
+
       } catch (err: any) {
-        setError(err.message);
+        console.error(err.message);
         setEmployee(null);
       } finally {
         setLoading(false);
@@ -65,7 +65,7 @@ const EmployeeViewPage: React.FC = () => {
       await employeesApi.delete(employee.id);
       navigate('/employees');
     } catch (err: any) {
-      setError(err.message);
+      console.error(err.message);
     }
   };
 

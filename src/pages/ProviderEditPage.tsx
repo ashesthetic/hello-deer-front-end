@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { providersApi, ProviderFormData } from '../services/api';
 
@@ -22,13 +22,9 @@ const ProviderEditPage: React.FC = () => {
     { value: 'Direct Deposit', label: 'Direct Deposit' },
   ];
 
-  useEffect(() => {
-    if (id) {
-      fetchProvider();
-    }
-  }, [id]);
 
-  const fetchProvider = async () => {
+
+  const fetchProvider = useCallback(async () => {
     try {
       setInitialLoading(true);
       const response = await providersApi.getById(parseInt(id!));
@@ -48,7 +44,13 @@ const ProviderEditPage: React.FC = () => {
     } finally {
       setInitialLoading(false);
     }
-  };
+  }, [id, navigate]);
+
+  useEffect(() => {
+    if (id) {
+      fetchProvider();
+    }
+  }, [id, fetchProvider]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;

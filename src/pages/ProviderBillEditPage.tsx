@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { providerBillsApi, ProviderBillFormData } from '../services/api';
 import { formatDateForAPI, parseDateSafely } from '../utils/dateUtils';
@@ -30,14 +30,9 @@ const ProviderBillEditPage: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [currentFileName, setCurrentFileName] = useState<string>('');
 
-  useEffect(() => {
-    if (id) {
-      fetchProviders();
-      fetchProviderBill();
-    }
-  }, [id]);
 
-  const fetchProviders = async () => {
+
+  const fetchProviders = useCallback(async () => {
     try {
       const response = await providerBillsApi.getProviders();
       setProviders(response.data);
@@ -45,9 +40,9 @@ const ProviderBillEditPage: React.FC = () => {
       console.error('Error fetching providers:', error);
       alert('Failed to load providers. Please try again.');
     }
-  };
+  }, []);
 
-  const fetchProviderBill = async () => {
+  const fetchProviderBill = useCallback(async () => {
     try {
       setInitialLoading(true);
       const response = await providerBillsApi.getById(parseInt(id!));
@@ -76,7 +71,14 @@ const ProviderBillEditPage: React.FC = () => {
     } finally {
       setInitialLoading(false);
     }
-  };
+  }, [id, navigate]);
+
+  useEffect(() => {
+    if (id) {
+      fetchProviders();
+      fetchProviderBill();
+    }
+  }, [id, fetchProviders, fetchProviderBill]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;

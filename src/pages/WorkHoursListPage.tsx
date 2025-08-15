@@ -59,14 +59,7 @@ const WorkHoursListPage: React.FC = () => {
     }
   };
 
-  const handleSort = (field: 'date' | 'employee' | 'total_hours') => {
-    if (sortBy === field) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortBy(field);
-      setSortOrder('desc');
-    }
-  };
+
 
   const filteredAndSortedWorkHours = workHours
     .filter(workHour => {
