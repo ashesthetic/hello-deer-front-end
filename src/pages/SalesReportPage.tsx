@@ -932,6 +932,15 @@ const SalesReportPage: React.FC = () => {
               </div>
             </div>
 
+            {/* Approx Profit by Date */}
+            <div className="bg-white rounded-lg shadow-lg p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Approx Profit by Date</h3>
+              <div className="h-80 relative">
+                <GrowthIndicator growth={calculateGrowth('approximate_profit')} />
+                <Bar data={createChartData('approximate_profit', 'Approximate Profit', '#10B981')} options={chartOptions} />
+              </div>
+            </div>
+
             {/* Weekly Groups vs Reported Total */}
             <div className="bg-white rounded-lg shadow-lg p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Weekly Groups vs Reported Total</h3>
