@@ -27,6 +27,7 @@ export function useUrlState(options: UseUrlStateOptions = {}) {
   const searchTerm = searchParams.get('search') || '';
   const statusFilter = searchParams.get('status') || '';
   const typeFilter = searchParams.get('type') || '';
+  const referenceFilter = searchParams.get('reference') || '';
   const vendorFilter = searchParams.get('vendor') || '';
 
   const updateUrl = (updates: Record<string, string | number>) => {
@@ -79,6 +80,10 @@ export function useUrlState(options: UseUrlStateOptions = {}) {
     updateUrl({ type: newTypeFilter, page: 1 }); // Reset to first page when filtering
   };
 
+  const setReferenceFilter = (newReferenceFilter: string) => {
+    updateUrl({ reference: newReferenceFilter, page: 1 }); // Reset to first page when filtering
+  };
+
   const setVendorFilter = (newVendorFilter: string) => {
     updateUrl({ vendor: newVendorFilter, page: 1 }); // Reset to first page when filtering
   };
@@ -105,6 +110,7 @@ export function useUrlState(options: UseUrlStateOptions = {}) {
     searchTerm,
     statusFilter,
     typeFilter,
+    referenceFilter,
     vendorFilter,
     
     // Setters
@@ -117,6 +123,7 @@ export function useUrlState(options: UseUrlStateOptions = {}) {
     setSearchTerm,
     setStatusFilter,
     setTypeFilter,
+    setReferenceFilter,
     setVendorFilter,
     clearFilters,
     
