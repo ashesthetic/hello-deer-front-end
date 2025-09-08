@@ -30,6 +30,7 @@ const VendorInvoiceEditPage: React.FC = () => {
     invoice_date: '',
     status: 'Unpaid',
     type: 'Expense',
+    reference: 'Vendor',
     payment_date: '',
     payment_method: undefined,
     gst: '',
@@ -55,6 +56,7 @@ const VendorInvoiceEditPage: React.FC = () => {
         invoice_date: formatDateForAPI(parseDateSafely(invoiceData.invoice_date)),
         status: invoiceData.status,
         type: invoiceData.type,
+        reference: invoiceData.reference,
         payment_date: invoiceData.payment_date ? formatDateForAPI(parseDateSafely(invoiceData.payment_date)) : '',
         payment_method: invoiceData.payment_method,
         gst: invoiceData.gst.toString(),
@@ -306,6 +308,24 @@ const VendorInvoiceEditPage: React.FC = () => {
               </select>
             </div>
 
+            {/* Reference */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Reference <span className="text-red-500">*</span>
+              </label>
+              <select
+                name="reference"
+                value={formData.reference}
+                onChange={handleInputChange}
+                required
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="Vendor">Vendor</option>
+                <option value="Ash">Ash</option>
+                <option value="Nafi">Nafi</option>
+              </select>
+            </div>
+
             {/* Subtotal (Read-only) */}
             <div>
               <label htmlFor="subtotal" className="block text-sm font-medium text-gray-700 mb-1">
@@ -491,4 +511,4 @@ const VendorInvoiceEditPage: React.FC = () => {
   );
 };
 
-export default VendorInvoiceEditPage; 
+export default VendorInvoiceEditPage;

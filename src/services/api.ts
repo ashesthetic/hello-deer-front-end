@@ -497,6 +497,7 @@ export interface VendorInvoice {
   invoice_date: string;
   status: 'Paid' | 'Unpaid';
   type: 'Income' | 'Expense';
+  reference: 'Vendor' | 'Ash' | 'Nafi';
   payment_date?: string;
   payment_method?: 'Card' | 'Cash' | 'Bank';
   invoice_file_path?: string;
@@ -525,6 +526,7 @@ export interface VendorInvoiceFormData {
   invoice_date: string;
   status: 'Paid' | 'Unpaid';
   type: 'Income' | 'Expense';
+  reference: 'Vendor' | 'Ash' | 'Nafi';
   payment_date?: string;
   payment_method?: 'Card' | 'Cash' | 'Bank';
   invoice_file?: File;
@@ -678,6 +680,7 @@ export const vendorInvoicesApi = {
     formData.append('invoice_date', data.invoice_date);
     formData.append('status', data.status);
     formData.append('type', data.type);
+    formData.append('reference', data.reference);
     formData.append('gst', data.gst);
     formData.append('total', data.total);
     
@@ -717,6 +720,7 @@ export const vendorInvoicesApi = {
     formData.append('invoice_date', data.invoice_date);
     formData.append('status', data.status);
     formData.append('type', data.type);
+    formData.append('reference', data.reference);
     formData.append('gst', data.gst);
     formData.append('total', data.total);
     
@@ -860,4 +864,4 @@ export const workScheduleApi = {
   employeeSchedules: (employeeId: number) => api.get(`/employees/${employeeId}/work-schedules`),
 };
 
-export default api; 
+export default api;

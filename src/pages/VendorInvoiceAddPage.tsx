@@ -32,6 +32,7 @@ const VendorInvoiceAddPage: React.FC = () => {
     invoice_date: getTodayForInput(),
     status: 'Unpaid',
     type: 'Expense',
+    reference: 'Vendor',
     payment_date: '',
     payment_method: undefined,
     gst: '',
@@ -262,6 +263,24 @@ const VendorInvoiceAddPage: React.FC = () => {
               >
                 <option value="Expense">Expense</option>
                 <option value="Income">Income</option>
+              </select>
+            </div>
+
+            {/* Reference */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Reference <span className="text-red-500">*</span>
+              </label>
+              <select
+                name="reference"
+                value={formData.reference}
+                onChange={handleInputChange}
+                required
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="Vendor">Vendor</option>
+                <option value="Ash">Ash</option>
+                <option value="Nafi">Nafi</option>
               </select>
             </div>
 
