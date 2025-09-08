@@ -183,6 +183,10 @@ const VendorInvoiceViewPage: React.FC = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Invoice Number</label>
                   <p className="text-gray-900">{invoice.invoice_number || 'Not specified'}</p>
                 </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Reference</label>
+                  <p className="text-gray-900">{invoice.reference}</p>
+                </div>
               </div>
             </div>
 
