@@ -24,6 +24,10 @@ import VendorsPage from './pages/VendorsPage';
 import VendorAddPage from './pages/VendorAddPage';
 import VendorEditPage from './pages/VendorEditPage';
 import VendorViewPage from './pages/VendorViewPage';
+import BankAccountsPage from './pages/BankAccountsPage';
+import BankAccountAddPage from './pages/BankAccountAddPage';
+import BankAccountEditPage from './pages/BankAccountEditPage';
+import BankAccountViewPage from './pages/BankAccountViewPage';
 import IncomePage from './pages/IncomePage';
 import ExpensePage from './pages/ExpensePage';
 import BalancePage from './pages/BalancePage';
@@ -267,6 +271,22 @@ const App: React.FC = () => {
           <Route 
             path="/accounting/vendors/:id/edit" 
             element={isAuthenticated ? <Layout><VendorEditPage /></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/accounting/bank-accounts" 
+            element={isAuthenticated ? <Layout><BankAccountsPage /></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/accounting/bank-accounts/add" 
+            element={isAuthenticated ? <Layout><BankAccountAddPage /></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/accounting/bank-accounts/:id" 
+            element={isAuthenticated ? <Layout><BankAccountViewPage /></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/accounting/bank-accounts/:id/edit" 
+            element={isAuthenticated ? <Layout><BankAccountEditPage /></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/accounting/income" 
