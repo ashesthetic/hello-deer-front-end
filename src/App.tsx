@@ -28,6 +28,7 @@ import BankAccountsPage from './pages/BankAccountsPage';
 import BankAccountAddPage from './pages/BankAccountAddPage';
 import BankAccountEditPage from './pages/BankAccountEditPage';
 import BankAccountViewPage from './pages/BankAccountViewPage';
+import ResolvePendingPage from './pages/ResolvePendingPage';
 import IncomePage from './pages/IncomePage';
 import ExpensePage from './pages/ExpensePage';
 import BalancePage from './pages/BalancePage';
@@ -288,6 +289,13 @@ const App: React.FC = () => {
             path="/accounting/bank-accounts/:id/edit" 
             element={isAuthenticated ? <Layout><BankAccountEditPage /></Layout> : <Navigate to="/login" />} 
           />
+          
+          {/* Resolve Pending Route (Admin only) */}
+          <Route 
+            path="/resolve-pending" 
+            element={isAuthenticated ? <Layout><ResolvePendingPage /></Layout> : <Navigate to="/login" />} 
+          />
+          
           <Route 
             path="/accounting/income" 
             element={isAuthenticated ? <Layout><IncomePage /></Layout> : <Navigate to="/login" />} 
