@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { PendingItem, BankAccount, ResolutionData } from '../types';
 import { safedropResolutionApi } from '../services/api';
 
