@@ -523,6 +523,7 @@ export interface VendorInvoiceFormData {
   reference: 'Vendor' | 'Ash' | 'Nafi';
   payment_date?: string;
   payment_method?: 'Card' | 'Cash' | 'Bank';
+  bank_account_id?: number;
   invoice_file?: File;
   gst: string;
   total: string;
@@ -685,6 +686,9 @@ export const vendorInvoicesApi = {
     if (data.payment_method) {
       formData.append('payment_method', data.payment_method);
     }
+    if (data.bank_account_id) {
+      formData.append('bank_account_id', data.bank_account_id.toString());
+    }
     if (data.description) {
       formData.append('description', data.description);
     }
@@ -725,6 +729,9 @@ export const vendorInvoicesApi = {
     if (data.payment_method) {
       formData.append('payment_method', data.payment_method);
     }
+    if (data.bank_account_id) {
+      formData.append('bank_account_id', data.bank_account_id.toString());
+    }
     if (data.description) {
       formData.append('description', data.description);
     }
@@ -748,6 +755,7 @@ export const vendorInvoicesApi = {
   },
   delete: (id: number) => api.delete(`/vendor-invoices/${id}`),
   getVendors: () => api.get('/vendor-invoices/vendors'),
+  getBankAccounts: () => api.get('/vendor-invoices/bank-accounts'),
   downloadFile: (id: number) => api.get(`/vendor-invoices/${id}/download`, { responseType: 'blob' }),
 };
 

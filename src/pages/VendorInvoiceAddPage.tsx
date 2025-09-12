@@ -13,6 +13,14 @@ interface Vendor {
   name: string;
 }
 
+interface BankAccount {
+  id: number;
+  bank_name: string;
+  account_name: string;
+  account_number: string;
+  display_name: string;
+}
+
 const VendorInvoiceAddPage: React.FC = () => {
   usePageTitle('Add Vendor Invoice');
   const navigate = useNavigate();
@@ -20,6 +28,7 @@ const VendorInvoiceAddPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [vendors, setVendors] = useState<Vendor[]>([]);
+  const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   
   // Refs for date inputs
@@ -35,6 +44,7 @@ const VendorInvoiceAddPage: React.FC = () => {
     reference: 'Vendor',
     payment_date: '',
     payment_method: undefined,
+    bank_account_id: undefined,
     gst: '',
     total: '',
     notes: '',
@@ -43,6 +53,7 @@ const VendorInvoiceAddPage: React.FC = () => {
 
   useEffect(() => {
     fetchVendors();
+    fetchBankAccounts();
   }, []);
 
   // Set up date input enhancements
@@ -65,6 +76,16 @@ const VendorInvoiceAddPage: React.FC = () => {
     }
   };
 
+  const fetchBankAccounts = async () => {
+    try {
+      const response = await vendorInvoicesApi.getBankAccounts();
+      setBankAccounts(response.data);
+    } catch (err: any) {
+      console.error('Bank accounts fetch error:', err);
+      setError(`Failed to fetch bank accounts: ${err.response?.data?.message || err.message || 'Unknown error'}`);
+    }
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -77,7 +98,8 @@ const VendorInvoiceAddPage: React.FC = () => {
       setFormData(prev => ({
         ...prev,
         payment_date: '',
-        payment_method: undefined
+        payment_method: undefined,
+        bank_account_id: undefined
       }));
     }
   };
@@ -117,6 +139,11 @@ const VendorInvoiceAddPage: React.FC = () => {
 
     if (formData.status === 'Paid' && !formData.payment_method) {
       setError('Payment method is required for paid invoices');
+      return;
+    }
+
+    if (formData.status === 'Paid' && !formData.bank_account_id) {
+      setError('Bank account is required for paid invoices');
       return;
     }
 
@@ -400,6 +427,29 @@ const VendorInvoiceAddPage: React.FC = () => {
                   <option value="Card">Card</option>
                   <option value="Cash">Cash</option>
                   <option value="Bank">Bank</option>
+                </select>
+              </div>
+            )}
+
+            {/* Bank Account - Only show if status is Paid */}
+            {formData.status === 'Paid' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Bank Account <span className="text-red-500">*</span>
+                </label>
+                <select
+                  name="bank_account_id"
+                  value={formData.bank_account_id || ''}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Select bank account</option>
+                  {bankAccounts.map((account) => (
+                    <option key={account.id} value={account.id}>
+                      {account.display_name}
+                    </option>
+                  ))}
                 </select>
               </div>
             )}
