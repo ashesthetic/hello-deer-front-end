@@ -70,6 +70,7 @@ import OwnerEquitiesPage from './pages/OwnerEquitiesPage';
 import OwnerEquityAddPage from './pages/OwnerEquityAddPage';
 import OwnerEquityEditPage from './pages/OwnerEquityEditPage';
 import OwnerEquityViewPage from './pages/OwnerEquityViewPage';
+import TransactionsPage from './pages/TransactionsPage';
 
 const App: React.FC = () => {
   const dispatch = useDispatch();
@@ -288,6 +289,12 @@ const App: React.FC = () => {
           <Route 
             path="/accounting/bank-accounts/:id/edit" 
             element={isAuthenticated ? <Layout><BankAccountEditPage /></Layout> : <Navigate to="/login" />} 
+          />
+          
+          {/* Transactions Routes */}
+          <Route 
+            path="/accounting/transactions" 
+            element={isAuthenticated ? <Layout><TransactionsPage /></Layout> : <Navigate to="/login" />} 
           />
           
           {/* Resolve Pending Route (Admin only) */}
