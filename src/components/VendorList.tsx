@@ -59,12 +59,6 @@ const VendorList: React.FC<VendorListProps> = ({
     return sortDirection === 'asc' ? '↑' : '↓';
   };
 
-  const formatDays = (days: string[]) => {
-    if (days.length === 0) return 'None';
-    if (days.length === 7) return 'All days';
-    return days.join(', ');
-  };
-
   const formatPaymentMethod = (method: string) => {
     switch (method) {
       case 'PAD':
@@ -139,12 +133,6 @@ const VendorList: React.FC<VendorListProps> = ({
                 </div>
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Order Days
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Delivery Days
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Contact Person
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -158,7 +146,7 @@ const VendorList: React.FC<VendorListProps> = ({
           <tbody className="divide-y divide-gray-200">
             {vendors.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+                <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
                   {searchTerm ? 'No vendors found matching your search.' : 'No vendors found.'}
                 </td>
               </tr>
@@ -173,16 +161,6 @@ const VendorList: React.FC<VendorListProps> = ({
                     <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
                       {formatPaymentMethod(vendor.payment_method)}
                     </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    <div className="text-sm text-gray-900">
-                      {formatDays(vendor.order_before_days)}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    <div className="text-sm text-gray-900">
-                      {formatDays(vendor.possible_delivery_days)}
-                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     <div className="text-sm text-gray-900">

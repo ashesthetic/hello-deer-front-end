@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Vendor, CreateVendorData, UpdateVendorData } from '../types';
 
 interface VendorFormProps {
@@ -7,156 +7,6 @@ interface VendorFormProps {
   loading: boolean;
   initialData: Vendor | null;
 }
-
-interface MultiSelectDropdownProps {
-  label: string;
-  options: string[];
-  selectedValues: string[];
-  onChange: (values: string[]) => void;
-  error?: string;
-  placeholder?: string;
-}
-
-const MultiSelectDropdown: React.FC<MultiSelectDropdownProps> = ({
-  label,
-  options,
-  selectedValues,
-  onChange,
-  error,
-  placeholder = "Select options..."
-}) => {
-  console.log(`MultiSelectDropdown ${label}:`, { selectedValues, options });
-  const [isOpen, setIsOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const filteredOptions = options.filter(option =>
-    option.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const handleToggleOption = (option: string) => {
-    const newValues = selectedValues.includes(option)
-      ? selectedValues.filter(value => value !== option)
-      : [...selectedValues, option];
-    onChange(newValues);
-  };
-
-  const handleSelectAll = () => {
-    onChange(options);
-  };
-
-  const handleClearAll = () => {
-    onChange([]);
-  };
-
-  const getDisplayText = () => {
-    if (selectedValues.length === 0) return placeholder;
-    if (selectedValues.length === options.length) return 'All days selected';
-    if (selectedValues.length === 1) return selectedValues[0];
-    return `${selectedValues.length} days selected`;
-  };
-
-  return (
-    <div className="relative" ref={dropdownRef}>
-      <label className="block text-sm font-medium text-gray-700 mb-2">
-        {label}
-      </label>
-      <div
-        className={`relative cursor-pointer border rounded-md focus-within:ring-2 focus-within:ring-blue-500 ${
-          error ? 'border-red-500' : 'border-gray-300'
-        }`}
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        <div className="flex items-center justify-between p-3">
-          <span className={`${selectedValues.length === 0 ? 'text-gray-500' : 'text-gray-900'}`}>
-            {getDisplayText()}
-          </span>
-          <svg
-            className={`w-5 h-5 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
-        </div>
-      </div>
-
-      {isOpen && (
-        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-hidden">
-          <div className="p-2 border-b border-gray-200">
-            <input
-              type="text"
-              placeholder="Search..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              onClick={(e) => e.stopPropagation()}
-            />
-          </div>
-          
-          <div className="p-2 border-b border-gray-200 flex gap-2">
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleSelectAll();
-              }}
-              className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
-            >
-              Select All
-            </button>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleClearAll();
-              }}
-              className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
-            >
-              Clear All
-            </button>
-          </div>
-
-          <div className="max-h-40 overflow-y-auto">
-            {filteredOptions.length === 0 ? (
-              <div className="p-3 text-gray-500 text-sm">No options found</div>
-            ) : (
-              filteredOptions.map((option) => (
-                <label
-                  key={option}
-                  className="flex items-center p-3 hover:bg-gray-50 cursor-pointer"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <input
-                    type="checkbox"
-                    checked={selectedValues.includes(option)}
-                    onChange={() => handleToggleOption(option)}
-                    className="mr-3"
-                  />
-                  <span className="text-sm text-gray-700">{option}</span>
-                </label>
-              ))
-            )}
-          </div>
-        </div>
-      )}
-      
-      {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
-    </div>
-  );
-};
 
 const VendorForm: React.FC<VendorFormProps> = ({
   onSubmit,
@@ -172,15 +22,12 @@ const VendorForm: React.FC<VendorFormProps> = ({
     contact_person_title: '',
     possible_products: '',
     payment_method: 'PAD',
-    order_before_days: [],
-    possible_delivery_days: [],
     notes: '',
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [voidCheckFile, setVoidCheckFile] = useState<File | null>(null);
 
-  const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   const paymentMethods = ['PAD', 'Credit Card', 'E-transfer', 'Direct Deposit'];
 
   useEffect(() => {
@@ -199,8 +46,6 @@ const VendorForm: React.FC<VendorFormProps> = ({
         transit_number: initialData.transit_number,
         institute_number: initialData.institute_number,
         account_number: initialData.account_number,
-        order_before_days: initialData.order_before_days,
-        possible_delivery_days: initialData.possible_delivery_days,
         notes: initialData.notes || '',
       };
       console.log('New form data:', newFormData);
@@ -217,14 +62,6 @@ const VendorForm: React.FC<VendorFormProps> = ({
 
     if (!formData.possible_products.trim()) {
       newErrors.possible_products = 'Possible products is required';
-    }
-
-    if (formData.order_before_days.length === 0) {
-      newErrors.order_before_days = 'At least one order before day is required';
-    }
-
-    if (formData.possible_delivery_days.length === 0) {
-      newErrors.possible_delivery_days = 'At least one possible delivery day is required';
     }
 
     if (formData.payment_method === 'E-transfer' && !formData.etransfer_email) {
@@ -515,39 +352,6 @@ const VendorForm: React.FC<VendorFormProps> = ({
             </div>
           </>
         )}
-
-        {/* Order and Delivery Days */}
-        <div className="md:col-span-2">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Order & Delivery Schedule</h2>
-        </div>
-
-        <div>
-          <MultiSelectDropdown
-            label="Order Before (Days) *"
-            options={daysOfWeek}
-            selectedValues={formData.order_before_days}
-            onChange={(values) => {
-              console.log('Order before days changed to:', values);
-              handleInputChange('order_before_days', values);
-            }}
-            error={errors.order_before_days}
-            placeholder="Select order days..."
-          />
-        </div>
-
-        <div>
-          <MultiSelectDropdown
-            label="Possible Delivery Days *"
-            options={daysOfWeek}
-            selectedValues={formData.possible_delivery_days}
-            onChange={(values) => {
-              console.log('Possible delivery days changed to:', values);
-              handleInputChange('possible_delivery_days', values);
-            }}
-            error={errors.possible_delivery_days}
-            placeholder="Select delivery days..."
-          />
-        </div>
 
         {/* Notes */}
         <div className="md:col-span-2">
