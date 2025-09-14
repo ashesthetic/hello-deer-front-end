@@ -71,6 +71,8 @@ import OwnerEquityAddPage from './pages/OwnerEquityAddPage';
 import OwnerEquityEditPage from './pages/OwnerEquityEditPage';
 import OwnerEquityViewPage from './pages/OwnerEquityViewPage';
 import TransactionsPage from './pages/TransactionsPage';
+import ProfilePage from './pages/ProfilePage';
+import ProtectedRoute from './components/ProtectedRoute';
 
 const App: React.FC = () => {
   const dispatch = useDispatch();
@@ -110,304 +112,310 @@ const App: React.FC = () => {
           {/* Sales Routes */}
           <Route 
             path="/sales" 
-            element={isAuthenticated ? <Layout><DailySalesPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><DailySalesPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/sales/:id" 
-            element={isAuthenticated ? <Layout><DailySalesViewPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><DailySalesViewPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/sales/:id/edit" 
-            element={isAuthenticated ? <Layout><DailySalesEditPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><DailySalesEditPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/sales/new" 
-            element={isAuthenticated ? <Layout><DailySalesEditPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><DailySalesEditPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           
           {/* Fuels Routes */}
           <Route 
             path="/fuels" 
-            element={isAuthenticated ? <Layout><DailyFuelsPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><DailyFuelsPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/fuels/:id" 
-            element={isAuthenticated ? <Layout><DailyFuelViewPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><DailyFuelViewPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/fuels/:id/edit" 
-            element={isAuthenticated ? <Layout><DailyFuelEditPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><DailyFuelEditPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/fuels/new" 
-            element={isAuthenticated ? <Layout><DailyFuelEditPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><DailyFuelEditPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           
           {/* Fuel Volume Routes */}
           <Route 
             path="/fuel-volumes" 
-            element={isAuthenticated ? <Layout><FuelVolumesPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><FuelVolumesPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/fuel-volumes/:id" 
-            element={isAuthenticated ? <Layout><FuelVolumeViewPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><FuelVolumeViewPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/fuel-volumes/:id/edit" 
-            element={isAuthenticated ? <Layout><FuelVolumeEditPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><FuelVolumeEditPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/fuel-volumes/new" 
-            element={isAuthenticated ? <Layout><FuelVolumeEditPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><FuelVolumeEditPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           
           {/* Import Data Route */}
           <Route 
             path="/import-data" 
-            element={isAuthenticated ? <Layout><ImportDataPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><ImportDataPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           
           {/* File Imports List Route */}
           <Route 
             path="/file-imports" 
-            element={isAuthenticated ? <Layout><FileImportsListPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><FileImportsListPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           
           {/* Employees Routes */}
           <Route 
             path="/employees" 
-            element={isAuthenticated ? <Layout><EmployeesPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><EmployeesPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/employees/add" 
-            element={isAuthenticated ? <Layout><AddEmployeePage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><AddEmployeePage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/employees/hours" 
-            element={isAuthenticated ? <Layout><AddHoursPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><AddHoursPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/employees/earnings" 
-            element={isAuthenticated ? <Layout><EmployeeEarningsPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><EmployeeEarningsPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/employees/work-hour-report" 
-            element={isAuthenticated ? <Layout><WorkHourReportPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><WorkHourReportPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/employees/pay-stubs" 
-            element={isAuthenticated ? <Layout><PayStubsPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><PayStubsPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/employees/:id" 
-            element={isAuthenticated ? <Layout><EmployeeViewPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><EmployeeViewPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/employees/:id/edit" 
-            element={isAuthenticated ? <Layout><EmployeeEditPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><EmployeeEditPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           
           {/* Work Hours Routes */}
           <Route 
             path="/work-hours" 
-            element={isAuthenticated ? <Layout><WorkHoursListPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><WorkHoursListPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/work-hours/create" 
-            element={isAuthenticated ? <Layout><WorkHoursEditPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><WorkHoursEditPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/work-hours/:id" 
-            element={isAuthenticated ? <Layout><WorkHoursViewPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><WorkHoursViewPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/work-hours/:id/edit" 
-            element={isAuthenticated ? <Layout><WorkHoursEditPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><WorkHoursEditPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           
           {/* Work Schedule Routes */}
           <Route 
             path="/work-schedules" 
-            element={isAuthenticated ? <Layout><WorkSchedulesPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><WorkSchedulesPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/work-schedules/create" 
-            element={isAuthenticated ? <Layout><WorkScheduleCreatePage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><WorkScheduleCreatePage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           
           {/* Reports Routes */}
           <Route 
             path="/reports/sales" 
-            element={isAuthenticated ? <Layout><SalesReportPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><SalesReportPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/reports/fuels" 
-            element={isAuthenticated ? <Layout><FuelsReportPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><FuelsReportPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/reports/settlement" 
-            element={isAuthenticated ? <Layout><SettlementReportPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><SettlementReportPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/reports/expense" 
-            element={isAuthenticated ? <Layout><ExpenseReportPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><ExpenseReportPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/reports/income" 
-            element={isAuthenticated ? <Layout><IncomeReportPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><IncomeReportPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           
           {/* Accounting Routes */}
           <Route 
             path="/accounting/vendors" 
-            element={isAuthenticated ? <Layout><VendorsPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><VendorsPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/accounting/vendors/add" 
-            element={isAuthenticated ? <Layout><VendorAddPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><VendorAddPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/accounting/vendors/:id" 
-            element={isAuthenticated ? <Layout><VendorViewPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><VendorViewPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/accounting/vendors/:id/edit" 
-            element={isAuthenticated ? <Layout><VendorEditPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><VendorEditPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/accounting/bank-accounts" 
-            element={isAuthenticated ? <Layout><BankAccountsPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><BankAccountsPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/accounting/bank-accounts/add" 
-            element={isAuthenticated ? <Layout><BankAccountAddPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><BankAccountAddPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/accounting/bank-accounts/:id" 
-            element={isAuthenticated ? <Layout><BankAccountViewPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><BankAccountViewPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/accounting/bank-accounts/:id/edit" 
-            element={isAuthenticated ? <Layout><BankAccountEditPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><BankAccountEditPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           
           {/* Transactions Routes */}
           <Route 
             path="/accounting/transactions" 
-            element={isAuthenticated ? <Layout><TransactionsPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><TransactionsPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           
           {/* Resolve Pending Route (Admin only) */}
           <Route 
             path="/resolve-pending" 
-            element={isAuthenticated ? <Layout><ResolvePendingPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="admin"><ResolvePendingPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           
           <Route 
             path="/accounting/income" 
-            element={isAuthenticated ? <Layout><IncomePage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><IncomePage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/accounting/expense" 
-            element={isAuthenticated ? <Layout><ExpensePage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><ExpensePage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/accounting/balance" 
-            element={isAuthenticated ? <Layout><BalancePage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><BalancePage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/accounting/vendor-invoices" 
-            element={isAuthenticated ? <Layout><VendorInvoicesPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><VendorInvoicesPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/accounting/vendor-invoices/add" 
-            element={isAuthenticated ? <Layout><VendorInvoiceAddPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><VendorInvoiceAddPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/accounting/vendor-invoices/:id" 
-            element={isAuthenticated ? <Layout><VendorInvoiceViewPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><VendorInvoiceViewPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/accounting/vendor-invoices/:id/edit" 
-            element={isAuthenticated ? <Layout><VendorInvoiceEditPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><VendorInvoiceEditPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           
           {/* Provider Routes */}
           <Route 
             path="/accounting/providers" 
-            element={isAuthenticated ? <Layout><ProvidersPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><ProvidersPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/accounting/providers/add" 
-            element={isAuthenticated ? <Layout><ProviderAddPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><ProviderAddPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/accounting/providers/:id" 
-            element={isAuthenticated ? <Layout><ProviderViewPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><ProviderViewPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/accounting/providers/:id/edit" 
-            element={isAuthenticated ? <Layout><ProviderEditPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><ProviderEditPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           
           {/* Provider Bill Routes */}
           <Route 
             path="/accounting/provider-bills" 
-            element={isAuthenticated ? <Layout><ProviderBillsPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><ProviderBillsPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/accounting/provider-bills/add" 
-            element={isAuthenticated ? <Layout><ProviderBillAddPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><ProviderBillAddPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/accounting/provider-bills/:id" 
-            element={isAuthenticated ? <Layout><ProviderBillViewPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><ProviderBillViewPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/accounting/provider-bills/:id/edit" 
-            element={isAuthenticated ? <Layout><ProviderBillEditPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><ProviderBillEditPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           
           {/* Owner Routes */}
           <Route 
             path="/accounting/owners" 
-            element={isAuthenticated ? <Layout><OwnersPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><OwnersPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/accounting/owners/add" 
-            element={isAuthenticated ? <Layout><OwnerAddPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><OwnerAddPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/accounting/owners/:id" 
-            element={isAuthenticated ? <Layout><OwnerViewPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><OwnerViewPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/accounting/owners/:id/edit" 
-            element={isAuthenticated ? <Layout><OwnerEditPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><OwnerEditPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           
           {/* Owner Equity Routes */}
           <Route 
             path="/accounting/owner-equities" 
-            element={isAuthenticated ? <Layout><OwnerEquitiesPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><OwnerEquitiesPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/accounting/owner-equities/add" 
-            element={isAuthenticated ? <Layout><OwnerEquityAddPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><OwnerEquityAddPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/accounting/owner-equities/:id" 
-            element={isAuthenticated ? <Layout><OwnerEquityViewPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><OwnerEquityViewPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/accounting/owner-equities/:id/edit" 
-            element={isAuthenticated ? <Layout><OwnerEquityEditPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><OwnerEquityEditPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           
           {/* Users Route */}
           <Route 
             path="/users" 
-            element={isAuthenticated ? <Layout><UserManagementPage /></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="canManageUsers"><UserManagementPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
+          />
+          
+          {/* Profile Route */}
+          <Route 
+            path="/profile" 
+            element={isAuthenticated ? <Layout><ProfilePage /></Layout> : <Navigate to="/login" />} 
           />
           
           {/* Settings Route */}

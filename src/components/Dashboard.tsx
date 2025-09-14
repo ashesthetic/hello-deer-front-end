@@ -1,6 +1,9 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { RootState } from '../store';
 import { usePageTitle } from '../hooks/usePageTitle';
+import { isStaff } from '../utils/permissions';
 import SalesReportCard from './SalesReportCard';
 import WeeklyReportCard from './WeeklyReportCard';
 import WeeklyTrendCard from './WeeklyTrendCard';
@@ -12,6 +15,7 @@ import FuelTrendCard from './FuelTrendCard';
 const Dashboard: React.FC = () => {
   usePageTitle('Dashboard');
   const navigate = useNavigate();
+  const currentUser = useSelector((state: RootState) => (state as any).auth.user);
 
   const handleNavigateToDailySales = () => {
     navigate('/daily-sales');
@@ -20,6 +24,35 @@ const Dashboard: React.FC = () => {
   const handleNavigateToDailyFuels = () => {
     navigate('/daily-fuels');
   };
+
+  // If user is staff, show a simple welcome message
+  if (isStaff(currentUser)) {
+    return (
+      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div className="px-4 py-6 sm:px-0">
+          <div className="bg-white rounded-lg shadow-lg p-8 text-center">
+            <div className="mb-6">
+              <svg className="w-20 h-20 text-blue-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+              </svg>
+            </div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">
+              Welcome, {currentUser?.name}!
+            </h1>
+            <p className="text-lg text-gray-600 mb-6">
+              You're logged in as a Staff member. Your profile settings are available in the settings menu.
+            </p>
+            <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+              <p className="text-sm text-blue-700">
+                <strong>Note:</strong> As a staff member, you have limited access to the system. 
+                If you need additional permissions, please contact your administrator.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
