@@ -1,5 +1,8 @@
 import axios from 'axios';
-import { DailySale, DailyFuel, FuelVolume, LoginCredentials, CreateUserData, UpdateUserData, CreateVendorData, UpdateVendorData, CreateOwnerData, UpdateOwnerData, CreateOwnerEquityData, UpdateOwnerEquityData, CreateBankAccountData, UpdateBankAccountData, CreateResolutionData } from '../types';
+import { DailySale, DailyFuel, FuelVolume, LoginCredentials, CreateUserData, UpdateUserData, CreateVendorData, UpdateVendorData, CreateOwnerData, UpdateOwnerData, CreateOwnerEquityData, UpdateOwnerEquityData, CreateBankAccountData, UpdateBankAccountData, CreateResolutionData, VendorInvoice } from '../types';
+
+// Re-export types for convenience
+export type { VendorInvoice };
 
 // Employee interfaces
 export interface Employee {
@@ -484,37 +487,7 @@ export interface ProviderFormData {
   email?: string;
 }
 
-// Vendor Invoice interfaces
-export interface VendorInvoice {
-  id: number;
-  vendor_id: number;
-  invoice_number?: string;
-  invoice_date: string;
-  status: 'Paid' | 'Unpaid';
-  type: 'Income' | 'Expense';
-  reference: 'Vendor' | 'Ash' | 'Nafi';
-  payment_date?: string;
-  payment_method?: 'Card' | 'Cash' | 'Bank';
-  invoice_file_path?: string;
-  subtotal: number | string;
-  gst: number | string;
-  total: number | string;
-  notes?: string;
-  description?: string;
-  user_id: number;
-  created_at: string;
-  updated_at: string;
-  vendor?: {
-    id: number;
-    name: string;
-  };
-  user?: {
-    id: number;
-    name: string;
-    email: string;
-  };
-}
-
+// Vendor Invoice interfaces - Import VendorInvoice from types
 export interface VendorInvoiceFormData {
   vendor_id: number;
   invoice_number?: string;
