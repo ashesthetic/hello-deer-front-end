@@ -54,12 +54,15 @@ const VendorInvoiceAddPage: React.FC = () => {
   });
 
   useEffect(() => {
+    // Only run when currentUser is available
+    if (!currentUser) return;
+    
     fetchVendors();
     // Only fetch bank accounts for non-staff users since staff can only create unpaid invoices
     if (!isStaff(currentUser)) {
       fetchBankAccounts();
     }
-  }, []);
+  }, [currentUser]);
 
   // Set up date input enhancements
   useEffect(() => {
@@ -85,11 +88,6 @@ const VendorInvoiceAddPage: React.FC = () => {
   };
 
   const fetchBankAccounts = async () => {
-    // Staff users don't need bank accounts since they can only create unpaid invoices
-    if (isStaff(currentUser)) {
-      return;
-    }
-    
     try {
       const response = await vendorInvoicesApi.getBankAccounts();
       setBankAccounts(response.data);
