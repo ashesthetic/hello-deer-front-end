@@ -29,7 +29,7 @@ const Navigation: React.FC = () => {
     return children.some(child => isActive(child.path));
   };
 
-  // If user is staff, only show dashboard
+  // If user is staff, only show dashboard and add invoice
   let navItems: NavItem[] = [];
 
   if (isStaff(currentUser)) {
@@ -41,6 +41,15 @@ const Navigation: React.FC = () => {
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5a2 2 0 012-2h4a2 2 0 012 2v6H8V5z" />
+          </svg>
+        )
+      },
+      {
+        path: '/vendor-invoices/add',
+        label: 'Add Invoice',
+        icon: (
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
           </svg>
         )
       }
@@ -557,7 +566,7 @@ const Navigation: React.FC = () => {
           {/* Desktop Navigation Links */}
           <div className="hidden lg:flex items-center space-x-1">
             {(isStaff(currentUser) 
-              ? navItems.filter(item => item.path === '/dashboard' || item.path === '/settings' || item.path === '/logout')
+              ? navItems.filter(item => item.path === '/dashboard' || item.path === '/vendor-invoices/add' || item.path === '/settings' || item.path === '/logout')
               : navItems
             ).map((item) => renderNavItem(item))}
           </div>
@@ -636,7 +645,7 @@ const Navigation: React.FC = () => {
             
             {/* Navigation Items */}
             {(isStaff(currentUser) 
-              ? navItems.filter(item => item.path === '/dashboard' || item.path === '/settings' || item.path === '/logout')
+              ? navItems.filter(item => item.path === '/dashboard' || item.path === '/vendor-invoices/add' || item.path === '/settings' || item.path === '/logout')
               : navItems
             ).map((item) => renderNavItem(item, true))}
           </div>

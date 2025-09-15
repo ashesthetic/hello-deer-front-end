@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 import { vendorInvoicesApi, VendorInvoiceFormData } from '../services/api';
-import { canCreate } from '../utils/permissions';
+import { canCreate, isStaff } from '../utils/permissions';
 import { usePageTitle } from '../hooks/usePageTitle';
 import { getTodayForInput } from '../utils/dateUtils';
 import { setupDateInput } from '../utils/dateInputUtils';
@@ -70,7 +70,10 @@ const VendorInvoiceAddPage: React.FC = () => {
 
   const fetchVendors = async () => {
     try {
-      const response = await vendorInvoicesApi.getVendors();
+      // Use staff endpoint if user is staff, otherwise use regular endpoint
+      const response = isStaff(currentUser) 
+        ? await vendorInvoicesApi.getVendorsForStaff()
+        : await vendorInvoicesApi.getVendors();
       setVendors(response.data);
     } catch (err: any) {
       console.error('Vendor fetch error:', err);
@@ -79,6 +82,11 @@ const VendorInvoiceAddPage: React.FC = () => {
   };
 
   const fetchBankAccounts = async () => {
+    // Staff users don't need bank accounts since they can only create unpaid invoices
+    if (isStaff(currentUser)) {
+      return;
+    }
+    
     try {
       const response = await vendorInvoicesApi.getBankAccounts();
       setBankAccounts(response.data);
@@ -118,7 +126,7 @@ const VendorInvoiceAddPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!canCreate(currentUser)) {
+    if (!canCreate(currentUser) && !isStaff(currentUser)) {
       setError('You do not have permission to create vendor invoices');
       return;
     }
@@ -138,19 +146,22 @@ const VendorInvoiceAddPage: React.FC = () => {
       return;
     }
 
-    if (formData.status === 'Paid' && !formData.payment_date) {
-      setError('Payment date is required for paid invoices');
-      return;
-    }
+    // For non-staff users, validate payment fields
+    if (!isStaff(currentUser)) {
+      if (formData.status === 'Paid' && !formData.payment_date) {
+        setError('Payment date is required for paid invoices');
+        return;
+      }
 
-    if (formData.status === 'Paid' && !formData.payment_method) {
-      setError('Payment method is required for paid invoices');
-      return;
-    }
+      if (formData.status === 'Paid' && !formData.payment_method) {
+        setError('Payment method is required for paid invoices');
+        return;
+      }
 
-    if (formData.status === 'Paid' && !formData.bank_account_id) {
-      setError('Bank account is required for paid invoices');
-      return;
+      if (formData.status === 'Paid' && !formData.bank_account_id) {
+        setError('Bank account is required for paid invoices');
+        return;
+      }
     }
 
     // Check Google Drive authentication if file is selected
@@ -168,8 +179,14 @@ const VendorInvoiceAddPage: React.FC = () => {
         invoice_file: selectedFile || undefined
       };
 
-      await vendorInvoicesApi.create(submitData);
-      navigate('/accounting/vendor-invoices');
+      // Use staff endpoint if user is staff
+      if (isStaff(currentUser)) {
+        await vendorInvoicesApi.createForStaff(submitData);
+        navigate('/dashboard'); // Staff users go back to dashboard
+      } else {
+        await vendorInvoicesApi.create(submitData);
+        navigate('/accounting/vendor-invoices'); // Regular users go to vendor invoices list
+      }
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || 'Failed to create vendor invoice';
       const errorCode = err.response?.data?.error_code;
@@ -185,10 +202,14 @@ const VendorInvoiceAddPage: React.FC = () => {
   };
 
   const handleCancel = () => {
-    navigate('/accounting/vendor-invoices');
+    if (isStaff(currentUser)) {
+      navigate('/dashboard');
+    } else {
+      navigate('/accounting/vendor-invoices');
+    }
   };
 
-  if (!canCreate(currentUser)) {
+  if (!canCreate(currentUser) && !isStaff(currentUser)) {
     return (
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center py-12">
@@ -198,7 +219,7 @@ const VendorInvoiceAddPage: React.FC = () => {
             onClick={handleCancel}
             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
           >
-            Back to Vendor Invoices
+            Back to {isStaff(currentUser) ? 'Dashboard' : 'Vendor Invoices'}
           </button>
         </div>
       </div>
@@ -389,20 +410,29 @@ const VendorInvoiceAddPage: React.FC = () => {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Status <span className="text-red-500">*</span>
               </label>
-              <select
-                name="status"
-                value={formData.status}
-                onChange={handleInputChange}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="Unpaid">Unpaid</option>
-                <option value="Paid">Paid</option>
-              </select>
+              {isStaff(currentUser) ? (
+                <input
+                  type="text"
+                  value="Unpaid"
+                  readOnly
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-600 cursor-not-allowed"
+                />
+              ) : (
+                <select
+                  name="status"
+                  value={formData.status}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="Unpaid">Unpaid</option>
+                  <option value="Paid">Paid</option>
+                </select>
+              )}
             </div>
 
-            {/* Payment Date - Only show if status is Paid */}
-            {formData.status === 'Paid' && (
+            {/* Payment Date - Only show if status is Paid and not staff */}
+            {formData.status === 'Paid' && !isStaff(currentUser) && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Payment Date <span className="text-red-500">*</span>
@@ -429,8 +459,8 @@ const VendorInvoiceAddPage: React.FC = () => {
               </div>
             )}
 
-            {/* Payment Method - Only show if status is Paid */}
-            {formData.status === 'Paid' && (
+            {/* Payment Method - Only show if status is Paid and not staff */}
+            {formData.status === 'Paid' && !isStaff(currentUser) && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Payment Method <span className="text-red-500">*</span>
@@ -450,8 +480,8 @@ const VendorInvoiceAddPage: React.FC = () => {
               </div>
             )}
 
-            {/* Bank Account - Only show if status is Paid */}
-            {formData.status === 'Paid' && (
+            {/* Bank Account - Only show if status is Paid and not staff */}
+            {formData.status === 'Paid' && !isStaff(currentUser) && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Bank Account <span className="text-red-500">*</span>

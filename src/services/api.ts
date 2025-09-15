@@ -732,6 +732,41 @@ export const vendorInvoicesApi = {
   getBankAccounts: () => api.get('/vendor-invoices/bank-accounts'),
   downloadFile: (id: number) => api.get(`/vendor-invoices/${id}/download`, { responseType: 'blob' }),
   getFileViewLink: (id: number) => api.get(`/vendor-invoices/${id}/view-link`),
+  
+  // Staff-specific endpoints
+  getVendorsForStaff: () => api.get('/staff/vendor-invoices/vendors'),
+  createForStaff: (data: VendorInvoiceFormData) => {
+    const formData = new FormData();
+    
+    // Add basic fields
+    formData.append('vendor_id', data.vendor_id.toString());
+    if (data.invoice_number) {
+      formData.append('invoice_number', data.invoice_number);
+    }
+    formData.append('invoice_date', data.invoice_date);
+    formData.append('type', data.type);
+    formData.append('reference', data.reference);
+    formData.append('gst', data.gst);
+    formData.append('total', data.total);
+    
+    if (data.description) {
+      formData.append('description', data.description);
+    }
+    if (data.notes) {
+      formData.append('notes', data.notes);
+    }
+    
+    // Add file if provided
+    if (data.invoice_file) {
+      formData.append('invoice_file', data.invoice_file);
+    }
+    
+    return api.post('/staff/vendor-invoices', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
 };
 
 // User Management API (Admin only)
