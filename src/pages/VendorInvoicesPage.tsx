@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 import { vendorInvoicesApi, VendorInvoice } from '../services/api';
 import { Vendor } from '../types';
-import { canCreate } from '../utils/permissions';
+import { canCreate, isStaff } from '../utils/permissions';
 import { usePageTitle } from '../hooks/usePageTitle';
 import { useUrlState } from '../hooks/useUrlState';
 import { formatDateForDisplay, formatCurrency } from '../utils/dateUtils';
@@ -64,14 +64,16 @@ const VendorInvoicesPage: React.FC = () => {
   useEffect(() => {
     const fetchVendors = async () => {
       try {
-        const response = await vendorInvoicesApi.getVendors();
+        const response = isStaff(currentUser) 
+          ? await vendorInvoicesApi.getVendorsForStaff()
+          : await vendorInvoicesApi.getVendors();
         setVendors(response.data || []);
       } catch (err) {
-        console.error('Error fetching vendors:', err);
+        // Error fetching vendors - silently handle
       }
     };
     fetchVendors();
-  }, []);
+  }, [currentUser]);
 
   useEffect(() => {
     fetchInvoices(currentPage);
@@ -112,7 +114,9 @@ const VendorInvoicesPage: React.FC = () => {
         params.end_date = endDateFilter;
       }
 
-      const response = await vendorInvoicesApi.getAll(params);
+      const response = isStaff(currentUser)
+        ? await vendorInvoicesApi.getAllForStaff(params)
+        : await vendorInvoicesApi.getAll(params);
       setInvoices(response.data.data || []);
       setTotalPages(response.data.last_page || 1);
       setTotalItems(response.data.total || 0);
@@ -124,15 +128,28 @@ const VendorInvoicesPage: React.FC = () => {
   };
 
   const handleAddInvoice = () => {
-    navigate('/accounting/vendor-invoices/add');
+    if (isStaff(currentUser)) {
+      navigate('/vendor-invoices/add');
+    } else {
+      navigate('/accounting/vendor-invoices/add');
+    }
   };
 
   const handleEditInvoice = (invoice: VendorInvoice) => {
-    navigate(`/accounting/vendor-invoices/${invoice.id}/edit`);
+    if (isStaff(currentUser)) {
+      // Staff users cannot edit invoices - redirect to view
+      navigate(`/vendor-invoices/${invoice.id}`);
+    } else {
+      navigate(`/accounting/vendor-invoices/${invoice.id}/edit`);
+    }
   };
 
   const handleViewInvoice = (invoice: VendorInvoice) => {
-    navigate(`/accounting/vendor-invoices/${invoice.id}`);
+    if (isStaff(currentUser)) {
+      navigate(`/vendor-invoices/${invoice.id}`);
+    } else {
+      navigate(`/accounting/vendor-invoices/${invoice.id}`);
+    }
   };
 
   const handleDeleteInvoice = (invoice: VendorInvoice) => {
@@ -200,7 +217,7 @@ const VendorInvoicesPage: React.FC = () => {
             <h1 className="text-2xl font-bold text-gray-900">Vendor Invoices</h1>
             <p className="text-gray-600">Manage vendor invoices and payments</p>
           </div>
-          {canCreate(currentUser) && (
+          {(canCreate(currentUser) || isStaff(currentUser)) && (
             <button
               onClick={handleAddInvoice}
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
@@ -459,18 +476,22 @@ const VendorInvoicesPage: React.FC = () => {
                             >
                               View
                             </button>
-                            <button
-                              onClick={() => handleEditInvoice(invoice)}
-                              className="text-indigo-600 hover:text-indigo-900 text-xs"
-                            >
-                              Edit
-                            </button>
-                            <button
-                              onClick={() => handleDeleteInvoice(invoice)}
-                              className="text-red-600 hover:text-red-900 text-xs"
-                            >
-                              Delete
-                            </button>
+                            {!isStaff(currentUser) && (
+                              <>
+                                <button
+                                  onClick={() => handleEditInvoice(invoice)}
+                                  className="text-indigo-600 hover:text-indigo-900 text-xs"
+                                >
+                                  Edit
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteInvoice(invoice)}
+                                  className="text-red-600 hover:text-red-900 text-xs"
+                                >
+                                  Delete
+                                </button>
+                              </>
+                            )}
                           </div>
                         </td>
                       </tr>

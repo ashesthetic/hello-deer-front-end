@@ -88,7 +88,6 @@ const App: React.FC = () => {
           const response = await authApi.profile();
           dispatch(loginSuccess({ user: response.data, token }));
         } catch (error) {
-          console.error('Failed to fetch user profile:', error);
           localStorage.removeItem('token');
         }
       };
@@ -326,10 +325,18 @@ const App: React.FC = () => {
             element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><VendorInvoiceAddPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           
-          {/* Staff-specific invoice add route */}
+          {/* Staff-specific invoice routes */}
+          <Route 
+            path="/vendor-invoices" 
+            element={isAuthenticated ? <Layout><VendorInvoicesPage /></Layout> : <Navigate to="/login" />} 
+          />
           <Route 
             path="/vendor-invoices/add" 
             element={isAuthenticated ? <Layout><VendorInvoiceAddPage /></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/vendor-invoices/:id" 
+            element={isAuthenticated ? <Layout><VendorInvoiceViewPage /></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/accounting/vendor-invoices/:id" 

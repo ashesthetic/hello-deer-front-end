@@ -734,6 +734,8 @@ export const vendorInvoicesApi = {
   getFileViewLink: (id: number) => api.get(`/vendor-invoices/${id}/view-link`),
   
   // Staff-specific endpoints
+  getAllForStaff: (params?: any) => api.get('/staff/vendor-invoices', { params }),
+  getForStaff: (id: number) => api.get(`/staff/vendor-invoices/${id}`),
   getVendorsForStaff: () => api.get('/staff/vendor-invoices/vendors'),
   createForStaff: (data: VendorInvoiceFormData) => {
     const formData = new FormData();
