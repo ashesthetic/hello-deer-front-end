@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-
+import { useSelector } from 'react-redux';
+import { RootState } from '../store';
 import { fuelVolumeApi } from '../services/api';
 import { getTodayAlberta } from '../utils/dateUtils';
+import { isStaff, canUpdate } from '../utils/permissions';
 
 interface FuelVolumeForm {
   date: string;
@@ -21,6 +23,7 @@ interface FuelVolumeForm {
 const FuelVolumeEditPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const currentUser = useSelector((state: RootState) => (state as any).auth.user);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -39,6 +42,17 @@ const FuelVolumeEditPage: React.FC = () => {
   });
 
   const isEditing = Boolean(id);
+
+  // Check permissions
+  const canEdit = !isStaff(currentUser) && canUpdate(currentUser);
+  const canAdd = !isStaff(currentUser) || isStaff(currentUser); // Both admin and staff can add
+  
+  // If staff trying to edit, redirect
+  useEffect(() => {
+    if (isEditing && isStaff(currentUser) && !canUpdate(currentUser)) {
+      navigate('/fuel-volumes');
+    }
+  }, [isEditing, currentUser, navigate]);
 
   const fetchFuelVolume = useCallback(async () => {
     try {
@@ -78,6 +92,19 @@ const FuelVolumeEditPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Check permissions for editing
+    if (isEditing && !canEdit) {
+      setError('You do not have permission to edit fuel volumes');
+      return;
+    }
+    
+    // Check permissions for adding
+    if (!isEditing && !canAdd) {
+      setError('You do not have permission to add fuel volumes');
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -98,7 +125,12 @@ const FuelVolumeEditPage: React.FC = () => {
       if (isEditing) {
         await fuelVolumeApi.update(parseInt(id!), submitData);
       } else {
-        await fuelVolumeApi.store(submitData);
+        // Use staff API for staff users, regular API for others
+        if (isStaff(currentUser)) {
+          await fuelVolumeApi.createForStaff(submitData);
+        } else {
+          await fuelVolumeApi.store(submitData);
+        }
       }
 
       navigate('/fuel-volumes');

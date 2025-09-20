@@ -265,6 +265,10 @@ export const fuelVolumeApi = {
     const url = date ? `/fuel-volumes/daily-summary/${date}` : '/fuel-volumes/daily-summary';
     return api.get(url);
   },
+  // Staff-specific methods
+  getAllForStaff: (params?: string) => api.get(`/staff/fuel-volumes${params ? `?${params}` : ''}`),
+  getForStaff: (id: number) => api.get(`/staff/fuel-volumes/${id}`),
+  createForStaff: (data: Omit<FuelVolume, 'id'>) => api.post('/staff/fuel-volumes', data),
 };
 
 // Vendor API
