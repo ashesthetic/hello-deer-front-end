@@ -96,6 +96,14 @@ export interface SftProcessResult {
     afd_discover: number;
     afd_interac_debit: number;
     afd_debit_transaction_count: number;
+    // Department Totals
+    tobacco_25: number;
+    tobacco_20: number;
+    lottery_total: number;
+    prepay_total: number;
+    // Loyalty Discounts
+    journey_discount: number;
+    aeroplan_discount: number;
     files_processed: number;
     files_with_errors: number;
     processed_files: Array<{
@@ -131,6 +139,14 @@ export interface SftProcessResult {
       afd_discover: number;
       afd_interac_debit: number;
       afd_debit_transaction_count: number;
+      // Department Totals
+      tobacco_25: number;
+      tobacco_20: number;
+      lottery_total: number;
+      prepay_total: number;
+      // Loyalty Discounts
+      journey_discount: number;
+      aeroplan_discount: number;
     }>;
     errors: Array<{
       file_name: string;
