@@ -299,6 +299,21 @@ const FileImportsByDatePage: React.FC = () => {
                         ${processResult.total_cash_sale_amount?.toFixed(2) || '0.00'}
                       </span>
                     </div>
+                    
+                    {/* Cash Sales by Shift Breakdown */}
+                    {processResult.cash_sales_by_shift && Object.keys(processResult.cash_sales_by_shift).length > 0 && (
+                      <div className="ml-4 space-y-1">
+                        {Object.entries(processResult.cash_sales_by_shift).map(([shift, amount]) => (
+                          <div key={shift} className="flex justify-between items-center text-sm">
+                            <span className="text-gray-600">Shift {shift}:</span>
+                            <span className="font-semibold text-green-500">
+                              ${amount?.toFixed(2) || '0.00'}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    
                     <div className="flex justify-between items-center">
                       <span className="text-gray-700 font-medium">Payout:</span>
                       <span className="text-lg font-bold text-red-600">

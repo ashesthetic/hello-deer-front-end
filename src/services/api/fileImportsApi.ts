@@ -48,6 +48,7 @@ export interface SaleDataProcessResult {
   total_lotto_payout_amount: number;
   total_fuel_sales_amount: number;
   net_cash_amount: number;
+  cash_sales_by_shift?: Record<string, number>;
   files: Array<{
     id: number;
     original_name: string;
