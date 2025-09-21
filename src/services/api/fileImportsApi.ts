@@ -46,6 +46,7 @@ export interface SaleDataProcessResult {
   failed_files: number;
   total_cash_sale_amount: number;
   total_lotto_payout_amount: number;
+  total_fuel_sales_amount: number;
   files: Array<{
     id: number;
     original_name: string;
@@ -55,6 +56,7 @@ export interface SaleDataProcessResult {
     status: string;
     cash_amount: number;
     lotto_payout_amount: number;
+    fuel_sales_amount: number;
     processed_at: string;
   }>;
   errors: Array<{
