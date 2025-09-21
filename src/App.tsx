@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useAppSelector } from './hooks/useAppSelector';
 import { useDispatch } from 'react-redux';
-import { loginSuccess } from './store/slices/authSlice';
+import { loginSuccess, logout } from './store/slices/authSlice';
 import { authApi } from './services/api';
 import LoginForm from './components/LoginForm';
 import Layout from './components/Layout';
@@ -76,7 +76,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 
 const App: React.FC = () => {
   const dispatch = useDispatch();
-  const { isAuthenticated, user } = useAppSelector((state) => (state as any).auth);
+  const { isAuthenticated, user, loading } = useAppSelector((state) => (state as any).auth);
 
   useEffect(() => {
     // Check if user is authenticated on app load
@@ -89,11 +89,21 @@ const App: React.FC = () => {
           dispatch(loginSuccess({ user: response.data, token }));
         } catch (error) {
           localStorage.removeItem('token');
+          dispatch(logout());
         }
       };
       fetchUserProfile();
     }
   }, [user, dispatch]);
+
+  // Show loading spinner while fetching user profile
+  if (loading && !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
     <Router>
@@ -165,13 +175,13 @@ const App: React.FC = () => {
           {/* Import Data Route */}
           <Route 
             path="/import-data" 
-            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><ImportDataPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="admin"><ImportDataPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           
           {/* File Imports List Route */}
           <Route 
             path="/file-imports" 
-            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><FileImportsListPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="admin"><FileImportsListPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           
           {/* Employees Routes */}
