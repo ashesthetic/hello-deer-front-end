@@ -61,6 +61,84 @@ export interface SaleDataProcessResult {
   processed_at: string;
 }
 
+export interface SftProcessResult {
+  success: boolean;
+  message: string;
+  data?: {
+    total_sales: number;
+    fuel_sales: number;
+    item_sales: number;
+    gst: number;
+    penny_rounding: number;
+    total_pos: number;
+    canadian_cash: number;
+    safedrops_count: number;
+    safedrops_amount: number;
+    cash_on_hand: number;
+    fuel_tax_gst: number;
+    payouts: number;
+    loyalty_discounts: number;
+    // POS Transaction Details
+    pos_visa: number;
+    pos_mastercard: number;
+    pos_amex: number;
+    pos_commercial: number;
+    pos_up_credit: number;
+    pos_discover: number;
+    pos_interac_debit: number;
+    pos_debit_transaction_count: number;
+    // AFD Transaction Details
+    afd_visa: number;
+    afd_mastercard: number;
+    afd_amex: number;
+    afd_commercial: number;
+    afd_up_credit: number;
+    afd_discover: number;
+    afd_interac_debit: number;
+    afd_debit_transaction_count: number;
+    files_processed: number;
+    files_with_errors: number;
+    processed_files: Array<{
+      file_name: string;
+      total_sales: number;
+      fuel_sales: number;
+      item_sales: number;
+      gst: number;
+      penny_rounding: number;
+      total_pos: number;
+      canadian_cash: number;
+      safedrops_count: number;
+      safedrops_amount: number;
+      cash_on_hand: number;
+      fuel_tax_gst: number;
+      payouts: number;
+      loyalty_discounts: number;
+      // POS Transaction Details
+      pos_visa: number;
+      pos_mastercard: number;
+      pos_amex: number;
+      pos_commercial: number;
+      pos_up_credit: number;
+      pos_discover: number;
+      pos_interac_debit: number;
+      pos_debit_transaction_count: number;
+      // AFD Transaction Details
+      afd_visa: number;
+      afd_mastercard: number;
+      afd_amex: number;
+      afd_commercial: number;
+      afd_up_credit: number;
+      afd_discover: number;
+      afd_interac_debit: number;
+      afd_debit_transaction_count: number;
+    }>;
+    errors: Array<{
+      file_name: string;
+      error: string;
+    }>;
+  };
+}
+
 class FileImportsApi {
   /**
    * Upload multiple files for import
@@ -138,6 +216,30 @@ class FileImportsApi {
   async processSaleData(date: string): Promise<SaleDataProcessResult> {
     const response = await api.post('/file-imports/sale-data', { date });
     return response.data;
+  }
+
+  /**
+   * Process SFT files and return aggregated sales data
+   */
+  async processSftSalesData(date: string): Promise<SftProcessResult> {
+    const response = await api.post('/sft-processor/process-sales-data', { import_date: date });
+    return response.data;
+  }
+
+  /**
+   * Get available import dates with SFT files
+   */
+  async getAvailableSftDates(): Promise<string[]> {
+    const response = await api.get('/sft-processor/available-dates');
+    return response.data.data;
+  }
+
+  /**
+   * Get SFT files for a specific date
+   */
+  async getSftFilesForDate(date: string): Promise<any[]> {
+    const response = await api.get('/sft-processor/files-for-date', { params: { import_date: date } });
+    return response.data.data;
   }
 }
 

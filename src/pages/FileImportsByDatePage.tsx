@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { fileImportsApi, FileImport, SaleDataProcessResult } from '../services/api/fileImportsApi';
+import { fileImportsApi, FileImport, SaleDataProcessResult, SftProcessResult } from '../services/api/fileImportsApi';
 
 const FileImportsByDatePage: React.FC = () => {
   const { date } = useParams<{ date: string }>();
@@ -9,6 +9,7 @@ const FileImportsByDatePage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [processResult, setProcessResult] = useState<SaleDataProcessResult | null>(null);
+  const [sftProcessResult, setSftProcessResult] = useState<SftProcessResult | null>(null);
 
   useEffect(() => {
     if (date) {
@@ -75,24 +76,33 @@ const FileImportsByDatePage: React.FC = () => {
     if (!date) return;
 
     setProcessing(true);
+    setSftProcessResult(null); // Reset previous result
     try {
-      const result = await fileImportsApi.processSaleData(date);
-      setProcessResult(result);
+      // Call the new SFT processing API
+      const result = await fileImportsApi.processSftSalesData(date);
+      setSftProcessResult(result);
       
       // Refresh the file imports to show updated status
       await fetchFileImportsByDate(date);
-    } catch (error) {
-      console.error('Error processing sale data:', error);
-      setProcessResult({
+    } catch (error: any) {
+      console.error('Error processing SFT sale data:', error);
+      console.error('Date being sent:', date);
+      
+      let errorMessage = 'Failed to process SFT sale data. Please ensure you have admin permissions and try again.';
+      
+      // Extract more specific error message if available
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.response?.data?.errors) {
+        // Handle validation errors
+        const validationErrors = error.response.data.errors;
+        const errorMessages = Object.values(validationErrors).flat();
+        errorMessage = `Validation error: ${errorMessages.join(', ')}`;
+      }
+      
+      setSftProcessResult({
         success: false,
-        message: 'Failed to process sale data',
-        date: date,
-        total_files: 0,
-        processed_files: 0,
-        failed_files: 0,
-        files: [],
-        errors: [],
-        processed_at: new Date().toISOString(),
+        message: errorMessage,
       });
     } finally {
       setProcessing(false);
@@ -252,7 +262,275 @@ const FileImportsByDatePage: React.FC = () => {
           )}
         </div>
 
-        {/* Process Results */}
+        {/* SFT Process Results */}
+        {sftProcessResult && (
+          <div className="bg-white rounded-lg shadow-md overflow-hidden mb-8">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h2 className="text-lg font-medium text-gray-900">SFT Sales Data Processing Results</h2>
+            </div>
+            <div className="px-6 py-4">
+              <div className="mb-4">
+                <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                  sftProcessResult.success 
+                    ? 'bg-green-100 text-green-800' 
+                    : 'bg-red-100 text-red-800'
+                }`}>
+                  {sftProcessResult.success ? '✓ Success' : '✗ Failed'}
+                </div>
+                <p className="mt-2 text-gray-600">{sftProcessResult.message}</p>
+              </div>
+
+              {/* Sales Summary - This is what the user requested */}
+              {sftProcessResult.success && sftProcessResult.data && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">Aggregated Sales Data</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <div className="bg-blue-50 p-6 rounded-lg border border-blue-200">
+                      <div className="text-3xl font-bold text-blue-600">
+                        ${sftProcessResult.data.total_sales.toFixed(2)}
+                      </div>
+                      <div className="text-sm text-blue-800 font-medium">Total Sales</div>
+                    </div>
+                    <div className="bg-green-50 p-6 rounded-lg border border-green-200">
+                      <div className="text-3xl font-bold text-green-600">
+                        ${sftProcessResult.data.item_sales.toFixed(2)}
+                      </div>
+                      <div className="text-sm text-green-800 font-medium">Item Sales</div>
+                    </div>
+                    <div className="bg-purple-50 p-6 rounded-lg border border-purple-200">
+                      <div className="text-3xl font-bold text-purple-600">
+                        ${sftProcessResult.data.fuel_sales.toFixed(2)}
+                      </div>
+                      <div className="text-sm text-purple-800 font-medium">Fuel Sales</div>
+                    </div>
+                  </div>
+                  
+                  {/* Additional Financial Data Table */}
+                  <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
+                    <h4 className="text-md font-medium text-gray-900 mb-4">Additional Financial Details</h4>
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full">
+                        <tbody className="divide-y divide-gray-200">
+                          <tr>
+                            <td className="py-2 px-4 text-sm font-medium text-gray-900">GST</td>
+                            <td className="py-2 px-4 text-sm text-gray-900">${sftProcessResult.data.gst.toFixed(2)}</td>
+                            <td className="py-2 px-4 text-sm font-medium text-gray-900">Penny Rounding</td>
+                            <td className="py-2 px-4 text-sm text-gray-900">${sftProcessResult.data.penny_rounding.toFixed(2)}</td>
+                          </tr>
+                          <tr>
+                            <td className="py-2 px-4 text-sm font-medium text-gray-900">Total POS Sale</td>
+                            <td className="py-2 px-4 text-sm text-gray-900">${sftProcessResult.data.total_pos.toFixed(2)}</td>
+                            <td className="py-2 px-4 text-sm font-medium text-gray-900">Canadian Cash</td>
+                            <td className="py-2 px-4 text-sm text-gray-900">${sftProcessResult.data.canadian_cash.toFixed(2)}</td>
+                          </tr>
+                          <tr>
+                            <td className="py-2 px-4 text-sm font-medium text-gray-900">Number of Safedrops</td>
+                            <td className="py-2 px-4 text-sm text-gray-900">{sftProcessResult.data.safedrops_count}</td>
+                            <td className="py-2 px-4 text-sm font-medium text-gray-900">Safedrops Amount</td>
+                            <td className="py-2 px-4 text-sm text-gray-900">${sftProcessResult.data.safedrops_amount.toFixed(2)}</td>
+                          </tr>
+                          <tr>
+                            <td className="py-2 px-4 text-sm font-medium text-gray-900">Cash on Hand</td>
+                            <td className="py-2 px-4 text-sm text-gray-900">${sftProcessResult.data.cash_on_hand.toFixed(2)}</td>
+                            <td className="py-2 px-4 text-sm font-medium text-gray-900">Fuel Tax (GST)</td>
+                            <td className="py-2 px-4 text-sm text-gray-900">${sftProcessResult.data.fuel_tax_gst.toFixed(2)}</td>
+                          </tr>
+                          <tr>
+                            <td className="py-2 px-4 text-sm font-medium text-gray-900">Payouts</td>
+                            <td className="py-2 px-4 text-sm text-gray-900">${sftProcessResult.data.payouts.toFixed(2)}</td>
+                            <td className="py-2 px-4 text-sm font-medium text-gray-900">Loyalty Discounts</td>
+                            <td className="py-2 px-4 text-sm text-gray-900">${sftProcessResult.data.loyalty_discounts.toFixed(2)}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                  
+                  {/* Transaction Details Tables */}
+                  <div className="bg-purple-50 p-6 rounded-lg border border-purple-200 mt-6">
+                    <h4 className="text-md font-medium text-gray-900 mb-4">Transaction Details</h4>
+                    
+                    {/* POS Transactions */}
+                    <div className="mb-6">
+                      <h5 className="text-sm font-medium text-purple-900 mb-3">POS Transactions</h5>
+                      <div className="overflow-x-auto">
+                        <table className="min-w-full">
+                          <tbody className="divide-y divide-purple-200">
+                            <tr>
+                              <td className="py-2 px-4 text-sm font-medium text-purple-900">VISA</td>
+                              <td className="py-2 px-4 text-sm text-purple-900">${sftProcessResult.data.pos_visa.toFixed(2)}</td>
+                              <td className="py-2 px-4 text-sm font-medium text-purple-900">MASTERCARD</td>
+                              <td className="py-2 px-4 text-sm text-purple-900">${sftProcessResult.data.pos_mastercard.toFixed(2)}</td>
+                            </tr>
+                            <tr>
+                              <td className="py-2 px-4 text-sm font-medium text-purple-900">AMEX</td>
+                              <td className="py-2 px-4 text-sm text-purple-900">${sftProcessResult.data.pos_amex.toFixed(2)}</td>
+                              <td className="py-2 px-4 text-sm font-medium text-purple-900">COMMERCIAL</td>
+                              <td className="py-2 px-4 text-sm text-purple-900">${sftProcessResult.data.pos_commercial.toFixed(2)}</td>
+                            </tr>
+                            <tr>
+                              <td className="py-2 px-4 text-sm font-medium text-purple-900">UP CREDIT</td>
+                              <td className="py-2 px-4 text-sm text-purple-900">${sftProcessResult.data.pos_up_credit.toFixed(2)}</td>
+                              <td className="py-2 px-4 text-sm font-medium text-purple-900">DISCOVER</td>
+                              <td className="py-2 px-4 text-sm text-purple-900">${sftProcessResult.data.pos_discover.toFixed(2)}</td>
+                            </tr>
+                            <tr>
+                              <td className="py-2 px-4 text-sm font-medium text-purple-900">INTERAC DEBIT</td>
+                              <td className="py-2 px-4 text-sm text-purple-900">${sftProcessResult.data.pos_interac_debit.toFixed(2)}</td>
+                              <td className="py-2 px-4 text-sm font-medium text-purple-900">DEBIT TRANSACTIONS</td>
+                              <td className="py-2 px-4 text-sm text-purple-900">{sftProcessResult.data.pos_debit_transaction_count}</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                    
+                    {/* AFD Transactions */}
+                    <div>
+                      <h5 className="text-sm font-medium text-blue-900 mb-3">AFD Transactions</h5>
+                      <div className="overflow-x-auto">
+                        <table className="min-w-full">
+                          <tbody className="divide-y divide-blue-200">
+                            <tr>
+                              <td className="py-2 px-4 text-sm font-medium text-blue-900">VISA</td>
+                              <td className="py-2 px-4 text-sm text-blue-900">${sftProcessResult.data.afd_visa.toFixed(2)}</td>
+                              <td className="py-2 px-4 text-sm font-medium text-blue-900">MASTERCARD</td>
+                              <td className="py-2 px-4 text-sm text-blue-900">${sftProcessResult.data.afd_mastercard.toFixed(2)}</td>
+                            </tr>
+                            <tr>
+                              <td className="py-2 px-4 text-sm font-medium text-blue-900">AMEX</td>
+                              <td className="py-2 px-4 text-sm text-blue-900">${sftProcessResult.data.afd_amex.toFixed(2)}</td>
+                              <td className="py-2 px-4 text-sm font-medium text-blue-900">COMMERCIAL</td>
+                              <td className="py-2 px-4 text-sm text-blue-900">${sftProcessResult.data.afd_commercial.toFixed(2)}</td>
+                            </tr>
+                            <tr>
+                              <td className="py-2 px-4 text-sm font-medium text-blue-900">UP CREDIT</td>
+                              <td className="py-2 px-4 text-sm text-blue-900">${sftProcessResult.data.afd_up_credit.toFixed(2)}</td>
+                              <td className="py-2 px-4 text-sm font-medium text-blue-900">DISCOVER</td>
+                              <td className="py-2 px-4 text-sm text-blue-900">${sftProcessResult.data.afd_discover.toFixed(2)}</td>
+                            </tr>
+                            <tr>
+                              <td className="py-2 px-4 text-sm font-medium text-blue-900">INTERAC DEBIT</td>
+                              <td className="py-2 px-4 text-sm text-blue-900">${sftProcessResult.data.afd_interac_debit.toFixed(2)}</td>
+                              <td className="py-2 px-4 text-sm font-medium text-blue-900">DEBIT TRANSACTIONS</td>
+                              <td className="py-2 px-4 text-sm text-blue-900">{sftProcessResult.data.afd_debit_transaction_count}</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Processing Summary */}
+              {sftProcessResult.success && sftProcessResult.data && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <div className="text-2xl font-bold text-gray-600">{sftProcessResult.data.files_processed}</div>
+                    <div className="text-sm text-gray-800">SFT Files Processed</div>
+                  </div>
+                  <div className="bg-red-50 p-4 rounded-lg">
+                    <div className="text-2xl font-bold text-red-600">{sftProcessResult.data.files_with_errors}</div>
+                    <div className="text-sm text-red-800">Files with Errors</div>
+                  </div>
+                </div>
+              )}
+
+              {/* Processed Files Details */}
+              {sftProcessResult.success && sftProcessResult.data && sftProcessResult.data.processed_files.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="text-md font-medium text-gray-900 mb-3">Processed SFT Files</h3>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            File Name
+                          </th>
+                          <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Total Sales
+                          </th>
+                          <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Item Sales
+                          </th>
+                          <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Fuel Sales
+                          </th>
+                          <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            GST
+                          </th>
+                          <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Safedrops
+                          </th>
+                          <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Safedrops $
+                          </th>
+                          <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Cash on Hand
+                          </th>
+                          <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Payouts
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {sftProcessResult.data.processed_files.map((file, index) => (
+                          <tr key={index}>
+                            <td className="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
+                              {file.file_name}
+                            </td>
+                            <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                              ${file.total_sales.toFixed(2)}
+                            </td>
+                            <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                              ${file.item_sales.toFixed(2)}
+                            </td>
+                            <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                              ${file.fuel_sales.toFixed(2)}
+                            </td>
+                            <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                              ${file.gst.toFixed(2)}
+                            </td>
+                            <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                              {file.safedrops_count}
+                            </td>
+                            <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                              ${file.safedrops_amount.toFixed(2)}
+                            </td>
+                            <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                              ${file.cash_on_hand.toFixed(2)}
+                            </td>
+                            <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                              ${file.payouts.toFixed(2)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Processing Errors */}
+              {sftProcessResult.success && sftProcessResult.data && sftProcessResult.data.errors.length > 0 && (
+                <div>
+                  <h3 className="text-md font-medium text-gray-900 mb-3">Processing Errors</h3>
+                  <div className="bg-red-50 border border-red-200 rounded-md p-4">
+                    {sftProcessResult.data.errors.map((error, index) => (
+                      <div key={index} className="mb-2 last:mb-0">
+                        <p className="text-sm font-medium text-red-800">{error.file_name}</p>
+                        <p className="text-sm text-red-600">{error.error}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Legacy Process Results (keeping for backwards compatibility) */}
         {processResult && (
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-200">
