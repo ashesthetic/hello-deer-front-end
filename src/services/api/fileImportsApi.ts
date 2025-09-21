@@ -44,6 +44,7 @@ export interface SaleDataProcessResult {
   total_files: number;
   processed_files: number;
   failed_files: number;
+  total_cash_sale_amount: number;
   files: Array<{
     id: number;
     original_name: string;
@@ -51,6 +52,7 @@ export interface SaleDataProcessResult {
     file_size: number;
     mime_type: string;
     status: string;
+    cash_amount: number;
     processed_at: string;
   }>;
   errors: Array<{
