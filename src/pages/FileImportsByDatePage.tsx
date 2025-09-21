@@ -93,6 +93,7 @@ const FileImportsByDatePage: React.FC = () => {
         total_cash_sale_amount: 0,
         total_lotto_payout_amount: 0,
         total_fuel_sales_amount: 0,
+        net_cash_amount: 0,
         files: [],
         errors: [],
         processed_at: new Date().toISOString(),
@@ -277,36 +278,50 @@ const FileImportsByDatePage: React.FC = () => {
               </div>
 
               {/* Processing Summary */}
-              <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-6">
-                <div className="bg-blue-50 p-4 rounded-lg">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                {/* Processing Status Cards */}
+                <div className="bg-blue-50 p-6 rounded-lg">
                   <div className="text-2xl font-bold text-blue-600">{processResult.total_files}</div>
                   <div className="text-sm text-blue-800">Total Files</div>
                 </div>
-                <div className="bg-green-50 p-4 rounded-lg">
+                <div className="bg-green-50 p-6 rounded-lg">
                   <div className="text-2xl font-bold text-green-600">{processResult.processed_files}</div>
                   <div className="text-sm text-green-800">Successfully Processed</div>
                 </div>
-                <div className="bg-red-50 p-4 rounded-lg">
-                  <div className="text-2xl font-bold text-red-600">{processResult.failed_files}</div>
-                  <div className="text-sm text-red-800">Failed</div>
-                </div>
-                <div className="bg-purple-50 p-4 rounded-lg">
-                  <div className="text-2xl font-bold text-purple-600">
-                    ${processResult.total_cash_sale_amount?.toFixed(2) || '0.00'}
+                
+                {/* Consolidated Financial Summary Card */}
+                <div className="bg-white border-2 border-gray-200 p-6 rounded-lg md:col-span-2">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Financial Summary</h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-700 font-medium">Cash Sale:</span>
+                      <span className="text-lg font-bold text-green-600">
+                        ${processResult.total_cash_sale_amount?.toFixed(2) || '0.00'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-700 font-medium">Payout:</span>
+                      <span className="text-lg font-bold text-red-600">
+                        ${processResult.total_lotto_payout_amount?.toFixed(2) || '0.00'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-700 font-medium">Fuel Sale:</span>
+                      <span className="text-lg font-bold text-blue-600">
+                        ${processResult.total_fuel_sales_amount?.toFixed(2) || '0.00'}
+                      </span>
+                    </div>
+                    <div className="border-t pt-3 mt-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-900 font-semibold text-lg">Net Cash:</span>
+                        <span className={`text-xl font-bold ${
+                          (processResult.net_cash_amount || 0) >= 0 ? 'text-green-700' : 'text-red-700'
+                        }`}>
+                          ${processResult.net_cash_amount?.toFixed(2) || '0.00'}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-sm text-purple-800">Total Cash Sales</div>
-                </div>
-                <div className="bg-yellow-50 p-4 rounded-lg">
-                  <div className="text-2xl font-bold text-yellow-600">
-                    ${processResult.total_lotto_payout_amount?.toFixed(2) || '0.00'}
-                  </div>
-                  <div className="text-sm text-yellow-800">Total Lotto Payouts</div>
-                </div>
-                <div className="bg-indigo-50 p-4 rounded-lg">
-                  <div className="text-2xl font-bold text-indigo-600">
-                    ${processResult.total_fuel_sales_amount?.toFixed(2) || '0.00'}
-                  </div>
-                  <div className="text-sm text-indigo-800">Total Fuel Sales</div>
                 </div>
               </div>
 
