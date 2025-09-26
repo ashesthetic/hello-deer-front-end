@@ -97,6 +97,25 @@ export interface EmployeeStats {
   avg_tenure: string;
 }
 
+export interface EmployeeWithHours {
+  id: number;
+  full_legal_name: string;
+  preferred_name?: string;
+  position: string;
+  department: string;
+  hire_date: string;
+  status: string;
+  hourly_rate: string;
+  total_hours: number;
+  total_work_days: number;
+  avg_hours_per_day: number;
+  total_earnings: number;
+  total_paid: number;
+  total_due: number;
+  resolved_hours: number;
+  unpaid_hours: number;
+}
+
 export interface EmployeeEarning {
   id: number;
   full_legal_name: string;
@@ -445,12 +464,15 @@ export const employeesApi = {
   },
   delete: (id: number) => api.delete(`/employees/${id}`),
   getStats: () => api.get('/employees/stats'),
+  getWithHours: () => api.get('/employees/with-hours'),
   getEarnings: () => api.get('/employees/earnings'),
   getPayDays: () => api.get('/employees/pay-days'),
   generateWorkHourReport: (data: { pay_day: string; employee_ids: number[] }) => 
     api.post('/employees/work-hour-report', data),
   generatePayStubs: (data: { pay_day: string; employee_ids: number[] }, endpoint?: string) => 
     api.post(endpoint || '/employees/pay-stubs', data),
+  resolveHours: (employeeId: number, data: { resolved_hours: number; notes?: string }) =>
+    api.post(`/employees/${employeeId}/resolve-hours`, data),
 };
 
 // Work Hours API
