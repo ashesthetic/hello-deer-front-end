@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { fileImportsApi, FileImport, SaleDataProcessResult, SftProcessResult } from '../services/api/fileImportsApi';
+import { dailySalesApi, dailyFuelsApi } from '../services/api';
+import { mapSftDataToForms, validateMappedData } from '../utils/sftMapping';
+import { SftToFormMapping } from '../types/sftMapping';
 
 const FileImportsByDatePage: React.FC = () => {
   const { date } = useParams<{ date: string }>();
@@ -10,6 +13,9 @@ const FileImportsByDatePage: React.FC = () => {
   const [processing, setProcessing] = useState(false);
   const [processResult, setProcessResult] = useState<SaleDataProcessResult | null>(null);
   const [sftProcessResult, setSftProcessResult] = useState<SftProcessResult | null>(null);
+  const [mappedData, setMappedData] = useState<SftToFormMapping | null>(null);
+  const [savingData, setSavingData] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
   useEffect(() => {
     if (date) {
@@ -77,10 +83,19 @@ const FileImportsByDatePage: React.FC = () => {
 
     setProcessing(true);
     setSftProcessResult(null); // Reset previous result
+    setMappedData(null); // Reset mapped data
+    setSaveSuccess(false); // Reset save success
+    
     try {
       // Call the new SFT processing API
       const result = await fileImportsApi.processSftSalesData(date);
       setSftProcessResult(result);
+      
+      // Create mapped data for forms if processing was successful
+      if (result.success && result.data) {
+        const mapped = mapSftDataToForms(result.data, date);
+        setMappedData(mapped);
+      }
       
       // Refresh the file imports to show updated status
       await fetchFileImportsByDate(date);
@@ -106,6 +121,39 @@ const FileImportsByDatePage: React.FC = () => {
       });
     } finally {
       setProcessing(false);
+    }
+  };
+
+  const handleSaveMappedData = async () => {
+    if (!mappedData || !date) return;
+
+    const validation = validateMappedData(mappedData);
+    if (!validation.valid) {
+      alert(`Validation errors:\n${validation.errors.join('\n')}`);
+      return;
+    }
+
+    setSavingData(true);
+    setSaveSuccess(false);
+
+    try {
+      // Save to daily_sales table using the proper API
+      if (mappedData.salesData) {
+        await dailySalesApi.create(mappedData.salesData as any);
+      }
+
+      // Save to daily_fuels table using the proper API
+      if (mappedData.fuelData) {
+        await dailyFuelsApi.create(mappedData.fuelData as any);
+      }
+
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 3000); // Hide success message after 3 seconds
+    } catch (error) {
+      console.error('Error saving mapped data:', error);
+      alert('Failed to save data. Please check the console for details.');
+    } finally {
+      setSavingData(false);
     }
   };
 
@@ -493,6 +541,110 @@ const FileImportsByDatePage: React.FC = () => {
                           </tr>
                         </tbody>
                       </table>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Mapped Data for Sales and Fuels Forms */}
+              {mappedData && (
+                <div className="mt-6">
+                  <div className="bg-blue-50 p-6 rounded-lg border border-blue-200">
+                    <div className="flex items-center justify-between mb-4">
+                      <h4 className="text-lg font-medium text-gray-900">Mapped Data for Forms</h4>
+                      <div className="flex items-center space-x-4">
+                        {saveSuccess && (
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                            ✓ Data saved successfully!
+                          </span>
+                        )}
+                        <button
+                          onClick={handleSaveMappedData}
+                          disabled={savingData}
+                          className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-6 py-2 rounded-md font-medium transition-colors"
+                        >
+                          {savingData ? 'Saving...' : 'Save Data'}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {/* Sales Data Preview */}
+                      <div className="bg-white p-4 rounded-lg border border-blue-200">
+                        <h5 className="text-md font-medium text-gray-900 mb-3">Daily Sales Data</h5>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Date:</span>
+                            <span className="font-medium">{mappedData.salesData.date}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Fuel Sale:</span>
+                            <span className="font-medium">${(mappedData.salesData.fuel_sale || 0).toFixed(2)}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Store Sale:</span>
+                            <span className="font-medium">${(mappedData.salesData.store_sale || 0).toFixed(2)}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">GST:</span>
+                            <span className="font-medium">${(mappedData.salesData.gst || 0).toFixed(2)}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Cash:</span>
+                            <span className="font-medium">${(mappedData.salesData.cash || 0).toFixed(2)}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Card:</span>
+                            <span className="font-medium">${(mappedData.salesData.card || 0).toFixed(2)}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Loyalty Coupon:</span>
+                            <span className="font-medium">${(mappedData.salesData.coupon || 0).toFixed(2)}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Reported Total:</span>
+                            <span className="font-medium">${(mappedData.salesData.reported_total || 0).toFixed(2)}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Safedrops:</span>
+                            <span className="font-medium">{mappedData.salesData.number_of_safedrops || 0} (${(mappedData.salesData.safedrops_amount || 0).toFixed(2)})</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Fuel Data Preview */}
+                      <div className="bg-white p-4 rounded-lg border border-blue-200">
+                        <h5 className="text-md font-medium text-gray-900 mb-3">Daily Fuel Data</h5>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Date:</span>
+                            <span className="font-medium">{mappedData.fuelData.date}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Regular:</span>
+                            <span className="font-medium">{(mappedData.fuelData.regular_quantity || 0).toFixed(2)}L - ${(mappedData.fuelData.regular_total_sale || 0).toFixed(2)}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Plus:</span>
+                            <span className="font-medium">{(mappedData.fuelData.plus_quantity || 0).toFixed(2)}L - ${(mappedData.fuelData.plus_total_sale || 0).toFixed(2)}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Sup Plus:</span>
+                            <span className="font-medium">{(mappedData.fuelData.sup_plus_quantity || 0).toFixed(2)}L - ${(mappedData.fuelData.sup_plus_total_sale || 0).toFixed(2)}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Diesel:</span>
+                            <span className="font-medium">{(mappedData.fuelData.diesel_quantity || 0).toFixed(2)}L - ${(mappedData.fuelData.diesel_total_sale || 0).toFixed(2)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 p-3 bg-blue-100 rounded-md">
+                      <p className="text-sm text-blue-800">
+                        <strong>Note:</strong> This data has been automatically mapped from the processed SFT files. 
+                        Review the values above and click "Save Data" to store them in the daily_sales and daily_fuels tables.
+                      </p>
                     </div>
                   </div>
                 </div>
