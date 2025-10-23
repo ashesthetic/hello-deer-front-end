@@ -248,11 +248,13 @@ export const dailySalesApi = {
     const url = year && month ? `/daily-sales/month/${year}/${month}` : '/daily-sales/month';
     return api.get(url);
   },
-  generateSettlementReport: (fromDate: string, toDate: string, specificDates?: string[]) => 
+  generateSettlementReport: (fromDate: string, toDate: string, specificDates?: string[], includeDebit?: boolean, includeCredit?: boolean) => 
     api.post('/daily-sales/settlement-report', { 
       from_date: fromDate, 
       to_date: toDate, 
-      specific_dates: specificDates || [] 
+      specific_dates: specificDates || [],
+      include_debit: includeDebit,
+      include_credit: includeCredit
     }),
 };
 
