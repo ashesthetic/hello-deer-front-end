@@ -104,6 +104,15 @@ export interface SftProcessResult {
     // Loyalty Discounts
     journey_discount: number;
     aeroplan_discount: number;
+    // Fuel Volume Data
+    diesel_volume: number;
+    diesel_total: number;
+    regular_volume: number;
+    regular_total: number;
+    plus_volume: number;
+    plus_total: number;
+    sup_plus_volume: number;
+    sup_plus_total: number;
     files_processed: number;
     files_with_errors: number;
     processed_files: Array<{
@@ -147,6 +156,15 @@ export interface SftProcessResult {
       // Loyalty Discounts
       journey_discount: number;
       aeroplan_discount: number;
+      // Fuel Volume Data
+      diesel_volume: number;
+      diesel_total: number;
+      regular_volume: number;
+      regular_total: number;
+      plus_volume: number;
+      plus_total: number;
+      sup_plus_volume: number;
+      sup_plus_total: number;
     }>;
     errors: Array<{
       file_name: string;
