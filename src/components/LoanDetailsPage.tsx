@@ -132,6 +132,12 @@ const LoanDetailsPage: React.FC = () => {
     setDeleteModalOpen(false);
   };
 
+  const formatCurrency = (amount: string, currency: string = 'CAD') => {
+    const numAmount = parseFloat(amount);
+    const symbol = currency === 'USD' ? '$' : currency === 'CAD' ? 'C$' : currency === 'BDT' ? '৳' : currency;
+    return `${symbol}${numAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -336,11 +342,8 @@ const LoanDetailsPage: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-500 mb-1">
                   Amount
                 </label>
-                <p className="text-lg text-gray-900">
-                  ${parseFloat(loan?.amount || '0').toLocaleString(undefined, {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })} {loan?.currency}
+                <p className="text-lg font-semibold text-green-600">
+                  {loan?.amount && loan?.currency ? formatCurrency(loan.amount, loan.currency) : 'N/A'}
                 </p>
               </div>
 
@@ -388,10 +391,7 @@ const LoanDetailsPage: React.FC = () => {
         Are you sure you want to delete the loan account <b>{loan?.name}</b>?
         <br />
         <br />
-        Amount: <b>${parseFloat(loan?.amount || '0').toLocaleString(undefined, {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        })} {loan?.currency}</b>
+        Amount: <b>{loan?.amount && loan?.currency ? formatCurrency(loan.amount, loan.currency) : 'N/A'}</b>
         <br />
         <br />
         This action cannot be undone.

@@ -92,7 +92,7 @@ const LoansPage: React.FC = () => {
 
   const formatCurrency = (amount: string, currency: string = 'CAD') => {
     const numAmount = parseFloat(amount);
-    const symbol = currency === 'USD' ? '$' : currency === 'CAD' ? 'C$' : currency;
+    const symbol = currency === 'USD' ? '$' : currency === 'CAD' ? 'C$' : currency === 'BDT' ? '৳' : currency;
     return `${symbol}${numAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
