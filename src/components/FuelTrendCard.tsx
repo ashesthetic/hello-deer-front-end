@@ -36,10 +36,16 @@ interface FuelData {
   value: number;
 }
 
+interface TrendData {
+  trend1: number;
+  trend2: number;
+  trend3: number;
+}
+
 const FuelTrendCard: React.FC<FuelTrendCardProps> = ({ title, dataField, color }) => {
   const [data, setData] = useState<FuelData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [percentageChange, setPercentageChange] = useState<number>(0);
+  const [percentageChange, setPercentageChange] = useState<TrendData>({ trend1: 0, trend2: 0, trend3: 0 });
 
   // Helper functions
   const formatCurrency = (amount: number) => {
@@ -81,9 +87,9 @@ const FuelTrendCard: React.FC<FuelTrendCardProps> = ({ title, dataField, color }
       const lastEntryDate = parseDateSafely(lastEntry.date);
       const lastEntryDateStr = lastEntryDate.toLocaleDateString('en-CA');
 
-      // Calculate 8 days before the last entry date
+      // Calculate 15 days before the last entry date
       const rangeStartDate = new Date(lastEntryDate);
-      rangeStartDate.setDate(rangeStartDate.getDate() - 7); // 8 days total (including last entry date)
+      rangeStartDate.setDate(rangeStartDate.getDate() - 14); // 15 days total (including last entry date)
       const startDateStr = rangeStartDate.toLocaleDateString('en-CA');
 
 
@@ -119,14 +125,14 @@ const FuelTrendCard: React.FC<FuelTrendCardProps> = ({ title, dataField, color }
         dateMap.set(fuelDate, currentValue + newValue);
       });
 
-      // Create a continuous 8-day range and fill in zeros for missing dates
+      // Create a continuous 15-day range and fill in zeros for missing dates
       const allDates: FuelData[] = [];
       const chartStartDate = parseDateSafely(startDateStr); // Use parseDateSafely for consistency
       const currentDate = new Date(chartStartDate);
       
 
       
-      for (let i = 0; i < 8; i++) {
+      for (let i = 0; i < 15; i++) {
         const dateStr = currentDate.toLocaleDateString('en-CA'); // YYYY-MM-DD format
         const value = dateMap.get(dateStr) || 0;
         allDates.push({ date: dateStr, value });
@@ -140,19 +146,26 @@ const FuelTrendCard: React.FC<FuelTrendCardProps> = ({ title, dataField, color }
       
       setData(allDates);
 
-      // Calculate percentage change - compare first and last dates
-      if (allDates.length >= 2) {
-        const firstDateValue = allDates[0].value;
-        const lastDateValue = allDates[allDates.length - 1].value;
-        const change = firstDateValue !== 0 ? ((lastDateValue - firstDateValue) / firstDateValue) * 100 : 0;
-        setPercentageChange(change);
+      // Calculate percentage changes
+      if (allDates.length >= 3) {
+        const firstValue = allDates[0].value;
+        const middleIndex = Math.floor(allDates.length / 2);
+        const middleValue = allDates[middleIndex].value;
+        const lastValue = allDates[allDates.length - 1].value;
+        
+        // First to middle, middle to last, first to last
+        const trend1 = firstValue !== 0 ? ((middleValue - firstValue) / firstValue) * 100 : 0;
+        const trend2 = middleValue !== 0 ? ((lastValue - middleValue) / middleValue) * 100 : 0;
+        const trend3 = firstValue !== 0 ? ((lastValue - firstValue) / firstValue) * 100 : 0;
+        
+        setPercentageChange({ trend1, trend2, trend3 });
       } else {
-        setPercentageChange(0);
+        setPercentageChange({ trend1: 0, trend2: 0, trend3: 0 });
       }
     } catch (error) {
       console.error('Error fetching fuel trend data:', error);
       setData([]);
-      setPercentageChange(0);
+      setPercentageChange({ trend1: 0, trend2: 0, trend3: 0 });
     } finally {
       setLoading(false);
     }
@@ -161,6 +174,20 @@ const FuelTrendCard: React.FC<FuelTrendCardProps> = ({ title, dataField, color }
   useEffect(() => {
     fetchLast7DaysData();
   }, [fetchLast7DaysData]);
+
+  // Create point colors array - first, middle, and last points get yellow color
+  const getPointColors = () => {
+    const colors = data.map(() => color);
+    if (data.length > 0) {
+      colors[0] = '#EAB308'; // Yellow for first
+      if (data.length > 2) {
+        const middleIndex = Math.floor(data.length / 2);
+        colors[middleIndex] = '#EAB308'; // Yellow for middle
+      }
+      colors[data.length - 1] = '#EAB308'; // Yellow for last
+    }
+    return colors;
+  };
 
   const chartData = {
     labels: data.map(item => formatDate(item.date)),
@@ -173,7 +200,7 @@ const FuelTrendCard: React.FC<FuelTrendCardProps> = ({ title, dataField, color }
         borderWidth: 2,
         fill: true,
         tension: 0.4,
-        pointBackgroundColor: color,
+        pointBackgroundColor: getPointColors(),
         pointBorderColor: '#fff',
         pointBorderWidth: 2,
         pointRadius: 4,
@@ -210,7 +237,13 @@ const FuelTrendCard: React.FC<FuelTrendCardProps> = ({ title, dataField, color }
       },
       datalabels: {
         display: true,
-        color: '#374151',
+        color: (context: any) => {
+          const index = context.dataIndex;
+          if (index === 0) return '#EAB308'; // Yellow for first
+          if (data.length > 2 && index === Math.floor(data.length / 2)) return '#EAB308'; // Yellow for middle
+          if (index === data.length - 1) return '#EAB308'; // Yellow for last
+          return '#374151';
+        },
         font: {
           weight: 'bold' as const,
           size: 11
@@ -292,18 +325,25 @@ const FuelTrendCard: React.FC<FuelTrendCardProps> = ({ title, dataField, color }
     <div className="bg-white rounded-lg shadow-lg p-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-        <div className={`flex items-center text-sm ${percentageChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-          <span className="font-medium">
-            {percentageChange >= 0 ? '+' : ''}{percentageChange.toFixed(1)}%
-          </span>
-          <svg
-            className={`w-4 h-4 ml-1 ${percentageChange >= 0 ? 'transform rotate-0' : 'transform rotate-180'}`}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
-          </svg>
+        <div className="flex flex-col items-end gap-1">
+          <div className="flex items-center gap-2 text-xs">
+            <span className="text-gray-600">1st→2nd:</span>
+            <span className={`font-medium ${percentageChange.trend1 >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {percentageChange.trend1 >= 0 ? '+' : ''}{percentageChange.trend1.toFixed(1)}%
+            </span>
+          </div>
+          <div className="flex items-center gap-2 text-xs">
+            <span className="text-gray-600">2nd→3rd:</span>
+            <span className={`font-medium ${percentageChange.trend2 >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {percentageChange.trend2 >= 0 ? '+' : ''}{percentageChange.trend2.toFixed(1)}%
+            </span>
+          </div>
+          <div className="flex items-center gap-2 text-xs">
+            <span className="text-gray-600">1st→3rd:</span>
+            <span className={`font-medium ${percentageChange.trend3 >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {percentageChange.trend3 >= 0 ? '+' : ''}{percentageChange.trend3.toFixed(1)}%
+            </span>
+          </div>
         </div>
       </div>
       <div className="h-64">

@@ -68,13 +68,13 @@ const WeeklyTrendCard: React.FC<WeeklyTrendCardProps> = ({ title, dataField, col
       // Find the last entry date
       const lastEntryDate = new Date(salesData[0].date);
       const startDate = new Date(lastEntryDate);
-      startDate.setDate(startDate.getDate() - 27); // 4 weeks (28 days) before the last entry
+      startDate.setDate(startDate.getDate() - 55); // 8 weeks (56 days) before the last entry
 
       // Format dates for API
       const startDateStr = startDate.toISOString().split('T')[0];
       const endDateStr = lastEntryDate.toISOString().split('T')[0];
 
-      // Get data for the last 4 weeks from the last entry
+      // Get data for the last 8 weeks from the last entry
       const rangeResponse = await dailySalesApi.getAll({
         start_date: startDateStr,
         end_date: endDateStr,
@@ -113,7 +113,7 @@ const WeeklyTrendCard: React.FC<WeeklyTrendCardProps> = ({ title, dataField, col
       const sortedData: WeeklyData[] = Array.from(weekMap.entries())
         .map(([week, value]) => ({ week, value }))
         .sort((a, b) => a.week.localeCompare(b.week))
-        .slice(-4); // Take only the last 4 weeks
+        .slice(-8); // Take only the last 8 weeks
 
       setData(sortedData);
 
@@ -146,9 +146,82 @@ const WeeklyTrendCard: React.FC<WeeklyTrendCardProps> = ({ title, dataField, col
     return `${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'America/Edmonton' })} - ${endOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'America/Edmonton' })}`;
   };
 
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-CA', {
+      style: 'currency',
+      currency: 'CAD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount);
+  };
+
   const chartData = {
     labels: data.map(item => formatWeekCustom(item.week)),
     datasets: [createLineDataset(title, data.map(item => item.value), color)],
+  };
+
+  const customOptions = {
+    ...lineChartOptions,
+    plugins: {
+      ...lineChartOptions.plugins,
+      datalabels: {
+        ...lineChartOptions.plugins.datalabels,
+        formatter: function(value: any, context: any) {
+          const numValue = parseFloat(value) || 0;
+          const index = context.dataIndex;
+          
+          if (index === 0) {
+            // First week - no comparison
+            return formatCurrency(numValue);
+          } else {
+            // Calculate difference from previous week
+            const previousValue = data[index - 1].value;
+            const difference = numValue - previousValue;
+            const percentChange = previousValue !== 0 ? ((difference / previousValue) * 100) : 0;
+            const sign = difference >= 0 ? '+' : '';
+            
+            return `${formatCurrency(numValue)}\n(${sign}${percentChange.toFixed(1)}%)`;
+          }
+        },
+        font: function(context: any) {
+          const index = context.dataIndex;
+          if (index === 0) {
+            return {
+              weight: 'bold' as const,
+              size: 10
+            };
+          }
+          
+          const previousValue = data[index - 1].value;
+          const currentValue = data[index].value;
+          const difference = currentValue - previousValue;
+          
+          return {
+            weight: 'bold' as const,
+            size: 10
+          };
+        },
+        color: function(context: any) {
+          const index = context.dataIndex;
+          if (index === 0) {
+            return '#374151'; // Default gray for first week
+          }
+          
+          const previousValue = data[index - 1].value;
+          const currentValue = data[index].value;
+          const difference = currentValue - previousValue;
+          
+          // Return color based on change
+          if (difference > 0) {
+            return '#10B981'; // Green for positive
+          } else if (difference < 0) {
+            return '#EF4444'; // Red for negative
+          } else {
+            return '#374151'; // Gray for no change
+          }
+        },
+      }
+    }
   };
 
   return (
@@ -166,7 +239,7 @@ const WeeklyTrendCard: React.FC<WeeklyTrendCardProps> = ({ title, dataField, col
       subtitle="First to last week trend"
       loading={loading}
     >
-      <Line data={chartData} options={lineChartOptions} />
+      <Line data={chartData} options={customOptions} />
     </ChartCard>
   );
 };

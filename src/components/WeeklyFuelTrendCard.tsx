@@ -64,13 +64,13 @@ const WeeklyFuelTrendCard: React.FC<WeeklyFuelTrendCardProps> = ({ title, dataFi
       // Find the last entry date
       const lastEntryDate = new Date(fuelData[0].date);
       const startDate = new Date(lastEntryDate);
-      startDate.setDate(startDate.getDate() - 27); // 4 weeks (28 days) before the last entry
+      startDate.setDate(startDate.getDate() - 55); // 8 weeks (56 days) before the last entry
 
       // Format dates for API
       const startDateStr = startDate.toISOString().split('T')[0];
       const endDateStr = lastEntryDate.toISOString().split('T')[0];
 
-      // Get data for the last 4 weeks from the last entry
+      // Get data for the last 8 weeks from the last entry
       const rangeResponse = await dailyFuelsApi.getAll({
         start_date: startDateStr,
         end_date: endDateStr,
@@ -141,7 +141,7 @@ const WeeklyFuelTrendCard: React.FC<WeeklyFuelTrendCardProps> = ({ title, dataFi
       const sortedData: WeeklyData[] = Array.from(weekMap.entries())
         .map(([week, value]) => ({ week, value }))
         .sort((a, b) => a.week.localeCompare(b.week))
-        .slice(-4); // Take only the last 4 weeks
+        .slice(-8); // Take only the last 8 weeks
 
       setData(sortedData);
 
@@ -241,14 +241,60 @@ const WeeklyFuelTrendCard: React.FC<WeeklyFuelTrendCardProps> = ({ title, dataFi
       },
       datalabels: {
         display: true,
-        color: '#374151',
-        font: {
-          weight: 'bold' as const,
-          size: 10
+        font: function(context: any) {
+          const index = context.dataIndex;
+          if (index === 0) {
+            return {
+              weight: 'bold' as const,
+              size: 10
+            };
+          }
+          
+          const previousValue = data[index - 1].value;
+          const currentValue = data[index].value;
+          const difference = currentValue - previousValue;
+          
+          return {
+            weight: 'bold' as const,
+            size: 10
+          };
         },
-        formatter: function(value: any) {
+        color: function(context: any) {
+          const index = context.dataIndex;
+          if (index === 0) {
+            return '#374151'; // Default gray for first week
+          }
+          
+          const previousValue = data[index - 1].value;
+          const currentValue = data[index].value;
+          const difference = currentValue - previousValue;
+          
+          // Return color based on change
+          if (difference > 0) {
+            return '#10B981'; // Green for positive
+          } else if (difference < 0) {
+            return '#EF4444'; // Red for negative
+          } else {
+            return '#374151'; // Gray for no change
+          }
+        },
+        formatter: function(value: any, context: any) {
           const numValue = parseFloat(value) || 0;
-          return isQuantityField ? formatQuantity(numValue) : formatCurrency(numValue);
+          const index = context.dataIndex;
+          
+          if (index === 0) {
+            // First week - no comparison
+            return isQuantityField ? formatQuantity(numValue) : formatCurrency(numValue);
+          } else {
+            // Calculate difference from previous week
+            const previousValue = data[index - 1].value;
+            const difference = numValue - previousValue;
+            const percentChange = previousValue !== 0 ? ((difference / previousValue) * 100) : 0;
+            const sign = difference >= 0 ? '+' : '';
+            
+            const formattedValue = isQuantityField ? formatQuantity(numValue) : formatCurrency(numValue);
+            return `${formattedValue}\n(${sign}${percentChange.toFixed(1)}%)`;
+          }
         },
         anchor: 'end' as const,
         align: 'top' as const,
@@ -319,7 +365,7 @@ const WeeklyFuelTrendCard: React.FC<WeeklyFuelTrendCardProps> = ({ title, dataFi
       </div>
       
       <div className="text-sm text-gray-600">
-        Last 4 weeks trend
+        Last 8 weeks trend
       </div>
     </div>
   );
