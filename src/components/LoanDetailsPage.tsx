@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { loanApi, Loan, LoanFormData } from '../services/api';
 import Modal from './Modal';
+import LoanPaymentModal, { PaymentFormData } from './LoanPaymentModal';
 
 const LoanDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -15,6 +16,7 @@ const LoanDetailsPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   
   const [formData, setFormData] = useState<LoanFormData>({
     name: '',
@@ -132,6 +134,31 @@ const LoanDetailsPage: React.FC = () => {
     setDeleteModalOpen(false);
   };
 
+  const handleAddPayment = () => {
+    setPaymentModalOpen(true);
+  };
+
+  const handlePaymentSubmit = async (data: PaymentFormData) => {
+    try {
+      await loanApi.processPayment(parseInt(id!), {
+        date: data.date,
+        amount: data.amount as number,
+        type: data.type,
+        notes: data.notes,
+      });
+      // Reload loan data to get updated amount
+      await loadLoan();
+      setPaymentModalOpen(false);
+    } catch (err) {
+      console.error('Error processing payment:', err);
+      throw err; // Let the modal handle the error
+    }
+  };
+
+  const handlePaymentClose = () => {
+    setPaymentModalOpen(false);
+  };
+
   const formatCurrency = (amount: string, currency: string = 'CAD') => {
     const numAmount = parseFloat(amount);
     const symbol = currency === 'USD' ? '$' : currency === 'CAD' ? 'C$' : currency === 'BDT' ? '৳' : currency;
@@ -186,6 +213,15 @@ const LoanDetailsPage: React.FC = () => {
           
           {!isEditMode && (
             <div className="flex space-x-3">
+              <button
+                onClick={handleAddPayment}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors inline-flex items-center"
+              >
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Add Payment
+              </button>
               <button
                 onClick={() => navigate(`/accounting/loan-accounts/${id}/edit`)}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -396,6 +432,14 @@ const LoanDetailsPage: React.FC = () => {
         <br />
         This action cannot be undone.
       </Modal>
+
+      {/* Payment Modal */}
+      <LoanPaymentModal
+        isOpen={paymentModalOpen}
+        loanName={loan?.name || ''}
+        onClose={handlePaymentClose}
+        onSubmit={handlePaymentSubmit}
+      />
     </div>
   );
 };
