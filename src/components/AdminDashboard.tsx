@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import SalesReportCard from './SalesReportCard';
 import WeeklyReportCard from './WeeklyReportCard';
 import WeeklyTrendCard from './WeeklyTrendCard';
+import WeeklyProfitsTrendCard from './WeeklyProfitsTrendCard';
 import WeeklyFuelTrendCard from './WeeklyFuelTrendCard';
 import MonthlySalesTrendCard from './MonthlySalesTrendCard';
 import MonthlyFuelTrendCard from './MonthlyFuelTrendCard';
@@ -37,6 +38,10 @@ const AdminDashboard: React.FC = () => {
               title="Total Sales Trend" 
               dataField="reported_total" 
               color="#3B82F6" 
+            />
+            <WeeklyProfitsTrendCard 
+              title="Total Profits Trend" 
+              color="#10B981" 
             />
             <SalesReportCard 
               title="Fuel Sales Trend ($$$)" 
