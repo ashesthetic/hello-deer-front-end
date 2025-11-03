@@ -914,4 +914,35 @@ export const safedropResolutionApi = {
   delete: (id: number) => api.delete(`/safedrop-resolutions/${id}`),
 };
 
+// Loan interfaces
+export interface Loan {
+  id: number;
+  name: string;
+  amount: string;
+  currency: string;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+export interface LoanFormData {
+  name: string;
+  amount: number | string;
+  currency?: string;
+  notes?: string;
+}
+
+// Loan API
+export const loanApi = {
+  getAll: (params?: any) => api.get('/loans', { params }),
+  getById: (id: number) => api.get(`/loans/${id}`),
+  create: (data: LoanFormData) => api.post('/loans', data),
+  update: (id: number, data: LoanFormData) => api.put(`/loans/${id}`, data),
+  delete: (id: number) => api.delete(`/loans/${id}`),
+  withTrashed: (params?: any) => api.get('/loans/with-trashed', { params }),
+  restore: (id: number) => api.post(`/loans/${id}/restore`),
+  forceDelete: (id: number) => api.delete(`/loans/${id}/force-delete`),
+};
+
 export default api;
