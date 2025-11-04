@@ -144,6 +144,7 @@ const LoanDetailsPage: React.FC = () => {
         date: data.date,
         amount: data.amount as number,
         type: data.type,
+        bank_account_id: parseInt(data.bank_account_id.toString()),
         notes: data.notes,
       });
       // Reload loan data to get updated amount
