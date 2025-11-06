@@ -265,9 +265,8 @@ export interface Owner {
   created_at?: string;
   updated_at?: string;
   total_equity?: number;
-  total_contributions?: number;
+  total_investments?: number;
   total_withdrawals?: number;
-  total_distributions?: number;
   equity_transactions?: OwnerEquity[];
   canBeUpdatedBy?: (user: User) => boolean;
   canBeDeletedBy?: (user: User) => boolean;
@@ -304,57 +303,49 @@ export interface UpdateOwnerData {
 // Owner Equity types
 export interface OwnerEquity {
   id?: number;
-  owner_id: number;
-  transaction_type: 'contribution' | 'withdrawal' | 'distribution' | 'adjustment';
+  date: string;
+  description: string;
+  type: 'investment' | 'withdrawal';
   amount: number;
-  transaction_date: string;
-  reference_number?: string;
-  payment_method?: string;
-  description?: string;
-  notes?: string;
-  user_id?: number;
+  note?: string;
+  owner_id: number;
   owner?: Owner;
-  user?: User;
   created_at?: string;
   updated_at?: string;
-  formatted_transaction_date?: string;
+  deleted_at?: string;
+  formatted_date?: string;
   formatted_amount?: string;
-  transaction_type_display?: string;
-  is_positive?: boolean;
-  is_negative?: boolean;
+  type_display?: string;
+  is_investment?: boolean;
+  is_withdrawal?: boolean;
   canBeUpdatedBy?: (user: User) => boolean;
   canBeDeletedBy?: (user: User) => boolean;
 }
 
 export interface CreateOwnerEquityData {
   owner_id: number;
-  transaction_type: 'contribution' | 'withdrawal' | 'distribution' | 'adjustment';
+  type: 'investment' | 'withdrawal';
   amount: number;
-  transaction_date: string;
-  reference_number?: string;
-  payment_method?: string;
-  description?: string;
-  notes?: string;
+  date: string;
+  description: string;
+  note?: string;
 }
 
 export interface UpdateOwnerEquityData {
   owner_id: number;
-  transaction_type: 'contribution' | 'withdrawal' | 'distribution' | 'adjustment';
+  type: 'investment' | 'withdrawal';
   amount: number;
-  transaction_date: string;
-  reference_number?: string;
-  payment_method?: string;
-  description?: string;
-  notes?: string;
+  date: string;
+  description: string;
+  note?: string;
 }
 
 export interface OwnerEquitySummary {
   total_owners: number;
   active_owners: number;
   total_equity: number;
-  total_contributions: number;
+  total_investments: number;
   total_withdrawals: number;
-  total_distributions: number;
   owners: Array<{
     id: number;
     name: string;
@@ -367,9 +358,8 @@ export interface OwnerEquitySummary {
 export interface OwnerSummary {
   owner: Owner;
   total_equity: number;
-  total_contributions: number;
+  total_investments: number;
   total_withdrawals: number;
-  total_distributions: number;
   recent_transactions: OwnerEquity[];
 }
 
