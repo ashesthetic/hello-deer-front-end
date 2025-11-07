@@ -4,6 +4,31 @@ import { DailySale, DailyFuel, FuelVolume, LoginCredentials, CreateUserData, Upd
 // Re-export types for convenience
 export type { VendorInvoice };
 
+// Exchange Rate API
+const exchangeRateApiBase = axios.create({
+  baseURL: 'https://api.exchangerate-api.com/v4/latest',
+});
+
+export interface ExchangeRateResponse {
+  base: string;
+  date: string;
+  rates: {
+    [key: string]: number;
+  };
+}
+
+export const exchangeRateApi = {
+  getRate: async (from: string, to: string): Promise<number> => {
+    try {
+      const response = await exchangeRateApiBase.get<ExchangeRateResponse>(`/${from}`);
+      return response.data.rates[to] || 0;
+    } catch (error) {
+      console.error('Error fetching exchange rate:', error);
+      return 0;
+    }
+  },
+};
+
 // Employee interfaces
 export interface Employee {
   id: number;

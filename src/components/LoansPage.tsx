@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { loanApi, Loan } from '../services/api';
+import { loanApi, Loan, exchangeRateApi } from '../services/api';
 import Modal from './Modal';
 
 const LoansPage: React.FC = () => {
@@ -15,6 +15,8 @@ const LoansPage: React.FC = () => {
   const [totalItems, setTotalItems] = useState(0);
   const [sortBy, setSortBy] = useState('created_at');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [bdtToCADRate, setBdtToCADRate] = useState<number>(0);
+  const [exchangeRateLoading, setExchangeRateLoading] = useState(true);
 
   const fetchLoans = async () => {
     try {
@@ -35,10 +37,26 @@ const LoansPage: React.FC = () => {
     }
   };
 
+  const fetchExchangeRate = async () => {
+    try {
+      setExchangeRateLoading(true);
+      const rate = await exchangeRateApi.getRate('BDT', 'CAD');
+      setBdtToCADRate(rate);
+    } catch (error) {
+      console.error('Error fetching exchange rate:', error);
+    } finally {
+      setExchangeRateLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchLoans();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, sortBy, sortDirection]);
+
+  useEffect(() => {
+    fetchExchangeRate();
+  }, []);
 
   const handleAddNew = () => {
     navigate('/accounting/loan-accounts/new');
@@ -105,6 +123,22 @@ const LoansPage: React.FC = () => {
     });
   };
 
+  const calculateTotalBDT = (): number => {
+    return loans
+      .filter(loan => loan.currency === 'BDT')
+      .reduce((sum, loan) => sum + parseFloat(loan.amount), 0);
+  };
+
+  const calculateTotalCAD = (): number => {
+    return loans
+      .filter(loan => loan.currency === 'CAD')
+      .reduce((sum, loan) => sum + parseFloat(loan.amount), 0);
+  };
+
+  const convertBDTToCAD = (bdtAmount: number): number => {
+    return bdtAmount * bdtToCADRate;
+  };
+
   if (loading && loans.length === 0) {
     return (
       <div className="flex justify-center items-center py-12">
@@ -133,6 +167,97 @@ const LoansPage: React.FC = () => {
             </svg>
             Add New Loan
           </button>
+        </div>
+
+        {/* Summary Card */}
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg shadow-md p-6 mb-6 border border-blue-100">
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <div className="flex items-center mb-4">
+                <svg className="w-6 h-6 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <h2 className="text-lg font-semibold text-gray-900">Total Loan Amounts</h2>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* BDT Section */}
+                <div className="bg-white rounded-lg p-4 shadow-sm">
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-sm text-gray-600 mb-1 font-medium">BDT Loans</p>
+                      <p className="text-2xl font-bold text-blue-600">
+                        {loading ? (
+                          <span className="text-base text-gray-400">Loading...</span>
+                        ) : (
+                          formatCurrency(calculateTotalBDT().toString(), 'BDT')
+                        )}
+                      </p>
+                    </div>
+
+                    <div className="pt-3 border-t border-gray-200">
+                      <div className="flex items-center justify-between mb-1">
+                        <p className="text-xs text-gray-600 font-medium">CAD Equivalent</p>
+                        {!exchangeRateLoading && bdtToCADRate > 0 && (
+                          <p className="text-xs text-gray-500">
+                            1 BDT = {bdtToCADRate.toFixed(4)} CAD
+                          </p>
+                        )}
+                      </div>
+                      <p className="text-xl font-bold text-green-600">
+                        {exchangeRateLoading ? (
+                          <span className="text-base text-gray-400">Loading rate...</span>
+                        ) : bdtToCADRate === 0 ? (
+                          <span className="text-base text-red-500">Rate unavailable</span>
+                        ) : loading ? (
+                          <span className="text-base text-gray-400">Loading...</span>
+                        ) : (
+                          formatCurrency(convertBDTToCAD(calculateTotalBDT()).toString(), 'CAD')
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* CAD Section */}
+                <div className="bg-white rounded-lg p-4 shadow-sm">
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-sm text-gray-600 mb-1 font-medium">CAD Loans</p>
+                      <p className="text-2xl font-bold text-green-600">
+                        {loading ? (
+                          <span className="text-base text-gray-400">Loading...</span>
+                        ) : (
+                          formatCurrency(calculateTotalCAD().toString(), 'CAD')
+                        )}
+                      </p>
+                    </div>
+
+                    <div className="pt-3 border-t border-gray-200">
+                      <p className="text-xs text-gray-600 font-medium mb-1">Total in CAD</p>
+                      <p className="text-xl font-bold text-indigo-600">
+                        {exchangeRateLoading || bdtToCADRate === 0 ? (
+                          <span className="text-base text-gray-400">Calculating...</span>
+                        ) : loading ? (
+                          <span className="text-base text-gray-400">Loading...</span>
+                        ) : (
+                          formatCurrency((calculateTotalCAD() + convertBDTToCAD(calculateTotalBDT())).toString(), 'CAD')
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="ml-4">
+              <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center">
+                <svg className="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                </svg>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Table */}
