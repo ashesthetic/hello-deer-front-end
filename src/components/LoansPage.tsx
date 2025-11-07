@@ -16,10 +16,6 @@ const LoansPage: React.FC = () => {
   const [sortBy, setSortBy] = useState('created_at');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
-  useEffect(() => {
-    fetchLoans();
-  }, [currentPage, sortBy, sortDirection]);
-
   const fetchLoans = async () => {
     try {
       setLoading(true);
@@ -38,6 +34,11 @@ const LoansPage: React.FC = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchLoans();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, sortBy, sortDirection]);
 
   const handleAddNew = () => {
     navigate('/accounting/loan-accounts/new');

@@ -44,12 +44,6 @@ const LoanPaymentModal: React.FC<LoanPaymentModalProps> = ({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (isOpen) {
-      fetchBankAccounts();
-    }
-  }, [isOpen]);
-
   const fetchBankAccounts = async () => {
     try {
       setLoadingAccounts(true);
@@ -68,6 +62,13 @@ const LoanPaymentModal: React.FC<LoanPaymentModalProps> = ({
       setLoadingAccounts(false);
     }
   };
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchBankAccounts();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
