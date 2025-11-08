@@ -973,4 +973,14 @@ export const loanApi = {
   getPaymentHistory: (id: number) => api.get(`/loans/${id}/payment-history`),
 };
 
+// Daily ATM API
+export const dailyAtmApi = {
+  index: (params?: string) => api.get(`/daily-atm${params ? `?${params}` : ''}`),
+  show: (id: number) => api.get(`/daily-atm/${id}`),
+  create: (data: { date: string; no_of_transactions: number; withdraw: number; notes?: string }) => api.post('/daily-atm', data),
+  update: (id: number, data: { date: string; no_of_transactions: number; withdraw: number; notes?: string }) => api.put(`/daily-atm/${id}`, data),
+  delete: (id: number) => api.delete(`/daily-atm/${id}`),
+  resolve: (id: number, data: { bank_account_id: number; notes?: string }) => api.post(`/daily-atm/${id}/resolve`, data),
+};
+
 export default api;
