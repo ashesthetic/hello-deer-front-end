@@ -412,18 +412,14 @@ const DashboardStatsCards: React.FC = () => {
               {stats.yesterday_data.latest_fuel_volume && (
                 <div className="mt-4 bg-white rounded-lg p-4 shadow-sm">
                   <div className="text-xs text-gray-600 mb-2 font-medium">Latest Fuel Volume</div>
-                  <div className="grid grid-cols-4 gap-3 text-sm">
+                  <div className="grid grid-cols-3 gap-3 text-sm">
                     <div>
                       <div className="text-xs text-gray-500">Regular</div>
                       <div className="font-semibold text-gray-900">{stats.yesterday_data.latest_fuel_volume.regular}L</div>
                     </div>
                     <div>
-                      <div className="text-xs text-gray-500">Plus</div>
-                      <div className="font-semibold text-gray-900">{stats.yesterday_data.latest_fuel_volume.plus}L</div>
-                    </div>
-                    <div>
-                      <div className="text-xs text-gray-500">Sup Plus</div>
-                      <div className="font-semibold text-gray-900">{stats.yesterday_data.latest_fuel_volume.sup_plus}L</div>
+                      <div className="text-xs text-gray-500">Premium</div>
+                      <div className="font-semibold text-gray-900">{stats.yesterday_data.latest_fuel_volume.premium}L</div>
                     </div>
                     <div>
                       <div className="text-xs text-gray-500">Diesel</div>
