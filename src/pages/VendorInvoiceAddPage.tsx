@@ -28,6 +28,7 @@ const VendorInvoiceAddPage: React.FC = () => {
   const currentUser = useSelector((state: RootState) => (state as any).auth.user);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -64,6 +65,27 @@ const VendorInvoiceAddPage: React.FC = () => {
       setError(`Failed to fetch vendors: ${err.response?.data?.message || err.message || 'Unknown error'}`);
     }
   }, [currentUser]);
+
+  useEffect(() => {
+    // Check for auth success/error in URL params
+    const urlParams = new URLSearchParams(window.location.search);
+    const authSuccess = urlParams.get('auth_success');
+    const authError = urlParams.get('auth_error');
+    
+    if (authSuccess) {
+      setSuccessMessage('Google Drive connected successfully!');
+      // Clean up URL
+      window.history.replaceState({}, '', window.location.pathname);
+      // Auto-clear success message after 5 seconds
+      setTimeout(() => setSuccessMessage(null), 5000);
+    }
+    
+    if (authError) {
+      setError(decodeURIComponent(authError));
+      // Clean up URL
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
 
   useEffect(() => {
     // Only run when currentUser is available
@@ -246,6 +268,13 @@ const VendorInvoiceAddPage: React.FC = () => {
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-md p-4">
             <p className="text-red-800">{error}</p>
+          </div>
+        )}
+
+        {/* Success Message */}
+        {successMessage && (
+          <div className="bg-green-50 border border-green-200 rounded-md p-4">
+            <p className="text-green-800">{successMessage}</p>
           </div>
         )}
 
