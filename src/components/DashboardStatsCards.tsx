@@ -32,6 +32,23 @@ interface IncomeExpenseItem {
   description: string;
 }
 
+interface ProfitBreakdownCategory {
+  percentage: number;
+  amount: number;
+  formatted_amount: string;
+  profit: number;
+  formatted_profit: string;
+}
+
+interface ProfitBreakdown {
+  fuel: ProfitBreakdownCategory;
+  tobacco_25: ProfitBreakdownCategory;
+  tobacco_20: ProfitBreakdownCategory;
+  lottery: ProfitBreakdownCategory;
+  prepay: ProfitBreakdownCategory;
+  store_sale: ProfitBreakdownCategory;
+}
+
 interface DashboardStats {
   total_money_in_banks: {
     total_balance: number;
@@ -73,50 +90,7 @@ interface DashboardStats {
       premium: number;
       diesel: number;
     } | null;
-    profit_breakdown?: {
-      fuel: {
-        percentage: number;
-        amount: number;
-        formatted_amount: string;
-        profit: number;
-        formatted_profit: string;
-      };
-      tobacco_25: {
-        percentage: number;
-        amount: number;
-        formatted_amount: string;
-        profit: number;
-        formatted_profit: string;
-      };
-      tobacco_20: {
-        percentage: number;
-        amount: number;
-        formatted_amount: string;
-        profit: number;
-        formatted_profit: string;
-      };
-      lottery: {
-        percentage: number;
-        amount: number;
-        formatted_amount: string;
-        profit: number;
-        formatted_profit: string;
-      };
-      prepay: {
-        percentage: number;
-        amount: number;
-        formatted_amount: string;
-        profit: number;
-        formatted_profit: string;
-      };
-      store_sale: {
-        percentage: number;
-        amount: number;
-        formatted_amount: string;
-        profit: number;
-        formatted_profit: string;
-      };
-    };
+    profit_breakdown?: ProfitBreakdown;
   };
   last_week_data: {
     has_data: boolean;
@@ -140,50 +114,7 @@ interface DashboardStats {
     fuel_sale_liters?: number;
     fuel_sale_amount?: number;
     formatted_fuel_sale_amount?: string;
-    profit_breakdown?: {
-      fuel: {
-        percentage: number;
-        amount: number;
-        formatted_amount: string;
-        profit: number;
-        formatted_profit: string;
-      };
-      tobacco_25: {
-        percentage: number;
-        amount: number;
-        formatted_amount: string;
-        profit: number;
-        formatted_profit: string;
-      };
-      tobacco_20: {
-        percentage: number;
-        amount: number;
-        formatted_amount: string;
-        profit: number;
-        formatted_profit: string;
-      };
-      lottery: {
-        percentage: number;
-        amount: number;
-        formatted_amount: string;
-        profit: number;
-        formatted_profit: string;
-      };
-      prepay: {
-        percentage: number;
-        amount: number;
-        formatted_amount: string;
-        profit: number;
-        formatted_profit: string;
-      };
-      store_sale: {
-        percentage: number;
-        amount: number;
-        formatted_amount: string;
-        profit: number;
-        formatted_profit: string;
-      };
-    };
+    profit_breakdown?: ProfitBreakdown;
   };
   last_month_data: {
     has_data: boolean;
@@ -207,50 +138,7 @@ interface DashboardStats {
     fuel_sale_liters?: number;
     fuel_sale_amount?: number;
     formatted_fuel_sale_amount?: string;
-    profit_breakdown?: {
-      fuel: {
-        percentage: number;
-        amount: number;
-        formatted_amount: string;
-        profit: number;
-        formatted_profit: string;
-      };
-      tobacco_25: {
-        percentage: number;
-        amount: number;
-        formatted_amount: string;
-        profit: number;
-        formatted_profit: string;
-      };
-      tobacco_20: {
-        percentage: number;
-        amount: number;
-        formatted_amount: string;
-        profit: number;
-        formatted_profit: string;
-      };
-      lottery: {
-        percentage: number;
-        amount: number;
-        formatted_amount: string;
-        profit: number;
-        formatted_profit: string;
-      };
-      prepay: {
-        percentage: number;
-        amount: number;
-        formatted_amount: string;
-        profit: number;
-        formatted_profit: string;
-      };
-      store_sale: {
-        percentage: number;
-        amount: number;
-        formatted_amount: string;
-        profit: number;
-        formatted_profit: string;
-      };
-    };
+    profit_breakdown?: ProfitBreakdown;
   };
   last_month_income: {
     total_income: number;
@@ -395,327 +283,7 @@ const DashboardStatsCards: React.FC = () => {
         </div>
       </div>
 
-      {/* Second Row - Yesterday's Data */}
-      <div className="grid grid-cols-1 gap-6">
-        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow border border-blue-100">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">Yesterday's Performance</h3>
-            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-            </div>
-          </div>
-          
-          {stats.yesterday_data.has_data ? (
-            <div>
-              <div className="text-sm text-gray-600 mb-4">{stats.yesterday_data.formatted_date}</div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-white rounded-lg p-4 shadow-sm">
-                  <div className="text-xs text-gray-600 mb-1">Profit</div>
-                  <div className="text-lg font-bold text-green-600">{stats.yesterday_data.formatted_profit}</div>
-                </div>
-                <div className="bg-white rounded-lg p-4 shadow-sm">
-                  <div className="text-xs text-gray-600 mb-1">Total Sale</div>
-                  <div className="text-lg font-bold text-gray-900">{stats.yesterday_data.formatted_total_sale}</div>
-                </div>
-                <div className="bg-white rounded-lg p-4 shadow-sm">
-                  <div className="text-xs text-gray-600 mb-1">Debit</div>
-                  <div className="text-lg font-bold text-gray-900">{stats.yesterday_data.formatted_debit_sale}</div>
-                </div>
-                <div className="bg-white rounded-lg p-4 shadow-sm">
-                  <div className="text-xs text-gray-600 mb-1">Credit</div>
-                  <div className="text-lg font-bold text-gray-900">{stats.yesterday_data.formatted_credit_sale}</div>
-                </div>
-                <div className="bg-white rounded-lg p-4 shadow-sm">
-                  <div className="text-xs text-gray-600 mb-1">Cash</div>
-                  <div className="text-lg font-bold text-gray-900">{stats.yesterday_data.formatted_cash_sale}</div>
-                </div>
-                <div className="bg-white rounded-lg p-4 shadow-sm">
-                  <div className="text-xs text-gray-600 mb-1">Safedrops</div>
-                  <div className="text-lg font-bold text-gray-900">{stats.yesterday_data.formatted_safedrops}</div>
-                </div>
-                <div className="bg-white rounded-lg p-4 shadow-sm">
-                  <div className="text-xs text-gray-600 mb-1">Cash in Hand</div>
-                  <div className="text-lg font-bold text-gray-900">{stats.yesterday_data.formatted_cash_in_hand}</div>
-                </div>
-                <div className="bg-white rounded-lg p-4 shadow-sm">
-                  <div className="text-xs text-gray-600 mb-1">Fuel (Liters)</div>
-                  <div className="text-lg font-bold text-gray-900">{stats.yesterday_data.fuel_sale_liters?.toLocaleString()}L</div>
-                </div>
-                <div className="bg-white rounded-lg p-4 shadow-sm">
-                  <div className="text-xs text-gray-600 mb-1">Fuel ($)</div>
-                  <div className="text-lg font-bold text-gray-900">{stats.yesterday_data.formatted_fuel_sale_amount}</div>
-                </div>
-              </div>
-              {stats.yesterday_data.latest_fuel_volume && (
-                <div className="mt-4 bg-white rounded-lg p-4 shadow-sm">
-                  <div className="text-xs text-gray-600 mb-2 font-medium">
-                    Latest Fuel Volume - {stats.yesterday_data.latest_fuel_volume.formatted_date}
-                  </div>
-                  <div className="grid grid-cols-3 gap-3 text-sm">
-                    <div>
-                      <div className="text-xs text-gray-500">Regular</div>
-                      <div className="font-semibold text-gray-900">{stats.yesterday_data.latest_fuel_volume.regular}L</div>
-                    </div>
-                    <div>
-                      <div className="text-xs text-gray-500">Premium</div>
-                      <div className="font-semibold text-gray-900">{stats.yesterday_data.latest_fuel_volume.premium}L</div>
-                    </div>
-                    <div>
-                      <div className="text-xs text-gray-500">Diesel</div>
-                      <div className="font-semibold text-gray-900">{stats.yesterday_data.latest_fuel_volume.diesel}L</div>
-                    </div>
-                  </div>
-                </div>
-              )}
-              {stats.yesterday_data.profit_breakdown && (
-                <div className="mt-4 bg-white rounded-lg p-4 shadow-sm">
-                  <div className="text-xs text-gray-600 mb-3 font-medium">Profit Breakdown</div>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
-                    <div className="border-l-4 border-blue-500 pl-3">
-                      <div className="text-xs font-medium text-gray-700">Fuel Profit ({stats.yesterday_data.profit_breakdown.fuel.percentage}%)</div>
-                      <div className="text-xs text-gray-500">Amount: {stats.yesterday_data.profit_breakdown.fuel.formatted_amount}</div>
-                      <div className="text-sm font-bold text-green-600">Profit: {stats.yesterday_data.profit_breakdown.fuel.formatted_profit}</div>
-                    </div>
-                    <div className="border-l-4 border-orange-500 pl-3">
-                      <div className="text-xs font-medium text-gray-700">Tobacco 25 Profit ({stats.yesterday_data.profit_breakdown.tobacco_25.percentage}%)</div>
-                      <div className="text-xs text-gray-500">Amount: {stats.yesterday_data.profit_breakdown.tobacco_25.formatted_amount}</div>
-                      <div className="text-sm font-bold text-green-600">Profit: {stats.yesterday_data.profit_breakdown.tobacco_25.formatted_profit}</div>
-                    </div>
-                    <div className="border-l-4 border-red-500 pl-3">
-                      <div className="text-xs font-medium text-gray-700">Tobacco 20 Profit ({stats.yesterday_data.profit_breakdown.tobacco_20.percentage}%)</div>
-                      <div className="text-xs text-gray-500">Amount: {stats.yesterday_data.profit_breakdown.tobacco_20.formatted_amount}</div>
-                      <div className="text-sm font-bold text-green-600">Profit: {stats.yesterday_data.profit_breakdown.tobacco_20.formatted_profit}</div>
-                    </div>
-                    <div className="border-l-4 border-purple-500 pl-3">
-                      <div className="text-xs font-medium text-gray-700">Lottery Profit ({stats.yesterday_data.profit_breakdown.lottery.percentage}%)</div>
-                      <div className="text-xs text-gray-500">Amount: {stats.yesterday_data.profit_breakdown.lottery.formatted_amount}</div>
-                      <div className="text-sm font-bold text-green-600">Profit: {stats.yesterday_data.profit_breakdown.lottery.formatted_profit}</div>
-                    </div>
-                    <div className="border-l-4 border-yellow-500 pl-3">
-                      <div className="text-xs font-medium text-gray-700">Prepay Profit ({stats.yesterday_data.profit_breakdown.prepay.percentage}%)</div>
-                      <div className="text-xs text-gray-500">Amount: {stats.yesterday_data.profit_breakdown.prepay.formatted_amount}</div>
-                      <div className="text-sm font-bold text-green-600">Profit: {stats.yesterday_data.profit_breakdown.prepay.formatted_profit}</div>
-                    </div>
-                    <div className="border-l-4 border-green-500 pl-3">
-                      <div className="text-xs font-medium text-gray-700">Store Sale Profit ({stats.yesterday_data.profit_breakdown.store_sale.percentage}%)</div>
-                      <div className="text-xs text-gray-500">Amount: {stats.yesterday_data.profit_breakdown.store_sale.formatted_amount}</div>
-                      <div className="text-sm font-bold text-green-600">Profit: {stats.yesterday_data.profit_breakdown.store_sale.formatted_profit}</div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="text-center text-gray-500 py-8">
-              No data available for yesterday ({stats.yesterday_data.formatted_date})
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Third Row - Last Week's Data */}
-      <div className="grid grid-cols-1 gap-6">
-        <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow border border-purple-100">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">Last Week's Performance</h3>
-            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-            </div>
-          </div>
-          
-          {stats.last_week_data.has_data ? (
-            <div>
-              <div className="text-sm text-gray-600 mb-4">{stats.last_week_data.formatted_period}</div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-white rounded-lg p-4 shadow-sm">
-                  <div className="text-xs text-gray-600 mb-1">Profit</div>
-                  <div className="text-lg font-bold text-green-600">{stats.last_week_data.formatted_profit}</div>
-                </div>
-                <div className="bg-white rounded-lg p-4 shadow-sm">
-                  <div className="text-xs text-gray-600 mb-1">Total Sale</div>
-                  <div className="text-lg font-bold text-gray-900">{stats.last_week_data.formatted_total_sale}</div>
-                </div>
-                <div className="bg-white rounded-lg p-4 shadow-sm">
-                  <div className="text-xs text-gray-600 mb-1">Debit</div>
-                  <div className="text-lg font-bold text-gray-900">{stats.last_week_data.formatted_debit_sale}</div>
-                </div>
-                <div className="bg-white rounded-lg p-4 shadow-sm">
-                  <div className="text-xs text-gray-600 mb-1">Credit</div>
-                  <div className="text-lg font-bold text-gray-900">{stats.last_week_data.formatted_credit_sale}</div>
-                </div>
-                <div className="bg-white rounded-lg p-4 shadow-sm">
-                  <div className="text-xs text-gray-600 mb-1">Cash</div>
-                  <div className="text-lg font-bold text-gray-900">{stats.last_week_data.formatted_cash_sale}</div>
-                </div>
-                <div className="bg-white rounded-lg p-4 shadow-sm">
-                  <div className="text-xs text-gray-600 mb-1">Safedrops</div>
-                  <div className="text-lg font-bold text-gray-900">{stats.last_week_data.formatted_safedrops}</div>
-                </div>
-                <div className="bg-white rounded-lg p-4 shadow-sm">
-                  <div className="text-xs text-gray-600 mb-1">Cash in Hand</div>
-                  <div className="text-lg font-bold text-gray-900">{stats.last_week_data.formatted_cash_in_hand}</div>
-                </div>
-                <div className="bg-white rounded-lg p-4 shadow-sm">
-                  <div className="text-xs text-gray-600 mb-1">Fuel (Liters)</div>
-                  <div className="text-lg font-bold text-gray-900">{stats.last_week_data.fuel_sale_liters?.toLocaleString()}L</div>
-                </div>
-                <div className="bg-white rounded-lg p-4 shadow-sm">
-                  <div className="text-xs text-gray-600 mb-1">Fuel ($)</div>
-                  <div className="text-lg font-bold text-gray-900">{stats.last_week_data.formatted_fuel_sale_amount}</div>
-                </div>
-              </div>
-              {stats.last_week_data.profit_breakdown && (
-                <div className="mt-4 bg-white rounded-lg p-4 shadow-sm">
-                  <div className="text-xs text-gray-600 mb-3 font-medium">Profit Breakdown</div>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
-                    <div className="border-l-4 border-blue-500 pl-3">
-                      <div className="text-xs font-medium text-gray-700">Fuel Profit ({stats.last_week_data.profit_breakdown.fuel.percentage}%)</div>
-                      <div className="text-xs text-gray-500">Amount: {stats.last_week_data.profit_breakdown.fuel.formatted_amount}</div>
-                      <div className="text-sm font-bold text-green-600">Profit: {stats.last_week_data.profit_breakdown.fuel.formatted_profit}</div>
-                    </div>
-                    <div className="border-l-4 border-orange-500 pl-3">
-                      <div className="text-xs font-medium text-gray-700">Tobacco 25 Profit ({stats.last_week_data.profit_breakdown.tobacco_25.percentage}%)</div>
-                      <div className="text-xs text-gray-500">Amount: {stats.last_week_data.profit_breakdown.tobacco_25.formatted_amount}</div>
-                      <div className="text-sm font-bold text-green-600">Profit: {stats.last_week_data.profit_breakdown.tobacco_25.formatted_profit}</div>
-                    </div>
-                    <div className="border-l-4 border-red-500 pl-3">
-                      <div className="text-xs font-medium text-gray-700">Tobacco 20 Profit ({stats.last_week_data.profit_breakdown.tobacco_20.percentage}%)</div>
-                      <div className="text-xs text-gray-500">Amount: {stats.last_week_data.profit_breakdown.tobacco_20.formatted_amount}</div>
-                      <div className="text-sm font-bold text-green-600">Profit: {stats.last_week_data.profit_breakdown.tobacco_20.formatted_profit}</div>
-                    </div>
-                    <div className="border-l-4 border-purple-500 pl-3">
-                      <div className="text-xs font-medium text-gray-700">Lottery Profit ({stats.last_week_data.profit_breakdown.lottery.percentage}%)</div>
-                      <div className="text-xs text-gray-500">Amount: {stats.last_week_data.profit_breakdown.lottery.formatted_amount}</div>
-                      <div className="text-sm font-bold text-green-600">Profit: {stats.last_week_data.profit_breakdown.lottery.formatted_profit}</div>
-                    </div>
-                    <div className="border-l-4 border-yellow-500 pl-3">
-                      <div className="text-xs font-medium text-gray-700">Prepay Profit ({stats.last_week_data.profit_breakdown.prepay.percentage}%)</div>
-                      <div className="text-xs text-gray-500">Amount: {stats.last_week_data.profit_breakdown.prepay.formatted_amount}</div>
-                      <div className="text-sm font-bold text-green-600">Profit: {stats.last_week_data.profit_breakdown.prepay.formatted_profit}</div>
-                    </div>
-                    <div className="border-l-4 border-green-500 pl-3">
-                      <div className="text-xs font-medium text-gray-700">Store Sale Profit ({stats.last_week_data.profit_breakdown.store_sale.percentage}%)</div>
-                      <div className="text-xs text-gray-500">Amount: {stats.last_week_data.profit_breakdown.store_sale.formatted_amount}</div>
-                      <div className="text-sm font-bold text-green-600">Profit: {stats.last_week_data.profit_breakdown.store_sale.formatted_profit}</div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="text-center text-gray-500 py-8">
-              No data available for last week ({stats.last_week_data.formatted_period})
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Fourth Row - Last Month's Performance */}
-      <div className="grid grid-cols-1 gap-6">
-        <div className="bg-gradient-to-br from-green-50 to-teal-50 rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow border border-green-100">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">Last Month's Performance</h3>
-            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-            </div>
-          </div>
-          
-          {stats.last_month_data.has_data ? (
-            <div>
-              <div className="text-sm text-gray-600 mb-4">{stats.last_month_data.formatted_period}</div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-white rounded-lg p-4 shadow-sm">
-                  <div className="text-xs text-gray-600 mb-1">Profit</div>
-                  <div className="text-lg font-bold text-green-600">{stats.last_month_data.formatted_profit}</div>
-                </div>
-                <div className="bg-white rounded-lg p-4 shadow-sm">
-                  <div className="text-xs text-gray-600 mb-1">Total Sale</div>
-                  <div className="text-lg font-bold text-gray-900">{stats.last_month_data.formatted_total_sale}</div>
-                </div>
-                <div className="bg-white rounded-lg p-4 shadow-sm">
-                  <div className="text-xs text-gray-600 mb-1">Debit</div>
-                  <div className="text-lg font-bold text-gray-900">{stats.last_month_data.formatted_debit_sale}</div>
-                </div>
-                <div className="bg-white rounded-lg p-4 shadow-sm">
-                  <div className="text-xs text-gray-600 mb-1">Credit</div>
-                  <div className="text-lg font-bold text-gray-900">{stats.last_month_data.formatted_credit_sale}</div>
-                </div>
-                <div className="bg-white rounded-lg p-4 shadow-sm">
-                  <div className="text-xs text-gray-600 mb-1">Cash</div>
-                  <div className="text-lg font-bold text-gray-900">{stats.last_month_data.formatted_cash_sale}</div>
-                </div>
-                <div className="bg-white rounded-lg p-4 shadow-sm">
-                  <div className="text-xs text-gray-600 mb-1">Safedrops</div>
-                  <div className="text-lg font-bold text-gray-900">{stats.last_month_data.formatted_safedrops}</div>
-                </div>
-                <div className="bg-white rounded-lg p-4 shadow-sm">
-                  <div className="text-xs text-gray-600 mb-1">Cash in Hand</div>
-                  <div className="text-lg font-bold text-gray-900">{stats.last_month_data.formatted_cash_in_hand}</div>
-                </div>
-                <div className="bg-white rounded-lg p-4 shadow-sm">
-                  <div className="text-xs text-gray-600 mb-1">Fuel (Liters)</div>
-                  <div className="text-lg font-bold text-gray-900">{stats.last_month_data.fuel_sale_liters?.toLocaleString()}L</div>
-                </div>
-                <div className="bg-white rounded-lg p-4 shadow-sm">
-                  <div className="text-xs text-gray-600 mb-1">Fuel ($)</div>
-                  <div className="text-lg font-bold text-gray-900">{stats.last_month_data.formatted_fuel_sale_amount}</div>
-                </div>
-              </div>
-
-              {/* Profit Breakdown */}
-              {stats.last_month_data.profit_breakdown && (
-                <div className="mt-6">
-                  <h4 className="text-sm font-semibold text-gray-700 mb-3">Profit Breakdown</h4>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    <div className="bg-white rounded-lg p-3 shadow-sm border-l-4 border-blue-500">
-                      <div className="text-xs text-gray-600 mb-1">Fuel ({stats.last_month_data.profit_breakdown.fuel.percentage}%)</div>
-                      <div className="text-sm font-semibold text-gray-900">{stats.last_month_data.profit_breakdown.fuel.formatted_amount}</div>
-                      <div className="text-xs text-blue-600 font-medium mt-1">Profit: {stats.last_month_data.profit_breakdown.fuel.formatted_profit}</div>
-                    </div>
-                    <div className="bg-white rounded-lg p-3 shadow-sm border-l-4 border-orange-500">
-                      <div className="text-xs text-gray-600 mb-1">Tobacco 25 ({stats.last_month_data.profit_breakdown.tobacco_25.percentage}%)</div>
-                      <div className="text-sm font-semibold text-gray-900">{stats.last_month_data.profit_breakdown.tobacco_25.formatted_amount}</div>
-                      <div className="text-xs text-orange-600 font-medium mt-1">Profit: {stats.last_month_data.profit_breakdown.tobacco_25.formatted_profit}</div>
-                    </div>
-                    <div className="bg-white rounded-lg p-3 shadow-sm border-l-4 border-red-500">
-                      <div className="text-xs text-gray-600 mb-1">Tobacco 20 ({stats.last_month_data.profit_breakdown.tobacco_20.percentage}%)</div>
-                      <div className="text-sm font-semibold text-gray-900">{stats.last_month_data.profit_breakdown.tobacco_20.formatted_amount}</div>
-                      <div className="text-xs text-red-600 font-medium mt-1">Profit: {stats.last_month_data.profit_breakdown.tobacco_20.formatted_profit}</div>
-                    </div>
-                    <div className="bg-white rounded-lg p-3 shadow-sm border-l-4 border-purple-500">
-                      <div className="text-xs text-gray-600 mb-1">Lottery ({stats.last_month_data.profit_breakdown.lottery.percentage}%)</div>
-                      <div className="text-sm font-semibold text-gray-900">{stats.last_month_data.profit_breakdown.lottery.formatted_amount}</div>
-                      <div className="text-xs text-purple-600 font-medium mt-1">Profit: {stats.last_month_data.profit_breakdown.lottery.formatted_profit}</div>
-                    </div>
-                    <div className="bg-white rounded-lg p-3 shadow-sm border-l-4 border-yellow-500">
-                      <div className="text-xs text-gray-600 mb-1">Prepay ({stats.last_month_data.profit_breakdown.prepay.percentage}%)</div>
-                      <div className="text-sm font-semibold text-gray-900">{stats.last_month_data.profit_breakdown.prepay.formatted_amount}</div>
-                      <div className="text-xs text-yellow-600 font-medium mt-1">Profit: {stats.last_month_data.profit_breakdown.prepay.formatted_profit}</div>
-                    </div>
-                    <div className="bg-white rounded-lg p-3 shadow-sm border-l-4 border-green-500">
-                      <div className="text-xs text-gray-600 mb-1">Store Sale ({stats.last_month_data.profit_breakdown.store_sale.percentage}%)</div>
-                      <div className="text-sm font-semibold text-gray-900">{stats.last_month_data.profit_breakdown.store_sale.formatted_amount}</div>
-                      <div className="text-xs text-green-600 font-medium mt-1">Profit: {stats.last_month_data.profit_breakdown.store_sale.formatted_profit}</div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="text-center text-gray-500 py-8">
-              No data available for last month ({stats.last_month_data.formatted_period})
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Fifth Row - Last Month Income and Expenses */}
+      {/* Second Row - Last Month Income and Expenses */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Last Month Income Card */}
         <div className="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow">
@@ -789,6 +357,314 @@ const DashboardStatsCards: React.FC = () => {
               <div className="text-center text-gray-500 py-4">No expenses for last month</div>
             )}
           </div>
+        </div>
+      </div>
+
+      {/* Third Row - Yesterday's Data */}
+      <div className="grid grid-cols-1 gap-6">
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow border border-blue-100">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Yesterday's Performance</h3>
+            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+              <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            </div>
+          </div>
+          
+          {stats.yesterday_data.has_data ? (
+            <div>
+              <div className="text-sm text-gray-600 mb-4">{stats.yesterday_data.formatted_date}</div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-white rounded-lg p-4 shadow-sm">
+                  <div className="text-xs text-gray-600 mb-1">Profit</div>
+                  <div className="text-lg font-bold text-green-600">{stats.yesterday_data.formatted_profit}</div>
+                </div>
+                <div className="bg-white rounded-lg p-4 shadow-sm">
+                  <div className="text-xs text-gray-600 mb-1">Total Sale</div>
+                  <div className="text-lg font-bold text-gray-900">{stats.yesterday_data.formatted_total_sale}</div>
+                </div>
+                <div className="bg-white rounded-lg p-4 shadow-sm">
+                  <div className="text-xs text-gray-600 mb-1">Debit/Credit</div>
+                  <div className="text-lg font-bold text-gray-900">{stats.yesterday_data.formatted_debit_sale}</div>
+                </div>
+                <div className="bg-white rounded-lg p-4 shadow-sm">
+                  <div className="text-xs text-gray-600 mb-1">Cash</div>
+                  <div className="text-lg font-bold text-gray-900">{stats.yesterday_data.formatted_cash_sale}</div>
+                </div>
+                <div className="bg-white rounded-lg p-4 shadow-sm">
+                  <div className="text-xs text-gray-600 mb-1">Safedrops</div>
+                  <div className="text-lg font-bold text-gray-900">{stats.yesterday_data.formatted_safedrops}</div>
+                </div>
+                <div className="bg-white rounded-lg p-4 shadow-sm">
+                  <div className="text-xs text-gray-600 mb-1">Cash in Hand</div>
+                  <div className="text-lg font-bold text-gray-900">{stats.yesterday_data.formatted_cash_in_hand}</div>
+                </div>
+                <div className="bg-white rounded-lg p-4 shadow-sm">
+                  <div className="text-xs text-gray-600 mb-1">Fuel (Liters)</div>
+                  <div className="text-lg font-bold text-gray-900">{stats.yesterday_data.fuel_sale_liters?.toLocaleString()}L</div>
+                </div>
+                <div className="bg-white rounded-lg p-4 shadow-sm">
+                  <div className="text-xs text-gray-600 mb-1">Fuel ($)</div>
+                  <div className="text-lg font-bold text-gray-900">{stats.yesterday_data.formatted_fuel_sale_amount}</div>
+                </div>
+              </div>
+              {stats.yesterday_data.latest_fuel_volume && (
+                <div className="mt-4 bg-white rounded-lg p-4 shadow-sm">
+                  <div className="text-xs text-gray-600 mb-2 font-medium">Latest Fuel Volume</div>
+                  <div className="grid grid-cols-4 gap-3 text-sm">
+                    <div>
+                      <div className="text-xs text-gray-500">Regular</div>
+                      <div className="font-semibold text-gray-900">{stats.yesterday_data.latest_fuel_volume.regular}L</div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-gray-500">Plus</div>
+                      <div className="font-semibold text-gray-900">{stats.yesterday_data.latest_fuel_volume.plus}L</div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-gray-500">Sup Plus</div>
+                      <div className="font-semibold text-gray-900">{stats.yesterday_data.latest_fuel_volume.sup_plus}L</div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-gray-500">Diesel</div>
+                      <div className="font-semibold text-gray-900">{stats.yesterday_data.latest_fuel_volume.diesel}L</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {stats.yesterday_data.profit_breakdown && (
+                <div className="mt-4">
+                  <div className="text-xs text-gray-600 mb-3 font-medium">Profit Breakdown</div>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    <div className="bg-white rounded-lg p-3 shadow-sm border border-gray-100">
+                      <div className="text-xs text-gray-500 mb-1">Fuel ({stats.yesterday_data.profit_breakdown.fuel.percentage}%)</div>
+                      <div className="text-sm font-semibold text-gray-900">{stats.yesterday_data.profit_breakdown.fuel.formatted_amount}</div>
+                      <div className="text-xs text-green-600 font-medium mt-1">Profit: {stats.yesterday_data.profit_breakdown.fuel.formatted_profit}</div>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 shadow-sm border border-gray-100">
+                      <div className="text-xs text-gray-500 mb-1">Tobacco 25% ({stats.yesterday_data.profit_breakdown.tobacco_25.percentage}%)</div>
+                      <div className="text-sm font-semibold text-gray-900">{stats.yesterday_data.profit_breakdown.tobacco_25.formatted_amount}</div>
+                      <div className="text-xs text-green-600 font-medium mt-1">Profit: {stats.yesterday_data.profit_breakdown.tobacco_25.formatted_profit}</div>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 shadow-sm border border-gray-100">
+                      <div className="text-xs text-gray-500 mb-1">Tobacco 20% ({stats.yesterday_data.profit_breakdown.tobacco_20.percentage}%)</div>
+                      <div className="text-sm font-semibold text-gray-900">{stats.yesterday_data.profit_breakdown.tobacco_20.formatted_amount}</div>
+                      <div className="text-xs text-green-600 font-medium mt-1">Profit: {stats.yesterday_data.profit_breakdown.tobacco_20.formatted_profit}</div>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 shadow-sm border border-gray-100">
+                      <div className="text-xs text-gray-500 mb-1">Lottery ({stats.yesterday_data.profit_breakdown.lottery.percentage}%)</div>
+                      <div className="text-sm font-semibold text-gray-900">{stats.yesterday_data.profit_breakdown.lottery.formatted_amount}</div>
+                      <div className="text-xs text-green-600 font-medium mt-1">Profit: {stats.yesterday_data.profit_breakdown.lottery.formatted_profit}</div>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 shadow-sm border border-gray-100">
+                      <div className="text-xs text-gray-500 mb-1">Prepay ({stats.yesterday_data.profit_breakdown.prepay.percentage}%)</div>
+                      <div className="text-sm font-semibold text-gray-900">{stats.yesterday_data.profit_breakdown.prepay.formatted_amount}</div>
+                      <div className="text-xs text-green-600 font-medium mt-1">Profit: {stats.yesterday_data.profit_breakdown.prepay.formatted_profit}</div>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 shadow-sm border border-gray-100">
+                      <div className="text-xs text-gray-500 mb-1">Store Sale ({stats.yesterday_data.profit_breakdown.store_sale.percentage}%)</div>
+                      <div className="text-sm font-semibold text-gray-900">{stats.yesterday_data.profit_breakdown.store_sale.formatted_amount}</div>
+                      <div className="text-xs text-green-600 font-medium mt-1">Profit: {stats.yesterday_data.profit_breakdown.store_sale.formatted_profit}</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="text-center text-gray-500 py-8">
+              No data available for yesterday ({stats.yesterday_data.formatted_date})
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Fourth Row - Last Week's Data */}
+      <div className="grid grid-cols-1 gap-6">
+        <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow border border-purple-100">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Last Week's Performance</h3>
+            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+              <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+          </div>
+          
+          {stats.last_week_data.has_data ? (
+            <div>
+              <div className="text-sm text-gray-600 mb-4">{stats.last_week_data.formatted_period}</div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-white rounded-lg p-4 shadow-sm">
+                  <div className="text-xs text-gray-600 mb-1">Profit</div>
+                  <div className="text-lg font-bold text-green-600">{stats.last_week_data.formatted_profit}</div>
+                </div>
+                <div className="bg-white rounded-lg p-4 shadow-sm">
+                  <div className="text-xs text-gray-600 mb-1">Total Sale</div>
+                  <div className="text-lg font-bold text-gray-900">{stats.last_week_data.formatted_total_sale}</div>
+                </div>
+                <div className="bg-white rounded-lg p-4 shadow-sm">
+                  <div className="text-xs text-gray-600 mb-1">Debit/Credit</div>
+                  <div className="text-lg font-bold text-gray-900">{stats.last_week_data.formatted_debit_sale}</div>
+                </div>
+                <div className="bg-white rounded-lg p-4 shadow-sm">
+                  <div className="text-xs text-gray-600 mb-1">Cash</div>
+                  <div className="text-lg font-bold text-gray-900">{stats.last_week_data.formatted_cash_sale}</div>
+                </div>
+                <div className="bg-white rounded-lg p-4 shadow-sm">
+                  <div className="text-xs text-gray-600 mb-1">Safedrops</div>
+                  <div className="text-lg font-bold text-gray-900">{stats.last_week_data.formatted_safedrops}</div>
+                </div>
+                <div className="bg-white rounded-lg p-4 shadow-sm">
+                  <div className="text-xs text-gray-600 mb-1">Cash in Hand</div>
+                  <div className="text-lg font-bold text-gray-900">{stats.last_week_data.formatted_cash_in_hand}</div>
+                </div>
+                <div className="bg-white rounded-lg p-4 shadow-sm">
+                  <div className="text-xs text-gray-600 mb-1">Fuel (Liters)</div>
+                  <div className="text-lg font-bold text-gray-900">{stats.last_week_data.fuel_sale_liters?.toLocaleString()}L</div>
+                </div>
+                <div className="bg-white rounded-lg p-4 shadow-sm">
+                  <div className="text-xs text-gray-600 mb-1">Fuel ($)</div>
+                  <div className="text-lg font-bold text-gray-900">{stats.last_week_data.formatted_fuel_sale_amount}</div>
+                </div>
+              </div>
+              {stats.last_week_data.profit_breakdown && (
+                <div className="mt-4">
+                  <div className="text-xs text-gray-600 mb-3 font-medium">Profit Breakdown</div>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    <div className="bg-white rounded-lg p-3 shadow-sm border border-gray-100">
+                      <div className="text-xs text-gray-500 mb-1">Fuel ({stats.last_week_data.profit_breakdown.fuel.percentage}%)</div>
+                      <div className="text-sm font-semibold text-gray-900">{stats.last_week_data.profit_breakdown.fuel.formatted_amount}</div>
+                      <div className="text-xs text-green-600 font-medium mt-1">Profit: {stats.last_week_data.profit_breakdown.fuel.formatted_profit}</div>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 shadow-sm border border-gray-100">
+                      <div className="text-xs text-gray-500 mb-1">Tobacco 25% ({stats.last_week_data.profit_breakdown.tobacco_25.percentage}%)</div>
+                      <div className="text-sm font-semibold text-gray-900">{stats.last_week_data.profit_breakdown.tobacco_25.formatted_amount}</div>
+                      <div className="text-xs text-green-600 font-medium mt-1">Profit: {stats.last_week_data.profit_breakdown.tobacco_25.formatted_profit}</div>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 shadow-sm border border-gray-100">
+                      <div className="text-xs text-gray-500 mb-1">Tobacco 20% ({stats.last_week_data.profit_breakdown.tobacco_20.percentage}%)</div>
+                      <div className="text-sm font-semibold text-gray-900">{stats.last_week_data.profit_breakdown.tobacco_20.formatted_amount}</div>
+                      <div className="text-xs text-green-600 font-medium mt-1">Profit: {stats.last_week_data.profit_breakdown.tobacco_20.formatted_profit}</div>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 shadow-sm border border-gray-100">
+                      <div className="text-xs text-gray-500 mb-1">Lottery ({stats.last_week_data.profit_breakdown.lottery.percentage}%)</div>
+                      <div className="text-sm font-semibold text-gray-900">{stats.last_week_data.profit_breakdown.lottery.formatted_amount}</div>
+                      <div className="text-xs text-green-600 font-medium mt-1">Profit: {stats.last_week_data.profit_breakdown.lottery.formatted_profit}</div>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 shadow-sm border border-gray-100">
+                      <div className="text-xs text-gray-500 mb-1">Prepay ({stats.last_week_data.profit_breakdown.prepay.percentage}%)</div>
+                      <div className="text-sm font-semibold text-gray-900">{stats.last_week_data.profit_breakdown.prepay.formatted_amount}</div>
+                      <div className="text-xs text-green-600 font-medium mt-1">Profit: {stats.last_week_data.profit_breakdown.prepay.formatted_profit}</div>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 shadow-sm border border-gray-100">
+                      <div className="text-xs text-gray-500 mb-1">Store Sale ({stats.last_week_data.profit_breakdown.store_sale.percentage}%)</div>
+                      <div className="text-sm font-semibold text-gray-900">{stats.last_week_data.profit_breakdown.store_sale.formatted_amount}</div>
+                      <div className="text-xs text-green-600 font-medium mt-1">Profit: {stats.last_week_data.profit_breakdown.store_sale.formatted_profit}</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="text-center text-gray-500 py-8">
+              No data available for last week ({stats.last_week_data.formatted_period})
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Fifth Row - Last Month's Performance */}
+      <div className="grid grid-cols-1 gap-6">
+        <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow border border-orange-100">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Last Month's Performance</h3>
+            <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+              <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+          </div>
+          
+          {stats.last_month_data.has_data ? (
+            <div>
+              <div className="text-sm text-gray-600 mb-4">{stats.last_month_data.formatted_period}</div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-white rounded-lg p-4 shadow-sm">
+                  <div className="text-xs text-gray-600 mb-1">Profit</div>
+                  <div className="text-lg font-bold text-green-600">{stats.last_month_data.formatted_profit}</div>
+                </div>
+                <div className="bg-white rounded-lg p-4 shadow-sm">
+                  <div className="text-xs text-gray-600 mb-1">Total Sale</div>
+                  <div className="text-lg font-bold text-gray-900">{stats.last_month_data.formatted_total_sale}</div>
+                </div>
+                <div className="bg-white rounded-lg p-4 shadow-sm">
+                  <div className="text-xs text-gray-600 mb-1">Debit/Credit</div>
+                  <div className="text-lg font-bold text-gray-900">{stats.last_month_data.formatted_debit_sale}</div>
+                </div>
+                <div className="bg-white rounded-lg p-4 shadow-sm">
+                  <div className="text-xs text-gray-600 mb-1">Cash</div>
+                  <div className="text-lg font-bold text-gray-900">{stats.last_month_data.formatted_cash_sale}</div>
+                </div>
+                <div className="bg-white rounded-lg p-4 shadow-sm">
+                  <div className="text-xs text-gray-600 mb-1">Safedrops</div>
+                  <div className="text-lg font-bold text-gray-900">{stats.last_month_data.formatted_safedrops}</div>
+                </div>
+                <div className="bg-white rounded-lg p-4 shadow-sm">
+                  <div className="text-xs text-gray-600 mb-1">Cash in Hand</div>
+                  <div className="text-lg font-bold text-gray-900">{stats.last_month_data.formatted_cash_in_hand}</div>
+                </div>
+                <div className="bg-white rounded-lg p-4 shadow-sm">
+                  <div className="text-xs text-gray-600 mb-1">Fuel (Liters)</div>
+                  <div className="text-lg font-bold text-gray-900">{stats.last_month_data.fuel_sale_liters?.toLocaleString()}L</div>
+                </div>
+                <div className="bg-white rounded-lg p-4 shadow-sm">
+                  <div className="text-xs text-gray-600 mb-1">Fuel ($)</div>
+                  <div className="text-lg font-bold text-gray-900">{stats.last_month_data.formatted_fuel_sale_amount}</div>
+                </div>
+              </div>
+              {stats.last_month_data.profit_breakdown && (
+                <div className="mt-4">
+                  <div className="text-xs text-gray-600 mb-3 font-medium">Profit Breakdown</div>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    <div className="bg-white rounded-lg p-3 shadow-sm border border-gray-100">
+                      <div className="text-xs text-gray-500 mb-1">Fuel ({stats.last_month_data.profit_breakdown.fuel.percentage}%)</div>
+                      <div className="text-sm font-semibold text-gray-900">{stats.last_month_data.profit_breakdown.fuel.formatted_amount}</div>
+                      <div className="text-xs text-green-600 font-medium mt-1">Profit: {stats.last_month_data.profit_breakdown.fuel.formatted_profit}</div>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 shadow-sm border border-gray-100">
+                      <div className="text-xs text-gray-500 mb-1">Tobacco 25% ({stats.last_month_data.profit_breakdown.tobacco_25.percentage}%)</div>
+                      <div className="text-sm font-semibold text-gray-900">{stats.last_month_data.profit_breakdown.tobacco_25.formatted_amount}</div>
+                      <div className="text-xs text-green-600 font-medium mt-1">Profit: {stats.last_month_data.profit_breakdown.tobacco_25.formatted_profit}</div>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 shadow-sm border border-gray-100">
+                      <div className="text-xs text-gray-500 mb-1">Tobacco 20% ({stats.last_month_data.profit_breakdown.tobacco_20.percentage}%)</div>
+                      <div className="text-sm font-semibold text-gray-900">{stats.last_month_data.profit_breakdown.tobacco_20.formatted_amount}</div>
+                      <div className="text-xs text-green-600 font-medium mt-1">Profit: {stats.last_month_data.profit_breakdown.tobacco_20.formatted_profit}</div>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 shadow-sm border border-gray-100">
+                      <div className="text-xs text-gray-500 mb-1">Lottery ({stats.last_month_data.profit_breakdown.lottery.percentage}%)</div>
+                      <div className="text-sm font-semibold text-gray-900">{stats.last_month_data.profit_breakdown.lottery.formatted_amount}</div>
+                      <div className="text-xs text-green-600 font-medium mt-1">Profit: {stats.last_month_data.profit_breakdown.lottery.formatted_profit}</div>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 shadow-sm border border-gray-100">
+                      <div className="text-xs text-gray-500 mb-1">Prepay ({stats.last_month_data.profit_breakdown.prepay.percentage}%)</div>
+                      <div className="text-sm font-semibold text-gray-900">{stats.last_month_data.profit_breakdown.prepay.formatted_amount}</div>
+                      <div className="text-xs text-green-600 font-medium mt-1">Profit: {stats.last_month_data.profit_breakdown.prepay.formatted_profit}</div>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 shadow-sm border border-gray-100">
+                      <div className="text-xs text-gray-500 mb-1">Store Sale ({stats.last_month_data.profit_breakdown.store_sale.percentage}%)</div>
+                      <div className="text-sm font-semibold text-gray-900">{stats.last_month_data.profit_breakdown.store_sale.formatted_amount}</div>
+                      <div className="text-xs text-green-600 font-medium mt-1">Profit: {stats.last_month_data.profit_breakdown.store_sale.formatted_profit}</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="text-center text-gray-500 py-8">
+              No data available for last month ({stats.last_month_data.formatted_period})
+            </div>
+          )}
         </div>
       </div>
     </div>
