@@ -3,114 +3,147 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 import { canCreate, canUpdate, canDelete } from '../utils/permissions';
-import { workScheduleApi } from '../services/api';
+import api from '../services/api';
 
-interface WorkScheduleDay {
-  id: number;
-  day_of_week: string;
+interface ShiftInfo {
   date: string;
-  start_time: string | null;
-  end_time: string | null;
-  hours_worked: number;
-  is_working_day: boolean;
-  notes: string | null;
+  start_time: string;
+  end_time: string;
+  total_hour: number;
 }
 
-interface WorkSchedule {
+interface Schedule {
   id: number;
   employee_id: number;
   week_start_date: string;
   week_end_date: string;
-  title: string | null;
+  weekly_total_hours: number;
+  shift_info: ShiftInfo[];
   notes: string | null;
-  status: string;
+  user_id: number;
   employee: {
     id: number;
     full_legal_name: string;
     preferred_name: string | null;
     position: string;
+    status: string;
   };
   user: {
     id: number;
     name: string;
   };
-  schedule_days: WorkScheduleDay[];
   created_at: string;
   updated_at: string;
+}
+
+interface WeekGroup {
+  weekKey: string;
+  week_start_date: string;
+  week_end_date: string;
+  schedules: Schedule[];
+  totalEmployees: number;
+  totalHours: number;
+  totalShifts: number;
 }
 
 const WorkSchedulesPage: React.FC = () => {
   const navigate = useNavigate();
   const currentUser = useSelector((state: RootState) => (state as any).auth.user);
-  const [workSchedules, setWorkSchedules] = useState<WorkSchedule[]>([]);
+  const [schedules, setSchedules] = useState<Schedule[]>([]);
+  const [weekGroups, setWeekGroups] = useState<WeekGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-
 
   useEffect(() => {
-    fetchWorkSchedules();
+    fetchSchedules();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const fetchWorkSchedules = async () => {
+  const fetchSchedules = async () => {
     try {
       setLoading(true);
-      const response = await workScheduleApi.index();
-      setWorkSchedules(response.data.data);
+      const response = await api.get('/schedules');
+      const schedulesData = response.data.data;
+      setSchedules(schedulesData);
+      
+      // Group schedules by week
+      const grouped = groupSchedulesByWeek(schedulesData);
+      setWeekGroups(grouped);
       setError(null);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to fetch work schedules');
+      setError(err.response?.data?.message || 'Failed to fetch schedules');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDelete = async (id: number) => {
+  const groupSchedulesByWeek = (schedules: Schedule[]): WeekGroup[] => {
+    const groups: { [key: string]: WeekGroup } = {};
+    
+    schedules.forEach(schedule => {
+      const weekKey = `${schedule.week_start_date}_${schedule.week_end_date}`;
+      
+      if (!groups[weekKey]) {
+        groups[weekKey] = {
+          weekKey,
+          week_start_date: schedule.week_start_date,
+          week_end_date: schedule.week_end_date,
+          schedules: [],
+          totalEmployees: 0,
+          totalHours: 0,
+          totalShifts: 0
+        };
+      }
+      
+      groups[weekKey].schedules.push(schedule);
+      groups[weekKey].totalEmployees += 1;
+      groups[weekKey].totalHours += Number(schedule.weekly_total_hours) || 0;
+      groups[weekKey].totalShifts += schedule.shift_info.length;
+    });
+    
+    return Object.values(groups).sort((a, b) => 
+      new Date(b.week_start_date).getTime() - new Date(a.week_start_date).getTime()
+    );
+  };
+
+  const handleDeleteWeek = async (weekStartDate: string) => {
     if (!canDelete(currentUser)) {
-      alert('You do not have permission to delete work schedules');
+      alert('You do not have permission to delete schedules');
       return;
     }
 
-    if (window.confirm('Are you sure you want to delete this work schedule?')) {
+    const weekGroup = weekGroups.find(g => g.week_start_date === weekStartDate);
+    if (!weekGroup) return;
+
+    if (window.confirm(`Are you sure you want to delete all ${weekGroup.totalEmployees} schedules for this week?`)) {
       try {
-        await workScheduleApi.destroy(id);
-        setWorkSchedules(workSchedules.filter(schedule => schedule.id !== id));
+        // Delete all schedules for this week
+        await Promise.all(
+          weekGroup.schedules.map(schedule => api.delete(`/schedules/${schedule.id}`))
+        );
+        fetchSchedules(); // Refresh the list
       } catch (err: any) {
-        alert(err.response?.data?.message || 'Failed to delete work schedule');
+        alert(err.response?.data?.message || 'Failed to delete schedules');
       }
     }
-  };
-
-  const getTotalHoursForWeek = (scheduleDays: WorkScheduleDay[]): number => {
-    return scheduleDays.reduce((total, day) => total + Number(day.hours_worked), 0);
-  };
-
-  const getWorkingDaysCount = (scheduleDays: WorkScheduleDay[]): number => {
-    return scheduleDays.filter(day => day.is_working_day).length;
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString();
   };
 
   const getWeekRangeString = (startDate: string, endDate: string) => {
     const start = new Date(startDate);
     const end = new Date(endDate);
-    return `${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${end.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+    return `Mon ${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - Sun ${end.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
   };
 
-  const filteredSchedules = workSchedules.filter(schedule => {
-    const matchesSearch = 
+  const filteredWeekGroups = weekGroups.filter(group => {
+    if (!searchTerm) return true;
+    
+    return group.schedules.some(schedule =>
       schedule.employee.full_legal_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       schedule.employee.preferred_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       schedule.employee.position.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      schedule.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      schedule.notes?.toLowerCase().includes(searchTerm.toLowerCase());
-
-    const matchesStatus = statusFilter === 'all' || schedule.status === statusFilter;
-
-    return matchesSearch && matchesStatus;
+      schedule.notes?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
   });
 
   if (loading) {
@@ -147,34 +180,26 @@ const WorkSchedulesPage: React.FC = () => {
       <div className="mb-8">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Work Schedules</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Schedules</h1>
             <p className="mt-2 text-sm text-gray-600">
-              Manage employee weekly work schedules with flexible daily hours
+              Manage employee weekly schedules
             </p>
           </div>
           {canCreate(currentUser) && (
-            <div className="flex space-x-3">
-              <button
-                onClick={() => navigate('/work-schedules/create')}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-              >
-                Create Schedule
-              </button>
-              <button
-                onClick={() => navigate('/work-schedules/current-week')}
-                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-              >
-                Current Week
-              </button>
-            </div>
+            <button
+              onClick={() => navigate('/work-schedules/create')}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+            >
+              Create Schedule
+            </button>
           )}
         </div>
       </div>
 
-      {/* Filters */}
+      {/* Search */}
       <div className="bg-white shadow rounded-lg p-6 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
+        <div className="flex items-center space-x-4">
+          <div className="flex-1">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Search
             </label>
@@ -186,25 +211,10 @@ const WorkSchedulesPage: React.FC = () => {
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Status
-            </label>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="all">All Status</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-              <option value="draft">Draft</option>
-            </select>
-          </div>
           <div className="flex items-end">
             <button
-              onClick={fetchWorkSchedules}
-              className="w-full bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+              onClick={fetchSchedules}
+              className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
             >
               Refresh
             </button>
@@ -212,147 +222,128 @@ const WorkSchedulesPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Work Schedules List */}
+      {/* Weeks Table */}
       <div className="bg-white shadow rounded-lg overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Employee
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Week
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Working Days
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Total Hours
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Created
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredSchedules.length === 0 ? (
+        {filteredWeekGroups.length === 0 ? (
+          <div className="p-8 text-center text-gray-500">
+            No schedules found
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
                 <tr>
-                  <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
-                    No work schedules found
-                  </td>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Week
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Employees
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Total Shifts
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Total Hours
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Notes
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
                 </tr>
-              ) : (
-                filteredSchedules.map((schedule) => (
-                  <tr key={schedule.id} className="hover:bg-gray-50">
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredWeekGroups.map((weekGroup) => (
+                  <tr key={weekGroup.weekKey} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">
-                          {schedule.employee.preferred_name || schedule.employee.full_legal_name}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          {schedule.employee.position}
-                        </div>
+                      <div className="text-sm font-medium text-gray-900">
+                        {getWeekRangeString(weekGroup.week_start_date, weekGroup.week_end_date)}
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        {new Date(weekGroup.week_start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div>
-                        <div className="text-sm text-gray-900">
-                          {getWeekRangeString(schedule.week_start_date, schedule.week_end_date)}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          {schedule.title || 'Weekly Schedule'}
-                        </div>
+                      <div className="text-sm text-gray-900">
+                        {weekGroup.totalEmployees}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {getWorkingDaysCount(schedule.schedule_days)} days
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {getTotalHoursForWeek(schedule.schedule_days).toFixed(1)} hrs
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">
+                        {weekGroup.totalShifts}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        schedule.status === 'active' 
-                          ? 'bg-green-100 text-green-800'
-                          : schedule.status === 'draft'
-                          ? 'bg-yellow-100 text-yellow-800'
-                          : 'bg-red-100 text-red-800'
-                      }`}>
-                        {schedule.status}
-                      </span>
+                      <div className="text-sm text-gray-900 font-medium">
+                        {weekGroup.totalHours.toFixed(1)} hrs
+                      </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {formatDate(schedule.created_at)}
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-gray-500 truncate max-w-xs">
+                        {weekGroup.schedules[0]?.notes || '-'}
+                      </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="flex justify-end space-x-2">
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                      <button
+                        onClick={() => navigate(`/work-schedules/view/${weekGroup.week_start_date}`)}
+                        className="text-blue-600 hover:text-blue-900"
+                      >
+                        View
+                      </button>
+                      {canUpdate(currentUser) && (
                         <button
-                          onClick={() => navigate(`/work-schedules/${schedule.id}`)}
-                          className="text-blue-600 hover:text-blue-900"
+                          onClick={() => navigate(`/work-schedules/edit/${weekGroup.week_start_date}`)}
+                          className="text-indigo-600 hover:text-indigo-900"
                         >
-                          View
+                          Edit
                         </button>
-                        {canUpdate(currentUser) && (
-                          <button
-                            onClick={() => navigate(`/work-schedules/${schedule.id}/edit`)}
-                            className="text-indigo-600 hover:text-indigo-900"
-                          >
-                            Edit
-                          </button>
-                        )}
-                        {canDelete(currentUser) && (
-                          <button
-                            onClick={() => handleDelete(schedule.id)}
-                            className="text-red-600 hover:text-red-900"
-                          >
-                            Delete
-                          </button>
-                        )}
-                      </div>
+                      )}
+                      {canDelete(currentUser) && (
+                        <button
+                          onClick={() => handleDeleteWeek(weekGroup.week_start_date)}
+                          className="text-red-600 hover:text-red-900"
+                        >
+                          Delete
+                        </button>
+                      )}
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
-      {/* Summary */}
-      <div className="mt-6 bg-white shadow rounded-lg p-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Summary</h3>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-blue-50 p-4 rounded-lg">
-            <div className="text-2xl font-bold text-blue-600">{workSchedules.length}</div>
-            <div className="text-sm text-blue-600">Total Schedules</div>
-          </div>
-          <div className="bg-green-50 p-4 rounded-lg">
-            <div className="text-2xl font-bold text-green-600">
-              {workSchedules.filter(s => s.status === 'active').length}
+      {/* Summary Stats */}
+      {weekGroups.length > 0 && (
+        <div className="mt-8 bg-white shadow rounded-lg p-6">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Summary</h3>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <div className="text-2xl font-bold text-blue-600">{weekGroups.length}</div>
+              <div className="text-sm text-blue-600">Total Weeks</div>
             </div>
-            <div className="text-sm text-green-600">Active Schedules</div>
-          </div>
-          <div className="bg-yellow-50 p-4 rounded-lg">
-            <div className="text-2xl font-bold text-yellow-600">
-              {workSchedules.filter(s => s.status === 'draft').length}
+            <div className="bg-green-50 p-4 rounded-lg">
+              <div className="text-2xl font-bold text-green-600">{schedules.length}</div>
+              <div className="text-sm text-green-600">Total Schedules</div>
             </div>
-            <div className="text-sm text-yellow-600">Draft Schedules</div>
-          </div>
-          <div className="bg-purple-50 p-4 rounded-lg">
-            <div className="text-2xl font-bold text-purple-600">
-              {new Set(workSchedules.map(s => s.employee_id)).size}
+            <div className="bg-purple-50 p-4 rounded-lg">
+              <div className="text-2xl font-bold text-purple-600">
+                {new Set(schedules.map(s => s.employee_id)).size}
+              </div>
+              <div className="text-sm text-purple-600">Unique Employees</div>
             </div>
-            <div className="text-sm text-purple-600">Employees with Schedules</div>
+            <div className="bg-orange-50 p-4 rounded-lg">
+              <div className="text-2xl font-bold text-orange-600">
+                {schedules.reduce((sum, s) => sum + (Number(s.weekly_total_hours) || 0), 0).toFixed(1)}
+              </div>
+              <div className="text-sm text-orange-600">Total Hours</div>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
