@@ -218,6 +218,9 @@ const DailyAtmPage: React.FC = () => {
                   Fee
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Balance
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -228,62 +231,71 @@ const DailyAtmPage: React.FC = () => {
             <tbody className="bg-white divide-y divide-gray-200">
               {dailyAtms.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
+                  <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
                     No ATM records found
                   </td>
                 </tr>
               ) : (
-                dailyAtms.map((atm) => (
-                  <tr key={atm.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {formatDateForDisplay(atm.date)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {atm.no_of_transactions}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      ${parseFloat(atm.withdraw).toFixed(2)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      ${parseFloat(atm.fee).toFixed(2)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {atm.resolved ? (
-                        <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                          Resolved
-                        </span>
-                      ) : (
-                        <span className="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                          Pending
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button
-                        onClick={() => navigate(`/daily-atm/${atm.id}`)}
-                        className="text-blue-600 hover:text-blue-900 mr-4"
-                      >
-                        View
-                      </button>
-                      {isAdmin(currentUser) && (
-                        <>
-                          <button
-                            onClick={() => navigate(`/daily-atm/${atm.id}/edit`)}
-                            className="text-indigo-600 hover:text-indigo-900 mr-4"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDeleteClick(atm)}
-                            className="text-red-600 hover:text-red-900"
-                          >
-                            Delete
-                          </button>
-                        </>
-                      )}
-                    </td>
-                  </tr>
-                ))
+                dailyAtms.map((atm) => {
+                  const withdraw = parseFloat(atm.withdraw);
+                  const fee = parseFloat(atm.fee);
+                  const balance = withdraw + fee;
+                  
+                  return (
+                    <tr key={atm.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {formatDateForDisplay(atm.date)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {atm.no_of_transactions}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${withdraw.toFixed(2)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${fee.toFixed(2)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
+                        ${balance.toFixed(2)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {atm.resolved ? (
+                          <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                            Resolved
+                          </span>
+                        ) : (
+                          <span className="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                            Pending
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button
+                          onClick={() => navigate(`/daily-atm/${atm.id}`)}
+                          className="text-blue-600 hover:text-blue-900 mr-4"
+                        >
+                          View
+                        </button>
+                        {isAdmin(currentUser) && (
+                          <>
+                            <button
+                              onClick={() => navigate(`/daily-atm/${atm.id}/edit`)}
+                              className="text-indigo-600 hover:text-indigo-900 mr-4"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDeleteClick(atm)}
+                              className="text-red-600 hover:text-red-900"
+                            >
+                              Delete
+                            </button>
+                          </>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
