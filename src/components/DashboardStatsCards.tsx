@@ -273,7 +273,7 @@ const DashboardStatsCards: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Total Money in Banks Card */}
         <div className="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-2">
             <h3 className="text-lg font-semibold text-gray-900">Total Money in Banks</h3>
             <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
               <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -281,10 +281,10 @@ const DashboardStatsCards: React.FC = () => {
               </svg>
             </div>
           </div>
-          <div className="text-3xl font-bold text-gray-900 mb-4">
+          <div className="text-3xl font-bold text-gray-900 mb-2">
             {stats.total_money_in_banks.formatted_total_balance}
           </div>
-          <div className="space-y-2 max-h-48 overflow-y-auto">
+          <div className="space-y-2 max-h-64 overflow-y-auto">
             {stats.total_money_in_banks.bank_accounts.map((account) => (
               <div key={account.id} className="flex justify-between items-center py-1 border-b border-gray-100 last:border-0">
                 <div className="text-sm text-gray-600">
@@ -301,7 +301,7 @@ const DashboardStatsCards: React.FC = () => {
 
         {/* Total Unpaid Invoices Card */}
         <div className="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-2">
             <h3 className="text-lg font-semibold text-gray-900">Unpaid Invoices</h3>
             <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
               <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -309,13 +309,13 @@ const DashboardStatsCards: React.FC = () => {
               </svg>
             </div>
           </div>
-          <div className="text-3xl font-bold text-gray-900 mb-4">
+          <div className="text-3xl font-bold text-gray-900 mb-1">
             {stats.total_unpaid_invoices.formatted_total_amount}
           </div>
-          <div className="text-sm text-gray-600 mb-3">
+          <div className="text-sm text-gray-600 mb-2">
             {stats.total_unpaid_invoices.invoice_count} unpaid invoices
           </div>
-          <div className="space-y-2 max-h-48 overflow-y-auto">
+          <div className="space-y-2 max-h-64 overflow-y-auto">
             {stats.total_unpaid_invoices.invoices.map((invoice) => (
               <div key={invoice.id} className="flex justify-between items-center text-sm py-1 border-b border-gray-100 last:border-0">
                 <div className="flex-1 min-w-0">
@@ -335,7 +335,7 @@ const DashboardStatsCards: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Last Month Income Card */}
         <div className="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-2">
             <h3 className="text-lg font-semibold text-gray-900">Last Month Income</h3>
             <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
               <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -343,10 +343,10 @@ const DashboardStatsCards: React.FC = () => {
               </svg>
             </div>
           </div>
-          <div className="text-3xl font-bold text-green-600 mb-2">
+          <div className="text-3xl font-bold text-green-600 mb-1">
             {stats.last_month_income.formatted_total_income}
           </div>
-          <div className="text-sm text-gray-600 mb-4">
+          <div className="text-sm text-gray-600 mb-2">
             {stats.last_month_income.income_count} income entries • {stats.last_month_income.formatted_period}
           </div>
           <div className="space-y-2 max-h-64 overflow-y-auto">
@@ -372,7 +372,7 @@ const DashboardStatsCards: React.FC = () => {
 
         {/* Last Month Expenses Card */}
         <div className="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-2">
             <h3 className="text-lg font-semibold text-gray-900">Last Month Expenses</h3>
             <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
               <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -380,10 +380,10 @@ const DashboardStatsCards: React.FC = () => {
               </svg>
             </div>
           </div>
-          <div className="text-3xl font-bold text-red-600 mb-2">
+          <div className="text-3xl font-bold text-red-600 mb-1">
             {stats.last_month_expenses.formatted_total_expense}
           </div>
-          <div className="text-sm text-gray-600 mb-4">
+          <div className="text-sm text-gray-600 mb-2">
             {stats.last_month_expenses.expense_count} expense entries • {stats.last_month_expenses.formatted_period}
           </div>
           <div className="space-y-2 max-h-64 overflow-y-auto">
