@@ -43,6 +43,7 @@ import UserManagementPage from './pages/UserManagementPage';
 import EmployeesPage from './pages/EmployeesPage';
 import AddEmployeePage from './pages/AddEmployeePage';
 import AddHoursPage from './pages/AddHoursPage';
+import WorkHoursFromSchedulePage from './pages/WorkHoursFromSchedulePage';
 import EmployeeViewPage from './pages/EmployeeViewPage';
 import EmployeeEditPage from './pages/EmployeeEditPage';
 import EmployeeEarningsPage from './pages/EmployeeEarningsPage';
@@ -266,6 +267,10 @@ const App: React.FC = () => {
           <Route 
             path="/work-hours/create" 
             element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><WorkHoursEditPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/work-hours/create-from-schedule" 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><WorkHoursFromSchedulePage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/work-hours/:id" 
