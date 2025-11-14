@@ -57,17 +57,20 @@ const PayrollUploadPage: React.FC = () => {
       // TODO: Implement actual upload API call
       // const formData = new FormData();
       // formData.append('file', file);
-      // await uploadPayrollReport(formData);
+      // const response = await uploadPayrollReport(formData);
+      // const reportId = response.data.id;
       
       // Simulate upload delay
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      alert('Report uploaded successfully!');
-      navigate('/employees/payroll/reports');
+      // For now, use a dummy ID. Replace with actual report ID from API response
+      const reportId = Date.now(); // Temporary ID
+      
+      // Redirect directly to process page
+      navigate(`/employees/payroll/reports/${reportId}/process`);
     } catch (error) {
       console.error('Upload error:', error);
       alert('Failed to upload report');
-    } finally {
       setUploading(false);
     }
   };
