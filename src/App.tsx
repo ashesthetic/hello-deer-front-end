@@ -50,6 +50,9 @@ import EmployeeEarningsPage from './pages/EmployeeEarningsPage';
 import WorkHourReportPage from './pages/WorkHourReportPage';
 import PayStubsPage from './pages/PayStubsPage';
 import PayrollPage from './pages/PayrollPage';
+import PayrollReportsPage from './pages/PayrollReportsPage';
+import PayrollUploadPage from './pages/PayrollUploadPage';
+import PayrollProcessPage from './pages/PayrollProcessPage';
 import ResolveHoursPage from './pages/ResolveHoursPage';
 import WorkHoursListPage from './pages/WorkHoursListPage';
 import ExpenseReportPage from './pages/ExpenseReportPage';
@@ -246,6 +249,18 @@ const App: React.FC = () => {
           <Route 
             path="/employees/payroll" 
             element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><PayrollPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/employees/payroll/reports" 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><PayrollReportsPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/employees/payroll/reports/upload" 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><PayrollUploadPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/employees/payroll/reports/:id/process" 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><PayrollProcessPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/employees/pay-stubs" 
