@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import api from '../services/api';
 
 interface PayrollFormData {
   employee_id: string;
@@ -36,65 +37,52 @@ interface PayrollFormData {
   payment_date: string;
 }
 
+interface Employee {
+  id: number;
+  full_legal_name: string;
+  preferred_name?: string;
+}
+
 const PayrollProcessPage: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [employees] = useState([]);
-  const [formData, setFormData] = useState<PayrollFormData>({
-    employee_id: '',
-    pay_date: '',
-    pay_period: '',
-    regular_hours: '0.00',
-    regular_rate: '0.00',
-    regular_current: '0.00',
-    regular_ytd: '0.00',
-    stat_hours: '0.00',
-    stat_rate: '0.00',
-    stat_current: '0.00',
-    stat_ytd: '0.00',
-    overtime_hours: '0.00',
-    overtime_rate: '0.00',
-    overtime_current: '0.00',
-    overtime_ytd: '0.00',
-    total_hours: '0.00',
-    total_current: '0.00',
-    total_ytd: '0.00',
-    cpp_emp_current: '0.00',
-    cpp_emp_ytd: '0.00',
-    ei_emp_current: '0.00',
-    ei_emp_ytd: '0.00',
-    fit_current: '0.00',
-    fit_ytd: '0.00',
-    total_deduction_current: '0.00',
-    total_deduction_ytd: '0.00',
-    vac_earned_current: '0.00',
-    vac_earned_ytd: '0.00',
-    vac_paid_current: '0.00',
-    vac_paid_ytd: '0.00',
-    net_pay: '0.00',
-    payment_date: '',
-  });
+  const [processing, setProcessing] = useState(false);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [formsData, setFormsData] = useState<PayrollFormData[]>([]);
 
   useEffect(() => {
-    // TODO: Fetch report data and extract information from PDF
-    // TODO: Fetch employees list
     const loadData = async () => {
       try {
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Fetch employees
+        const employeesResponse = await api.get('/employees');
+        const employeesList = Array.isArray(employeesResponse.data) 
+          ? employeesResponse.data 
+          : employeesResponse.data.data || [];
+        setEmployees(employeesList);
         
-        // TODO: Replace with actual API calls
-        // const reportData = await fetchReportById(id);
-        // const extractedData = await extractDataFromPDF(reportData.file_path);
-        // setFormData(extractedData);
-        // const employeesList = await fetchEmployees();
-        // setEmployees(employeesList);
+        // Fetch report and trigger processing if not already processed
+        const reportResponse = await api.get(`/payroll-reports/${id}`);
+        const report = reportResponse.data;
+        
+        if (report.status === 'pending') {
+          setProcessing(true);
+          const processResponse = await api.post(`/payroll-reports/${id}/process`);
+          const processedReport = processResponse.data.report;
+          
+          if (processedReport.parsed_data && processedReport.parsed_data.employees) {
+            initializeFormsFromParsedData(processedReport.parsed_data.employees, employeesList);
+          }
+          setProcessing(false);
+        } else if (report.parsed_data && report.parsed_data.employees) {
+          initializeFormsFromParsedData(report.parsed_data.employees, employeesList);
+        }
         
         setLoading(false);
       } catch (error) {
         console.error('Error loading data:', error);
+        alert('Failed to load report data');
         setLoading(false);
       }
     };
@@ -102,40 +90,136 @@ const PayrollProcessPage: React.FC = () => {
     loadData();
   }, [id]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+  const initializeFormsFromParsedData = (employeesData: any[], employeesList: Employee[]) => {
+    const forms: PayrollFormData[] = employeesData.map((empData) => {
+      const parsed = empData.parsed_data || {};
+      
+      // Format date from MM/DD/YYYY to YYYY-MM-DD for HTML date input
+      const formatPayDate = (dateStr: string): string => {
+        if (!dateStr) return '';
+        const parts = dateStr.split('/');
+        if (parts.length === 3) {
+          const [month, day, year] = parts;
+          return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+        }
+        return dateStr;
+      };
+      
+      // Try to match employee by name
+      let matchedEmployeeId = '';
+      if (parsed.employee_name) {
+        const matched = employeesList.find(emp => 
+          emp.full_legal_name.toLowerCase().includes(parsed.employee_name.toLowerCase()) ||
+          (emp.preferred_name && emp.preferred_name.toLowerCase().includes(parsed.employee_name.toLowerCase()))
+        );
+        if (matched) {
+          matchedEmployeeId = matched.id.toString();
+        }
+      }
+
+      return {
+        employee_id: matchedEmployeeId,
+        pay_date: formatPayDate(parsed.pay_date || ''),
+        pay_period: parsed.pay_period || '',
+        regular_hours: parsed.regular_hours?.toString() || '0.00',
+        regular_rate: parsed.regular_rate?.toString() || '0.00',
+        regular_current: parsed.regular_current?.toString() || '0.00',
+        regular_ytd: parsed.regular_ytd?.toString() || '0.00',
+        stat_hours: parsed.stat_hours?.toString() || '0.00',
+        stat_rate: parsed.stat_rate?.toString() || '0.00',
+        stat_current: parsed.stat_current?.toString() || '0.00',
+        stat_ytd: parsed.stat_ytd?.toString() || '0.00',
+        overtime_hours: parsed.overtime_hours?.toString() || '0.00',
+        overtime_rate: parsed.overtime_rate?.toString() || '0.00',
+        overtime_current: parsed.overtime_current?.toString() || '0.00',
+        overtime_ytd: parsed.overtime_ytd?.toString() || '0.00',
+        total_hours: parsed.total_hours?.toString() || '0.00',
+        total_current: parsed.total_current?.toString() || '0.00',
+        total_ytd: parsed.total_ytd?.toString() || '0.00',
+        cpp_emp_current: parsed.cpp_emp_current?.toString() || '0.00',
+        cpp_emp_ytd: parsed.cpp_emp_ytd?.toString() || '0.00',
+        ei_emp_current: parsed.ei_emp_current?.toString() || '0.00',
+        ei_emp_ytd: parsed.ei_emp_ytd?.toString() || '0.00',
+        fit_current: parsed.fit_current?.toString() || '0.00',
+        fit_ytd: parsed.fit_ytd?.toString() || '0.00',
+        total_deduction_current: parsed.total_deduction_current?.toString() || '0.00',
+        total_deduction_ytd: parsed.total_deduction_ytd?.toString() || '0.00',
+        vac_earned_current: parsed.vac_earned_current?.toString() || '0.00',
+        vac_earned_ytd: parsed.vac_earned_ytd?.toString() || '0.00',
+        vac_paid_current: parsed.vac_paid_current?.toString() || '0.00',
+        vac_paid_ytd: parsed.vac_paid_ytd?.toString() || '0.00',
+        net_pay: parsed.net_pay?.toString() || '0.00',
+        payment_date: parsed.payment_date || '',
+      };
+    });
+
+    setFormsData(forms);
+  };
+
+  const handleInputChange = (index: number, field: keyof PayrollFormData, value: string) => {
+    const newFormsData = [...formsData];
+    newFormsData[index] = {
+      ...newFormsData[index],
+      [field]: value
+    };
+    setFormsData(newFormsData);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate that all forms have employee selected and pay date
+    const invalidForms = formsData.filter(form => !form.employee_id || !form.pay_date);
+    if (invalidForms.length > 0) {
+      alert('Please fill in Employee and Pay Date for all forms');
+      return;
+    }
+    
     setSaving(true);
 
     try {
-      // TODO: Implement actual save API call
-      // await savePayrollData(formData);
+      await api.post('/payrolls/bulk', { payrolls: formsData });
       
-      // Simulate save delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      alert('Payroll data saved successfully!');
+      alert(`Successfully saved ${formsData.length} payroll record(s)!`);
       navigate('/employees/payroll');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Save error:', error);
-      alert('Failed to save payroll data');
+      const errorMessage = error.response?.data?.message || 'Failed to save payroll data';
+      alert(errorMessage);
     } finally {
       setSaving(false);
     }
   };
 
-  if (loading) {
+  if (loading || processing) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="flex flex-col justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+          <p className="text-gray-600">
+            {processing ? 'Processing PDF and extracting data...' : 'Loading...'}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (formsData.length === 0) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <button
+            onClick={() => navigate('/employees/payroll/reports')}
+            className="text-blue-600 hover:text-blue-800 mb-4 flex items-center"
+          >
+            <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            Back to Reports
+          </button>
+          <div className="text-center py-12">
+            <p className="text-gray-600">No employee data found in the PDF.</p>
+          </div>
         </div>
       </div>
     );
@@ -144,54 +228,47 @@ const PayrollProcessPage: React.FC = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-6xl mx-auto">
-        <div className="bg-white rounded-lg shadow-md p-6">
-          {/* Header */}
-          <div className="mb-6">
-            <button
-              onClick={() => navigate('/employees/payroll/reports')}
-              className="text-blue-600 hover:text-blue-800 mb-2 flex items-center"
-            >
-              <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              Back to Reports
-            </button>
-            <h1 className="text-3xl font-bold text-gray-900">Process Payroll Report</h1>
-            <p className="text-gray-600 mt-2">Review and verify the extracted data before saving</p>
-          </div>
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <button
+            onClick={() => navigate('/employees/payroll/reports')}
+            className="text-blue-600 hover:text-blue-800 mb-2 flex items-center"
+          >
+            <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            Back to Reports
+          </button>
+          <h1 className="text-3xl font-bold text-gray-900">Process Payroll Report</h1>
+          <p className="text-gray-600 mt-2">
+            Review and edit extracted data for {formsData.length} employee{formsData.length !== 1 ? 's' : ''}
+          </p>
+        </div>
 
-          {/* Info Alert */}
-          <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <div className="flex">
-              <svg className="w-5 h-5 text-yellow-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-              </svg>
-              <div>
-                <h4 className="text-sm font-medium text-yellow-800">Review Required</h4>
-                <p className="text-sm text-yellow-700 mt-1">
-                  The data below has been extracted from the PDF. Please review all fields carefully before saving.
-                </p>
-              </div>
-            </div>
-          </div>
+        <form onSubmit={handleSubmit}>
+          {formsData.map((formData, index) => (
+            <div key={index} className="bg-white rounded-lg shadow-md p-6 mb-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-4 pb-2 border-b">
+                Employee #{index + 1} - Page {index + 1}
+              </h2>
 
-          <form onSubmit={handleSubmit}>
-            {/* Basic Information */}
-            <div className="mb-8">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Basic Information</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Basic Information */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Employee</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Employee <span className="text-red-500">*</span>
+                  </label>
                   <select
                     name="employee_id"
                     value={formData.employee_id}
-                    onChange={handleInputChange}
+                    onChange={(e) => handleInputChange(index, 'employee_id', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
                   >
                     <option value="">Select Employee</option>
-                    {employees.map((emp: any) => (
-                      <option key={emp.id} value={emp.id}>{emp.name}</option>
+                    {employees.map((emp) => (
+                      <option key={emp.id} value={emp.id}>
+                        {emp.preferred_name || emp.full_legal_name}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -199,420 +276,252 @@ const PayrollProcessPage: React.FC = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Pay Period</label>
                   <input
                     type="text"
-                    name="pay_period"
                     value={formData.pay_period}
-                    onChange={handleInputChange}
+                    onChange={(e) => handleInputChange(index, 'pay_period', e.target.value)}
                     placeholder="e.g., Nov 1-15, 2025"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Pay Date</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Pay Date <span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="date"
-                    name="pay_date"
                     value={formData.pay_date}
-                    onChange={handleInputChange}
+                    onChange={(e) => handleInputChange(index, 'pay_date', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Payment Date</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Payment Date
+                  </label>
                   <input
                     type="date"
-                    name="payment_date"
                     value={formData.payment_date}
-                    onChange={handleInputChange}
+                    onChange={(e) => handleInputChange(index, 'payment_date', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
               </div>
-            </div>
 
-            {/* Regular Pay */}
-            <div className="mb-8">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Regular Pay</h2>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Hours</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    name="regular_hours"
-                    value={formData.regular_hours}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Rate</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    name="regular_rate"
-                    value={formData.regular_rate}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Current</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    name="regular_current"
-                    value={formData.regular_current}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">YTD</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    name="regular_ytd"
-                    value={formData.regular_ytd}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-            </div>
+              {/* Earnings Table */}
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold mb-3 text-gray-800">Earnings</h3>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full border border-gray-300">
+                    <thead className="bg-gray-100">
+                      <tr>
+                        <th className="px-4 py-2 border-b border-r text-left text-sm font-semibold text-gray-700">Description</th>
+                        <th className="px-4 py-2 border-b border-r text-left text-sm font-semibold text-gray-700">Hours</th>
+                        <th className="px-4 py-2 border-b border-r text-left text-sm font-semibold text-gray-700">Rate</th>
+                        <th className="px-4 py-2 border-b border-r text-left text-sm font-semibold text-gray-700">Amount</th>
+                        <th className="px-4 py-2 border-b text-left text-sm font-semibold text-gray-700">YTD Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {/* Regular */}
+                      <tr className="hover:bg-gray-50">
+                        <td className="px-4 py-2 border-b border-r text-sm font-medium text-gray-700">Regular</td>
+                        <td className="px-2 py-2 border-b border-r">
+                          <input type="number" step="0.01" value={formData.regular_hours} onChange={(e) => handleInputChange(index, 'regular_hours', e.target.value)} className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                        </td>
+                        <td className="px-2 py-2 border-b border-r">
+                          <input type="number" step="0.01" value={formData.regular_rate} onChange={(e) => handleInputChange(index, 'regular_rate', e.target.value)} className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                        </td>
+                        <td className="px-2 py-2 border-b border-r">
+                          <input type="number" step="0.01" value={formData.regular_current} onChange={(e) => handleInputChange(index, 'regular_current', e.target.value)} className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                        </td>
+                        <td className="px-2 py-2 border-b">
+                          <input type="number" step="0.01" value={formData.regular_ytd} onChange={(e) => handleInputChange(index, 'regular_ytd', e.target.value)} className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                        </td>
+                      </tr>
 
-            {/* Stat Pay */}
-            <div className="mb-8">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Stat Pay</h2>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Hours</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    name="stat_hours"
-                    value={formData.stat_hours}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Rate</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    name="stat_rate"
-                    value={formData.stat_rate}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Current</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    name="stat_current"
-                    value={formData.stat_current}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">YTD</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    name="stat_ytd"
-                    value={formData.stat_ytd}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-            </div>
+                      {/* Stat Holiday Paid */}
+                      <tr className="hover:bg-gray-50">
+                        <td className="px-4 py-2 border-b border-r text-sm font-medium text-gray-700">Stat Holiday Paid</td>
+                        <td className="px-2 py-2 border-b border-r">
+                          <input type="number" step="0.01" value={formData.stat_hours} onChange={(e) => handleInputChange(index, 'stat_hours', e.target.value)} className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                        </td>
+                        <td className="px-2 py-2 border-b border-r">
+                          <input type="number" step="0.01" value={formData.stat_rate} onChange={(e) => handleInputChange(index, 'stat_rate', e.target.value)} className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                        </td>
+                        <td className="px-2 py-2 border-b border-r">
+                          <input type="number" step="0.01" value={formData.stat_current} onChange={(e) => handleInputChange(index, 'stat_current', e.target.value)} className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                        </td>
+                        <td className="px-2 py-2 border-b">
+                          <input type="number" step="0.01" value={formData.stat_ytd} onChange={(e) => handleInputChange(index, 'stat_ytd', e.target.value)} className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                        </td>
+                      </tr>
 
-            {/* Overtime Pay */}
-            <div className="mb-8">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Overtime Pay</h2>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Hours</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    name="overtime_hours"
-                    value={formData.overtime_hours}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Rate</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    name="overtime_rate"
-                    value={formData.overtime_rate}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Current</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    name="overtime_current"
-                    value={formData.overtime_current}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">YTD</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    name="overtime_ytd"
-                    value={formData.overtime_ytd}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-            </div>
+                      {/* Overtime */}
+                      <tr className="hover:bg-gray-50">
+                        <td className="px-4 py-2 border-b border-r text-sm font-medium text-gray-700">Overtime</td>
+                        <td className="px-2 py-2 border-b border-r">
+                          <input type="number" step="0.01" value={formData.overtime_hours} onChange={(e) => handleInputChange(index, 'overtime_hours', e.target.value)} className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                        </td>
+                        <td className="px-2 py-2 border-b border-r">
+                          <input type="number" step="0.01" value={formData.overtime_rate} onChange={(e) => handleInputChange(index, 'overtime_rate', e.target.value)} className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                        </td>
+                        <td className="px-2 py-2 border-b border-r">
+                          <input type="number" step="0.01" value={formData.overtime_current} onChange={(e) => handleInputChange(index, 'overtime_current', e.target.value)} className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                        </td>
+                        <td className="px-2 py-2 border-b">
+                          <input type="number" step="0.01" value={formData.overtime_ytd} onChange={(e) => handleInputChange(index, 'overtime_ytd', e.target.value)} className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                        </td>
+                      </tr>
 
-            {/* Totals */}
-            <div className="mb-8">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Totals</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Total Hours</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    name="total_hours"
-                    value={formData.total_hours}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Total Current</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    name="total_current"
-                    value={formData.total_current}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Total YTD</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    name="total_ytd"
-                    value={formData.total_ytd}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-            </div>
+                      {/* VAC Paid */}
+                      <tr className="hover:bg-gray-50">
+                        <td className="px-4 py-2 border-b border-r text-sm font-medium text-gray-700">VAC Paid</td>
+                        <td className="px-2 py-2 border-b border-r">
+                          <span className="text-gray-400 text-sm">-</span>
+                        </td>
+                        <td className="px-2 py-2 border-b border-r">
+                          <span className="text-gray-400 text-sm">-</span>
+                        </td>
+                        <td className="px-2 py-2 border-b border-r">
+                          <input type="number" step="0.01" value={formData.vac_paid_current} onChange={(e) => handleInputChange(index, 'vac_paid_current', e.target.value)} className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                        </td>
+                        <td className="px-2 py-2 border-b">
+                          <input type="number" step="0.01" value={formData.vac_paid_ytd} onChange={(e) => handleInputChange(index, 'vac_paid_ytd', e.target.value)} className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                        </td>
+                      </tr>
 
-            {/* Deductions */}
-            <div className="mb-8">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Deductions</h2>
-              
-              {/* CPP */}
-              <div className="mb-4">
-                <h3 className="text-sm font-semibold text-gray-700 mb-2">CPP Employee</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Current</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      name="cpp_emp_current"
-                      value={formData.cpp_emp_current}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">YTD</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      name="cpp_emp_ytd"
-                      value={formData.cpp_emp_ytd}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
+                      {/* Total */}
+                      <tr className="bg-gray-50 font-medium">
+                        <td className="px-4 py-2 border-b border-r text-sm font-semibold text-gray-800">Total</td>
+                        <td className="px-2 py-2 border-b border-r">
+                          <input type="number" step="0.01" value={formData.total_hours} onChange={(e) => handleInputChange(index, 'total_hours', e.target.value)} className="w-full px-2 py-1 border border-gray-300 rounded text-sm bg-white font-medium focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                        </td>
+                        <td className="px-2 py-2 border-b border-r"></td>
+                        <td className="px-2 py-2 border-b border-r">
+                          <input type="number" step="0.01" value={formData.total_current} onChange={(e) => handleInputChange(index, 'total_current', e.target.value)} className="w-full px-2 py-1 border border-gray-300 rounded text-sm bg-white font-medium focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                        </td>
+                        <td className="px-2 py-2 border-b">
+                          <input type="number" step="0.01" value={formData.total_ytd} onChange={(e) => handleInputChange(index, 'total_ytd', e.target.value)} className="w-full px-2 py-1 border border-gray-300 rounded text-sm bg-white font-medium focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
               </div>
 
-              {/* EI */}
-              <div className="mb-4">
-                <h3 className="text-sm font-semibold text-gray-700 mb-2">EI Employee</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Current</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      name="ei_emp_current"
-                      value={formData.ei_emp_current}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">YTD</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      name="ei_emp_ytd"
-                      value={formData.ei_emp_ytd}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
+              {/* Deductions Table */}
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold mb-3 text-gray-800">Deductions</h3>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full border border-gray-300">
+                    <thead className="bg-gray-100">
+                      <tr>
+                        <th className="px-4 py-2 border-b border-r text-left text-sm font-semibold text-gray-700">Description</th>
+                        <th className="px-4 py-2 border-b border-r text-left text-sm font-semibold text-gray-700">Amount</th>
+                        <th className="px-4 py-2 border-b text-left text-sm font-semibold text-gray-700">YTD Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {/* CPP Employee */}
+                      <tr className="hover:bg-gray-50">
+                        <td className="px-4 py-2 border-b border-r text-sm font-medium text-gray-700">CPP - Employee</td>
+                        <td className="px-2 py-2 border-b border-r">
+                          <input type="number" step="0.01" value={formData.cpp_emp_current} onChange={(e) => handleInputChange(index, 'cpp_emp_current', e.target.value)} className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                        </td>
+                        <td className="px-2 py-2 border-b">
+                          <input type="number" step="0.01" value={formData.cpp_emp_ytd} onChange={(e) => handleInputChange(index, 'cpp_emp_ytd', e.target.value)} className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                        </td>
+                      </tr>
+
+                      {/* EI Employee */}
+                      <tr className="hover:bg-gray-50">
+                        <td className="px-4 py-2 border-b border-r text-sm font-medium text-gray-700">EI - Employee</td>
+                        <td className="px-2 py-2 border-b border-r">
+                          <input type="number" step="0.01" value={formData.ei_emp_current} onChange={(e) => handleInputChange(index, 'ei_emp_current', e.target.value)} className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                        </td>
+                        <td className="px-2 py-2 border-b">
+                          <input type="number" step="0.01" value={formData.ei_emp_ytd} onChange={(e) => handleInputChange(index, 'ei_emp_ytd', e.target.value)} className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                        </td>
+                      </tr>
+
+                      {/* Federal Income Tax */}
+                      <tr className="hover:bg-gray-50">
+                        <td className="px-4 py-2 border-b border-r text-sm font-medium text-gray-700">Federal Income Tax</td>
+                        <td className="px-2 py-2 border-b border-r">
+                          <input type="number" step="0.01" value={formData.fit_current} onChange={(e) => handleInputChange(index, 'fit_current', e.target.value)} className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                        </td>
+                        <td className="px-2 py-2 border-b">
+                          <input type="number" step="0.01" value={formData.fit_ytd} onChange={(e) => handleInputChange(index, 'fit_ytd', e.target.value)} className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                        </td>
+                      </tr>
+
+                      {/* Total Deductions */}
+                      <tr className="bg-gray-50 font-medium">
+                        <td className="px-4 py-2 border-b border-r text-sm font-semibold text-gray-800">Total Deductions</td>
+                        <td className="px-2 py-2 border-b border-r">
+                          <input type="number" step="0.01" value={formData.total_deduction_current} onChange={(e) => handleInputChange(index, 'total_deduction_current', e.target.value)} className="w-full px-2 py-1 border border-gray-300 rounded text-sm bg-white font-medium focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                        </td>
+                        <td className="px-2 py-2 border-b">
+                          <input type="number" step="0.01" value={formData.total_deduction_ytd} onChange={(e) => handleInputChange(index, 'total_deduction_ytd', e.target.value)} className="w-full px-2 py-1 border border-gray-300 rounded text-sm bg-white font-medium focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
               </div>
 
-              {/* FIT */}
-              <div className="mb-4">
-                <h3 className="text-sm font-semibold text-gray-700 mb-2">Federal Income Tax</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Current</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      name="fit_current"
-                      value={formData.fit_current}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">YTD</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      name="fit_ytd"
-                      value={formData.fit_ytd}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Total Deductions */}
+              {/* Vacation and Net Pay Table */}
               <div>
-                <h3 className="text-sm font-semibold text-gray-700 mb-2">Total Deductions</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Current</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      name="total_deduction_current"
-                      value={formData.total_deduction_current}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">YTD</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      name="total_deduction_ytd"
-                      value={formData.total_deduction_ytd}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
+                <h3 className="text-lg font-semibold mb-3 text-gray-800">Vacation & Net Pay</h3>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full border border-gray-300">
+                    <thead className="bg-gray-100">
+                      <tr>
+                        <th className="px-4 py-2 border-b border-r text-left text-sm font-semibold text-gray-700">Description</th>
+                        <th className="px-4 py-2 border-b border-r text-left text-sm font-semibold text-gray-700">Amount</th>
+                        <th className="px-4 py-2 border-b text-left text-sm font-semibold text-gray-700">YTD Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {/* VAC Earned */}
+                      <tr className="hover:bg-gray-50">
+                        <td className="px-4 py-2 border-b border-r text-sm font-medium text-gray-700">VAC Earned</td>
+                        <td className="px-2 py-2 border-b border-r">
+                          <input type="number" step="0.01" value={formData.vac_earned_current} onChange={(e) => handleInputChange(index, 'vac_earned_current', e.target.value)} className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                        </td>
+                        <td className="px-2 py-2 border-b">
+                          <input type="number" step="0.01" value={formData.vac_earned_ytd} onChange={(e) => handleInputChange(index, 'vac_earned_ytd', e.target.value)} className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                        </td>
+                      </tr>
+
+                      {/* VAC Paid */}
+                      <tr className="hover:bg-gray-50">
+                        <td className="px-4 py-2 border-b border-r text-sm font-medium text-gray-700">VAC Paid</td>
+                        <td className="px-2 py-2 border-b border-r">
+                          <input type="number" step="0.01" value={formData.vac_paid_current} onChange={(e) => handleInputChange(index, 'vac_paid_current', e.target.value)} className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                        </td>
+                        <td className="px-2 py-2 border-b">
+                          <input type="number" step="0.01" value={formData.vac_paid_ytd} onChange={(e) => handleInputChange(index, 'vac_paid_ytd', e.target.value)} className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                        </td>
+                      </tr>
+
+                      {/* Net Pay */}
+                      <tr className="bg-blue-50 font-semibold">
+                        <td className="px-4 py-2 border-b border-r text-sm font-semibold text-gray-800">Net Pay</td>
+                        <td className="px-2 py-2 border-b border-r" colSpan={2}>
+                          <input type="number" step="0.01" value={formData.net_pay} onChange={(e) => handleInputChange(index, 'net_pay', e.target.value)} className="w-full px-3 py-2 border border-gray-400 rounded text-sm bg-white font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </div>
+          ))}
 
-            {/* Vacation */}
-            <div className="mb-8">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Vacation</h2>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Earned Current</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    name="vac_earned_current"
-                    value={formData.vac_earned_current}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Earned YTD</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    name="vac_earned_ytd"
-                    value={formData.vac_earned_ytd}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Paid Current</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    name="vac_paid_current"
-                    value={formData.vac_paid_current}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Paid YTD</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    name="vac_paid_ytd"
-                    value={formData.vac_paid_ytd}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Net Pay */}
-            <div className="mb-8">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Net Pay</h2>
-              <div className="max-w-md">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Net Pay Amount</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  name="net_pay"
-                  value={formData.net_pay}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg font-semibold"
-                />
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex justify-end space-x-3 pt-6 border-t">
+          {/* Action Buttons */}
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex justify-end space-x-3">
               <button
                 type="button"
                 onClick={() => navigate('/employees/payroll/reports')}
@@ -623,26 +532,21 @@ const PayrollProcessPage: React.FC = () => {
               </button>
               <button
                 type="submit"
-                className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center"
+                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center"
                 disabled={saving}
               >
                 {saving ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Saving...
+                    Saving {formsData.length} Record(s)...
                   </>
                 ) : (
-                  <>
-                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    Save to Payroll
-                  </>
+                  `Save All (${formsData.length} Record${formsData.length !== 1 ? 's' : ''})`
                 )}
               </button>
             </div>
-          </form>
-        </div>
+          </div>
+        </form>
       </div>
     </div>
   );

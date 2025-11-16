@@ -1,10 +1,52 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import api from '../services/api';
 
 const PayrollPage: React.FC = () => {
   const navigate = useNavigate();
-  const [payrolls] = useState([]);
-  const [loading] = useState(false);
+  const [payrolls, setPayrolls] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchPayrolls();
+  }, []);
+
+  const fetchPayrolls = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get('/payrolls');
+      setPayrolls(response.data.data || []);
+    } catch (error) {
+      console.error('Error fetching payrolls:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatPayPeriod = (payPeriod: string | null) => {
+    if (!payPeriod) return '-';
+    
+    // Try to parse date range in MM/DD/YYYY format (e.g., "10/24/2025- 11/06/2025")
+    const dateRangePattern = /(\d{1,2})\/(\d{1,2})\/(\d{4})\s*-\s*(\d{1,2})\/(\d{1,2})\/(\d{4})/;
+    const match = payPeriod.match(dateRangePattern);
+    
+    if (match) {
+      const [, startMonth, startDay, startYear, endMonth, endDay, endYear] = match;
+      
+      // Create date objects
+      const startDate = new Date(parseInt(startYear), parseInt(startMonth) - 1, parseInt(startDay));
+      const endDate = new Date(parseInt(endYear), parseInt(endMonth) - 1, parseInt(endDay));
+      
+      // Format as "Month day, year"
+      const formatOptions: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' };
+      const formattedStart = startDate.toLocaleDateString('en-US', formatOptions);
+      const formattedEnd = endDate.toLocaleDateString('en-US', formatOptions);
+      
+      return `${formattedStart} - ${formattedEnd}`;
+    }
+    
+    return payPeriod;
+  };
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -88,13 +130,13 @@ const PayrollPage: React.FC = () => {
                 payrolls.map((payroll: any) => (
                   <tr key={payroll.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {payroll.pay_period || '-'}
+                      {formatPayPeriod(payroll.pay_period)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {payroll.pay_date}
+                      {new Date(payroll.pay_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {payroll.employee?.name}
+                      {payroll.employee?.full_legal_name || '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {payroll.total_hours}
