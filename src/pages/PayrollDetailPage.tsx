@@ -15,6 +15,7 @@ interface Payroll {
     preferred_name: string;
     full_legal_name: string;
     address?: string;
+    email?: string;
   };
   regular_hours: number;
   regular_rate: number;
@@ -55,6 +56,7 @@ const PayrollDetailPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
+  const [sending, setSending] = useState(false);
   const paystubRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -178,6 +180,78 @@ const PayrollDetailPage: React.FC = () => {
     }
   };
 
+  const sendPayStub = async () => {
+    if (!payroll?.employee?.email) {
+      alert('Employee does not have an email address on file');
+      return;
+    }
+
+    if (!window.confirm(`Send pay stub to ${payroll.employee.email}?`)) {
+      return;
+    }
+
+    try {
+      setSending(true);
+
+      // Generate PDF using html2canvas
+      if (!paystubRef.current) return;
+
+      const canvas = await html2canvas(paystubRef.current, {
+        scale: 1.5,
+        useCORS: true,
+        allowTaint: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+        windowWidth: 1200,
+      });
+
+      // Create PDF
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      
+      const margin = 15;
+      const contentWidth = pdfWidth - (margin * 2);
+      const contentHeight = pdfHeight - (margin * 2);
+
+      const imgData = canvas.toDataURL('image/jpeg', 0.8);
+      const imgWidth = contentWidth;
+      const imgHeight = (canvas.height * contentWidth) / canvas.width;
+
+      let heightLeft = imgHeight;
+      let position = margin;
+
+      pdf.addImage(imgData, 'JPEG', margin, position, imgWidth, imgHeight);
+      heightLeft -= contentHeight;
+
+      while (heightLeft > 0) {
+        position = margin - (imgHeight - heightLeft);
+        pdf.addPage();
+        pdf.addImage(imgData, 'JPEG', margin, position, imgWidth, imgHeight);
+        heightLeft -= contentHeight;
+      }
+
+      // Convert PDF to base64
+      const pdfBase64 = pdf.output('datauristring').split(',')[1];
+
+      // Send email via API
+      const response = await api.post(`/payrolls/${id}/email`, {
+        pdf_data: pdfBase64
+      });
+
+      if (response.data.success) {
+        alert(`Pay stub sent successfully to ${payroll.employee.email}`);
+      } else {
+        alert('Failed to send pay stub: ' + (response.data.message || 'Unknown error'));
+      }
+    } catch (error: any) {
+      console.error('Error sending pay stub:', error);
+      alert('Failed to send pay stub: ' + (error.response?.data?.message || error.message || 'Unknown error'));
+    } finally {
+      setSending(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -224,6 +298,26 @@ const PayrollDetailPage: React.FC = () => {
             </p>
           </div>
           <div className="flex gap-3">
+            <button
+              onClick={sendPayStub}
+              disabled={sending || !payroll.employee?.email}
+              className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center"
+              title={!payroll.employee?.email ? 'Employee has no email address' : 'Send pay stub via email'}
+            >
+              {sending ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  Send Pay Stub
+                </>
+              )}
+            </button>
             <button
               onClick={downloadPaystub}
               disabled={downloading}
