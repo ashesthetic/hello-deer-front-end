@@ -160,9 +160,21 @@ const PayrollProcessPage: React.FC = () => {
     const newFormsData = [...formsData];
     newFormsData[index] = {
       ...newFormsData[index],
-      [field]: value
+      [field]: value,
     };
     setFormsData(newFormsData);
+  };
+
+  const handleDeleteSection = (index: number) => {
+    if (formsData.length === 1) {
+      alert('Cannot delete the last section. At least one employee record is required.');
+      return;
+    }
+
+    if (window.confirm(`Are you sure you want to delete Employee #${index + 1} section?`)) {
+      const newFormsData = formsData.filter((_, i) => i !== index);
+      setFormsData(newFormsData);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -246,10 +258,23 @@ const PayrollProcessPage: React.FC = () => {
 
         <form onSubmit={handleSubmit}>
           {formsData.map((formData, index) => (
-            <div key={index} className="bg-white rounded-lg shadow-md p-6 mb-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4 pb-2 border-b">
-                Employee #{index + 1} - Page {index + 1}
-              </h2>
+            <div key={index} className="bg-white rounded-lg shadow-md p-6 mb-8">
+              <div className="flex justify-between items-center mb-4 pb-2 border-b">
+                <h2 className="text-xl font-bold text-gray-900">
+                  Employee #{index + 1} - Page {index + 1}
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => handleDeleteSection(index)}
+                  className="text-red-600 hover:text-red-800 hover:bg-red-50 px-3 py-1 rounded-md transition-colors flex items-center"
+                  title="Delete this section"
+                >
+                  <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  Delete
+                </button>
+              </div>
 
               {/* Basic Information */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
