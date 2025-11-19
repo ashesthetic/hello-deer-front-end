@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 import { smokesApi, smokesCategoryApi, SmokesCategory } from '../services/api';
-import { canCreate } from '../utils/permissions';
+import { canCreate, isStaff } from '../utils/permissions';
 import { usePageTitle } from '../hooks/usePageTitle';
 
 interface SmokesEntry {
@@ -94,7 +94,7 @@ const SmokesAddPage: React.FC = () => {
   };
 
   // Check if user can create
-  if (!canCreate(currentUser)) {
+  if (!canCreate(currentUser) && !isStaff(currentUser)) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">

@@ -11,6 +11,7 @@ export const formatDate = (dateString: string) => {
   const [year, month, day] = dateString.split('T')[0].split('-');
   const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
   return date.toLocaleDateString('en-US', {
+    weekday: 'short',
     year: 'numeric',
     month: 'short',
     day: 'numeric',

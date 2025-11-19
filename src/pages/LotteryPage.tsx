@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 import { lotteryApi, Lottery } from '../services/api';
-import { canCreate, canDelete } from '../utils/permissions';
+import { canCreate, canDelete, isStaff } from '../utils/permissions';
 import { usePageTitle } from '../hooks/usePageTitle';
 
 const LotteryPage: React.FC = () => {
@@ -132,15 +132,15 @@ const LotteryPage: React.FC = () => {
     new Date(b).getTime() - new Date(a).getTime()
   );
 
-  const handleAddSmoke = () => {
+  const handleAddLottery = () => {
     navigate('/entry/lottery/add');
   };
 
-  const handleEditSmoke = (lottery: Lottery) => {
+  const handleEditLottery = (lottery: Lottery) => {
     navigate(`/entry/lottery/${lottery.id}/edit`);
   };
 
-  const handleDeleteSmoke = async (lottery: Lottery) => {
+  const handleDeleteLottery = async (lottery: Lottery) => {
     if (!window.confirm(`Are you sure you want to delete this lottery entry?`)) {
       return;
     }
@@ -167,12 +167,12 @@ const LotteryPage: React.FC = () => {
       <div className="space-y-6">
         <div className="flex flex-wrap justify-between items-center gap-4">
           <h1 className="text-2xl font-bold text-gray-900">Lottery</h1>
-          {canCreate(currentUser) && (
+          {(canCreate(currentUser) || isStaff(currentUser)) && (
             <button
-              onClick={handleAddSmoke}
+              onClick={handleAddLottery}
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 whitespace-nowrap"
             >
-              Add Smoke Entry
+              Add Lottery Entry
             </button>
           )}
         </div>
@@ -315,7 +315,7 @@ const LotteryPage: React.FC = () => {
                                 <div className="flex gap-2 justify-center">
                                   {morning && (
                                     <button
-                                      onClick={() => handleEditSmoke(morning)}
+                                      onClick={() => handleEditLottery(morning)}
                                       className="text-blue-600 hover:text-blue-900"
                                     >
                                       Edit M
@@ -323,7 +323,7 @@ const LotteryPage: React.FC = () => {
                                   )}
                                   {evening && (
                                     <button
-                                      onClick={() => handleEditSmoke(evening)}
+                                      onClick={() => handleEditLottery(evening)}
                                       className="text-blue-600 hover:text-blue-900"
                                     >
                                       Edit E
@@ -334,7 +334,7 @@ const LotteryPage: React.FC = () => {
                                   <div className="flex gap-2 justify-center">
                                     {morning && (
                                       <button
-                                        onClick={() => handleDeleteSmoke(morning)}
+                                        onClick={() => handleDeleteLottery(morning)}
                                         className="text-red-600 hover:text-red-900"
                                       >
                                         Del M
@@ -342,7 +342,7 @@ const LotteryPage: React.FC = () => {
                                     )}
                                     {evening && (
                                       <button
-                                        onClick={() => handleDeleteSmoke(evening)}
+                                        onClick={() => handleDeleteLottery(evening)}
                                         className="text-red-600 hover:text-red-900"
                                       >
                                         Del E
