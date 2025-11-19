@@ -668,9 +668,9 @@ const Navigation: React.FC = () => {
   return (
     <nav className="bg-white shadow-sm border-b border-gray-200 relative z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
+        <div className="flex justify-between h-16 items-center">
           {/* Logo and Brand */}
-          <div className="flex items-center">
+          <div className="flex items-center flex-shrink-0">
             <div 
               className="flex items-center cursor-pointer"
               onClick={() => navigate('/dashboard')}
@@ -687,12 +687,12 @@ const Navigation: React.FC = () => {
           </div>
 
           {/* Desktop Navigation Links */}
-          <div className="hidden lg:flex items-center space-x-1">
+          <div className="hidden lg:flex items-center space-x-1 flex-1 justify-center overflow-x-auto">
             {navItems.map((item) => renderNavItem(item))}
           </div>
 
           {/* User Menu and Mobile Menu Button */}
-          <div className="flex items-center space-x-4 relative">
+          <div className="flex items-center space-x-4 relative flex-shrink-0">
             {/* User Info - Hidden on mobile */}
             <div className="hidden sm:flex items-center space-x-2">
               {currentUser && (

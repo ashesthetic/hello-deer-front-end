@@ -106,6 +106,32 @@ const SmokesPage: React.FC = () => {
     }
   };
 
+  // Group smokes by date and item
+  const groupedSmokes = smokes.reduce((acc: any, smoke) => {
+    const dateKey = smoke.date;
+    const itemKey = smoke.item;
+    
+    if (!acc[dateKey]) {
+      acc[dateKey] = {};
+    }
+    
+    if (!acc[dateKey][itemKey]) {
+      acc[dateKey][itemKey] = { morning: null, evening: null };
+    }
+    
+    if (smoke.shift === 'Morning') {
+      acc[dateKey][itemKey].morning = smoke;
+    } else {
+      acc[dateKey][itemKey].evening = smoke;
+    }
+    
+    return acc;
+  }, {});
+
+  const sortedDates = Object.keys(groupedSmokes).sort((a, b) => 
+    new Date(b).getTime() - new Date(a).getTime()
+  );
+
   const handleAddSmoke = () => {
     navigate('/entry/smokes/add');
   };
@@ -139,12 +165,12 @@ const SmokesPage: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
+        <div className="flex flex-wrap justify-between items-center gap-4">
           <h1 className="text-2xl font-bold text-gray-900">Smokes</h1>
           {canCreate(currentUser) && (
             <button
               onClick={handleAddSmoke}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 whitespace-nowrap"
             >
               Add Smoke Entry
             </button>
@@ -204,86 +230,132 @@ const SmokesPage: React.FC = () => {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-2 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" rowSpan={2}>
                       Date
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-2 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" rowSpan={2}>
                       Item
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Shift
+                    <th className="px-2 sm:px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-l border-gray-200" colSpan={3}>
+                      Morning
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Start
+                    <th className="px-2 sm:px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-l border-gray-200" colSpan={3}>
+                      Evening
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      End
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Added
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-2 sm:px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-l border-gray-200" rowSpan={2}>
                       Actions
                     </th>
+                  </tr>
+                  <tr>
+                    <th className="px-1 sm:px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider border-l border-gray-200">Start</th>
+                    <th className="px-1 sm:px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider">End</th>
+                    <th className="px-1 sm:px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider">Added</th>
+                    <th className="px-1 sm:px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider border-l border-gray-200">Start</th>
+                    <th className="px-1 sm:px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider">End</th>
+                    <th className="px-1 sm:px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider">Added</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {smokes.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
+                      <td colSpan={9} className="px-2 sm:px-6 py-4 text-center text-gray-500">
                         No smoke entries found
                       </td>
                     </tr>
                   ) : (
-                    smokes.map((smoke) => (
-                      <tr key={smoke.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900">
-                          {new Date(smoke.date).toLocaleDateString('en-GB', { 
-                            day: 'numeric', 
-                            month: 'short',
-                            year: '2-digit',
-                            weekday: 'short'
-                          }).replace(/,/g, '')}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900">
-                          {smoke.item}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900">
-                          <span className={`px-2 py-1 rounded-full text-xs ${
-                            smoke.shift === 'Morning' 
-                              ? 'bg-yellow-100 text-yellow-800' 
-                              : 'bg-blue-100 text-blue-800'
-                          }`}>
-                            {smoke.shift}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 text-right">
-                          {Number(smoke.start).toFixed(2)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 text-right">
-                          {Number(smoke.end).toFixed(2)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 text-right">
-                          {Number(smoke.added).toFixed(2)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-xs font-medium">
-                          <button
-                            onClick={() => handleEditSmoke(smoke)}
-                            className="text-blue-600 hover:text-blue-900 mr-4"
-                          >
-                            Edit
-                          </button>
-                          {canDelete(currentUser) && (
-                            <button
-                              onClick={() => handleDeleteSmoke(smoke)}
-                              className="text-red-600 hover:text-red-900"
-                            >
-                              Delete
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    ))
+                    sortedDates.map((date, dateIndex) => 
+                      Object.keys(groupedSmokes[date]).map((item, itemIndex) => {
+                        const { morning, evening } = groupedSmokes[date][item];
+                        const isEvenRow = (dateIndex % 2 === 0);
+                        
+                        return (
+                          <tr key={`${date}-${item}`} className={isEvenRow ? 'bg-white' : 'bg-gray-50'}>
+                            {itemIndex === 0 && (
+                              <td 
+                                className="px-2 sm:px-6 py-4 whitespace-nowrap text-xs text-gray-900 font-medium border-r border-gray-200" 
+                                rowSpan={Object.keys(groupedSmokes[date]).length}
+                              >
+                                {new Date(date).toLocaleDateString('en-GB', { 
+                                  day: 'numeric', 
+                                  month: 'short',
+                                  year: '2-digit',
+                                  weekday: 'short'
+                                }).replace(/,/g, '')}
+                              </td>
+                            )}
+                            <td className="px-2 sm:px-6 py-4 whitespace-nowrap text-xs text-gray-900">
+                              {item}
+                            </td>
+                            
+                            {/* Morning Data */}
+                            <td className="px-1 sm:px-4 py-4 whitespace-nowrap text-xs text-gray-900 text-center border-l border-gray-200">
+                              {morning ? Number(morning.start).toFixed(2) : '-'}
+                            </td>
+                            <td className="px-1 sm:px-4 py-4 whitespace-nowrap text-xs text-gray-900 text-center">
+                              {morning ? Number(morning.end).toFixed(2) : '-'}
+                            </td>
+                            <td className="px-1 sm:px-4 py-4 whitespace-nowrap text-xs text-gray-900 text-center">
+                              {morning ? Number(morning.added).toFixed(2) : '-'}
+                            </td>
+                            
+                            {/* Evening Data */}
+                            <td className="px-1 sm:px-4 py-4 whitespace-nowrap text-xs text-gray-900 text-center border-l border-gray-200">
+                              {evening ? Number(evening.start).toFixed(2) : '-'}
+                            </td>
+                            <td className="px-1 sm:px-4 py-4 whitespace-nowrap text-xs text-gray-900 text-center">
+                              {evening ? Number(evening.end).toFixed(2) : '-'}
+                            </td>
+                            <td className="px-1 sm:px-4 py-4 whitespace-nowrap text-xs text-gray-900 text-center">
+                              {evening ? Number(evening.added).toFixed(2) : '-'}
+                            </td>
+                            
+                            {/* Actions */}
+                            <td className="px-1 sm:px-4 py-4 whitespace-nowrap text-center text-xs font-medium border-l border-gray-200">
+                              <div className="flex flex-col gap-1">
+                                <div className="flex gap-2 justify-center">
+                                  {morning && (
+                                    <button
+                                      onClick={() => handleEditSmoke(morning)}
+                                      className="text-blue-600 hover:text-blue-900"
+                                    >
+                                      Edit M
+                                    </button>
+                                  )}
+                                  {evening && (
+                                    <button
+                                      onClick={() => handleEditSmoke(evening)}
+                                      className="text-blue-600 hover:text-blue-900"
+                                    >
+                                      Edit E
+                                    </button>
+                                  )}
+                                </div>
+                                {canDelete(currentUser) && (morning || evening) && (
+                                  <div className="flex gap-2 justify-center">
+                                    {morning && (
+                                      <button
+                                        onClick={() => handleDeleteSmoke(morning)}
+                                        className="text-red-600 hover:text-red-900"
+                                      >
+                                        Del M
+                                      </button>
+                                    )}
+                                    {evening && (
+                                      <button
+                                        onClick={() => handleDeleteSmoke(evening)}
+                                        className="text-red-600 hover:text-red-900"
+                                      >
+                                        Del E
+                                      </button>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )
                   )}
                 </tbody>
               </table>
