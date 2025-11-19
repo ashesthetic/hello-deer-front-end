@@ -37,7 +37,7 @@ const LotteryEditPage: React.FC = () => {
       const response = await lotteryApi.getById(Number(id));
       const lottery: Lottery = response.data.data;
       setFormData({
-        date: lottery.date,
+        date: new Date(lottery.date).toISOString().split('T')[0],
         item: lottery.item,
         shift: lottery.shift,
         start: lottery.start.toString(),
