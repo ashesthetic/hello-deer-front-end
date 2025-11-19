@@ -58,10 +58,6 @@ const StaffPayStubDetailPage: React.FC = () => {
   const [downloading, setDownloading] = useState(false);
   const paystubRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    fetchPayroll();
-  }, [id]);
-
   const fetchPayroll = async () => {
     try {
       setLoading(true);
@@ -75,6 +71,11 @@ const StaffPayStubDetailPage: React.FC = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchPayroll();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return '-';

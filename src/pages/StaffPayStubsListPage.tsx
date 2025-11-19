@@ -36,10 +36,6 @@ const StaffPayStubsListPage: React.FC = () => {
     total: 0,
   });
 
-  useEffect(() => {
-    fetchPayStubs();
-  }, [pagination.current_page]);
-
   const fetchPayStubs = async () => {
     try {
       setLoading(true);
@@ -67,6 +63,11 @@ const StaffPayStubsListPage: React.FC = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchPayStubs();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pagination.current_page]);
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return '-';
