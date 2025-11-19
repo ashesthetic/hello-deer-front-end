@@ -54,7 +54,10 @@ const ResolutionModal: React.FC<ResolutionModalProps> = ({
   };
 
   const totalAllocated = resolutions.reduce((sum, res) => sum + (res.amount || 0), 0);
-  const remaining = pendingAmount - totalAllocated;
+  // Round to 2 decimal places to avoid floating-point precision issues
+  const totalAllocatedRounded = Math.round(totalAllocated * 100) / 100;
+  const pendingAmountRounded = Math.round(pendingAmount * 100) / 100;
+  const remaining = pendingAmountRounded - totalAllocatedRounded;
 
   const isValid = () => {
     // Check if all resolutions have valid bank accounts and amounts
@@ -62,8 +65,8 @@ const ResolutionModal: React.FC<ResolutionModalProps> = ({
       res.bank_account_id > 0 && res.amount > 0
     );
     
-    // Check if total doesn't exceed pending amount
-    const validTotal = totalAllocated <= pendingAmount && totalAllocated > 0;
+    // Check if total doesn't exceed pending amount (with tolerance for floating-point errors)
+    const validTotal = totalAllocatedRounded <= pendingAmountRounded + 0.001 && totalAllocatedRounded > 0;
     
     return hasValidResolutions && validTotal;
   };
@@ -93,7 +96,7 @@ const ResolutionModal: React.FC<ResolutionModalProps> = ({
 
   const handleAutoFill = () => {
     if (resolutions.length === 1 && resolutions[0].bank_account_id > 0) {
-      updateResolution(0, 'amount', pendingAmount);
+      updateResolution(0, 'amount', pendingAmountRounded);
     }
   };
 
@@ -216,7 +219,7 @@ const ResolutionModal: React.FC<ResolutionModalProps> = ({
                       type="number"
                       step="0.01"
                       min="0.01"
-                      max={pendingAmount}
+                      max={pendingAmountRounded}
                       required
                       value={resolution.amount || ''}
                       onChange={(e) => updateResolution(index, 'amount', parseFloat(e.target.value) || 0)}
@@ -246,15 +249,15 @@ const ResolutionModal: React.FC<ResolutionModalProps> = ({
           <div className="bg-blue-50 rounded-lg p-4 mb-6">
             <div className="flex justify-between items-center text-sm">
               <span className="text-gray-700">Total Allocated:</span>
-              <span className="font-bold text-blue-900">{formatCurrency(totalAllocated)}</span>
+              <span className="font-bold text-blue-900">{formatCurrency(totalAllocatedRounded)}</span>
             </div>
             <div className="flex justify-between items-center text-sm mt-1">
               <span className="text-gray-700">Remaining:</span>
-              <span className={`font-bold ${remaining < 0 ? 'text-red-600' : remaining === 0 ? 'text-green-600' : 'text-orange-600'}`}>
+              <span className={`font-bold ${remaining < -0.001 ? 'text-red-600' : Math.abs(remaining) < 0.01 ? 'text-green-600' : 'text-orange-600'}`}>
                 {formatCurrency(remaining)}
               </span>
             </div>
-            {remaining < 0 && (
+            {remaining < -0.001 && (
               <div className="text-red-600 text-xs mt-2">
                 ⚠️ Total allocation exceeds pending amount
               </div>
