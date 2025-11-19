@@ -93,6 +93,12 @@ import ProtectedRoute from './components/ProtectedRoute';
 import LoansPage from './components/LoansPage';
 import AddLoanPage from './components/AddLoanPage';
 import LoanDetailsPage from './components/LoanDetailsPage';
+import SmokesCategoriesPage from './pages/SmokesCategoriesPage';
+import SmokesCategoryAddPage from './pages/SmokesCategoryAddPage';
+import SmokesCategoryEditPage from './pages/SmokesCategoryEditPage';
+import SmokesPage from './pages/SmokesPage';
+import SmokesAddPage from './pages/SmokesAddPage';
+import SmokesEditPage from './pages/SmokesEditPage';
 
 const App: React.FC = () => {
   const dispatch = useDispatch();
@@ -459,6 +465,34 @@ const App: React.FC = () => {
           <Route 
             path="/accounting/vendor-invoices/:id/edit" 
             element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><VendorInvoiceEditPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
+          />
+
+          {/* Smokes Category Routes */}
+          <Route 
+            path="/entry/smokes-categories" 
+            element={isAuthenticated ? <Layout><SmokesCategoriesPage /></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/entry/smokes-categories/add" 
+            element={isAuthenticated ? <Layout><SmokesCategoryAddPage /></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/entry/smokes-categories/:id/edit" 
+            element={isAuthenticated ? <Layout><SmokesCategoryEditPage /></Layout> : <Navigate to="/login" />} 
+          />
+
+          {/* Smokes Routes */}
+          <Route 
+            path="/entry/smokes" 
+            element={isAuthenticated ? <Layout><SmokesPage /></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/entry/smokes/add" 
+            element={isAuthenticated ? <Layout><SmokesAddPage /></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/entry/smokes/:id/edit" 
+            element={isAuthenticated ? <Layout><SmokesEditPage /></Layout> : <Navigate to="/login" />} 
           />
 
           {/* Staff Pay Stubs routes */}
