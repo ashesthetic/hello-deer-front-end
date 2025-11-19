@@ -1043,4 +1043,39 @@ export const smokesApi = {
   forceDelete: (id: number) => api.delete(`/smokes/${id}/force-delete`),
 };
 
+// Lottery interfaces
+export interface Lottery {
+  id: number;
+  date: string;
+  item: string;
+  shift: 'Morning' | 'Evening';
+  start: number;
+  end: number;
+  added: number;
+  created_at: string;
+  updated_at: string;
+  deleted_at?: string;
+}
+
+export interface LotteryFormData {
+  date: string;
+  item: string;
+  shift: 'Morning' | 'Evening';
+  start: number | string;
+  end: number | string;
+  added?: number | string;
+}
+
+// Lottery API
+export const lotteryApi = {
+  getAll: (params?: any) => api.get('/lottery', { params }),
+  getById: (id: number) => api.get(`/lottery/${id}`),
+  create: (data: LotteryFormData) => api.post('/lottery', data),
+  update: (id: number, data: LotteryFormData) => api.put(`/lottery/${id}`, data),
+  delete: (id: number) => api.delete(`/lottery/${id}`),
+  withTrashed: (params?: any) => api.get('/lottery/with-trashed', { params }),
+  restore: (id: number) => api.post(`/lottery/${id}/restore`),
+  forceDelete: (id: number) => api.delete(`/lottery/${id}/force-delete`),
+};
+
 export default api;

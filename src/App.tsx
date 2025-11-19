@@ -99,6 +99,9 @@ import SmokesCategoryEditPage from './pages/SmokesCategoryEditPage';
 import SmokesPage from './pages/SmokesPage';
 import SmokesAddPage from './pages/SmokesAddPage';
 import SmokesEditPage from './pages/SmokesEditPage';
+import LotteryPage from './pages/LotteryPage';
+import LotteryAddPage from './pages/LotteryAddPage';
+import LotteryEditPage from './pages/LotteryEditPage';
 
 const App: React.FC = () => {
   const dispatch = useDispatch();
@@ -493,6 +496,20 @@ const App: React.FC = () => {
           <Route 
             path="/entry/smokes/:id/edit" 
             element={isAuthenticated ? <Layout><SmokesEditPage /></Layout> : <Navigate to="/login" />} 
+          />
+
+          {/* Lottery routes */}
+          <Route 
+            path="/entry/lottery" 
+            element={isAuthenticated ? <Layout><LotteryPage /></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/entry/lottery/add" 
+            element={isAuthenticated ? <Layout><LotteryAddPage /></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/entry/lottery/:id/edit" 
+            element={isAuthenticated ? <Layout><LotteryEditPage /></Layout> : <Navigate to="/login" />} 
           />
 
           {/* Staff Pay Stubs routes */}
