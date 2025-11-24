@@ -17,10 +17,9 @@ const SmokesEditPage: React.FC = () => {
   const [formData, setFormData] = useState<SmokesFormData>({
     date: '',
     item: '',
-    shift: 'Morning',
     start: '',
-    end: '',
     added: '0',
+    end: '',
   });
 
   useEffect(() => {
@@ -48,10 +47,9 @@ const SmokesEditPage: React.FC = () => {
       setFormData({
         date: new Date(smoke.date).toISOString().split('T')[0],
         item: smoke.item,
-        shift: smoke.shift,
         start: smoke.start.toString(),
-        end: smoke.end.toString(),
         added: smoke.added.toString(),
+        end: smoke.end.toString(),
       });
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to fetch smoke entry');
@@ -139,22 +137,6 @@ const SmokesEditPage: React.FC = () => {
             </div>
 
             <div>
-              <label htmlFor="shift" className="block text-sm font-medium text-gray-700 mb-2">
-                Shift *
-              </label>
-              <select
-                id="shift"
-                required
-                value={formData.shift}
-                onChange={(e) => setFormData({ ...formData, shift: e.target.value as 'Morning' | 'Evening' })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="Morning">Morning</option>
-                <option value="Evening">Evening</option>
-              </select>
-            </div>
-
-            <div className="md:col-span-2">
               <label htmlFor="item" className="block text-sm font-medium text-gray-700 mb-2">
                 Item *
               </label>
@@ -192,6 +174,22 @@ const SmokesEditPage: React.FC = () => {
             </div>
 
             <div>
+              <label htmlFor="added" className="block text-sm font-medium text-gray-700 mb-2">
+                Added
+              </label>
+              <input
+                type="number"
+                id="added"
+                step="0.01"
+                min="0"
+                value={formData.added}
+                onChange={(e) => setFormData({ ...formData, added: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="0.00"
+              />
+            </div>
+
+            <div>
               <label htmlFor="end" className="block text-sm font-medium text-gray-700 mb-2">
                 End *
               </label>
@@ -203,22 +201,6 @@ const SmokesEditPage: React.FC = () => {
                 min="0"
                 value={formData.end}
                 onChange={(e) => setFormData({ ...formData, end: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="0.00"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="added" className="block text-sm font-medium text-gray-700 mb-2">
-                Added
-              </label>
-              <input
-                type="number"
-                id="added"
-                step="0.01"
-                min="0"
-                value={formData.added}
-                onChange={(e) => setFormData({ ...formData, added: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="0.00"
               />
