@@ -29,7 +29,7 @@ const SmokesAddPage: React.FC = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await smokesCategoryApi.getAll({ per_page: 100, sort_by: 'name', sort_direction: 'asc' });
+      const response = await smokesCategoryApi.getAll({ per_page: 100, sort_by: 'id', sort_direction: 'asc' });
       const cats = response.data.data || [];
       setCategories(cats);
       
