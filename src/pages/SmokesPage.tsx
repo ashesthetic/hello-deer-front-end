@@ -5,7 +5,6 @@ import { RootState } from '../store';
 import { smokesApi, Smokes, smokesCategoryApi, SmokesCategory } from '../services/api';
 import { canCreate, canDelete, isStaff } from '../utils/permissions';
 import { usePageTitle } from '../hooks/usePageTitle';
-import { start } from 'repl';
 
 const SmokesPage: React.FC = () => {
   usePageTitle('Smokes');
@@ -305,7 +304,6 @@ const SmokesPage: React.FC = () => {
                         const previousDate = new Date(currentDate);
                         previousDate.setDate(previousDate.getDate() - 1);
                         
-                        const currentDateKey = currentDate.toISOString().split('T')[0];
                         const previousDateKey = previousDate.toISOString().split('T')[0];
 
                         const previousSmoke = groupedSmokes[previousDateKey]?.[item];
