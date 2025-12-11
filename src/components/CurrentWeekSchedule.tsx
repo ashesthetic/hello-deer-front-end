@@ -137,7 +137,6 @@ const CurrentWeekSchedule: React.FC = () => {
         const schedules = weekData.schedules;
         const weekDates: string[] = [];
         const [startYear, startMonth, startDay] = weekData.week_start_date.split('-').map(Number);
-        const startDate = new Date(startYear, startMonth - 1, startDay);
         
         for (let i = 0; i < 7; i++) {
           const date = new Date(startYear, startMonth - 1, startDay + i);
