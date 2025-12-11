@@ -130,8 +130,8 @@ const WorkSchedulesPage: React.FC = () => {
   };
 
   const getWeekRangeString = (startDate: string, endDate: string) => {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+    const start = new Date(startDate + 'T00:00:00');
+    const end = new Date(endDate + 'T00:00:00');
     return `Mon ${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - Sun ${end.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
   };
 
@@ -261,7 +261,7 @@ const WorkSchedulesPage: React.FC = () => {
                         {getWeekRangeString(weekGroup.week_start_date, weekGroup.week_end_date)}
                       </div>
                       <div className="text-xs text-gray-500 mt-1">
-                        {new Date(weekGroup.week_start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                        {new Date(weekGroup.week_start_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
