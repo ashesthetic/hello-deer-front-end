@@ -281,6 +281,12 @@ export const dailySalesApi = {
       include_debit: includeDebit,
       include_credit: includeCredit
     }),
+  getSettlementDates: () => api.get('/settlement-dates'),
+  updateSettlementDates: (debitDate: string, creditDate: string) => 
+    api.put('/settlement-dates', { 
+      debit_date: debitDate, 
+      credit_date: creditDate 
+    }),
 };
 
 // Daily Fuels API

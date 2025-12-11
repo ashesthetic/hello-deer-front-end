@@ -22,6 +22,14 @@ const SettlementReportPage: React.FC = () => {
   const hasInitialized = useRef(false);
   const reportRef = useRef<HTMLDivElement>(null);
 
+  // Settlement dates state
+  const [lastDebitDate, setLastDebitDate] = useState<string | null>(null);
+  const [lastCreditDate, setLastCreditDate] = useState<string | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editDebitDate, setEditDebitDate] = useState('');
+  const [editCreditDate, setEditCreditDate] = useState('');
+  const [savingDates, setSavingDates] = useState(false);
+
   const handleGenerate = async () => {
     if (!fromDate || !toDate) {
       setError('Please select both from and to dates');
@@ -90,6 +98,59 @@ const SettlementReportPage: React.FC = () => {
 
   const totals = calculateTotals();
 
+  // Fetch settlement dates on component mount
+  useEffect(() => {
+    const fetchSettlementDates = async () => {
+      try {
+        const response = await dailySalesApi.getSettlementDates();
+        setLastDebitDate(response.data.debit_date);
+        setLastCreditDate(response.data.credit_date);
+      } catch (err) {
+        console.error('Failed to fetch settlement dates:', err);
+      }
+    };
+    fetchSettlementDates();
+  }, []);
+
+  const formatDateDisplay = (dateString: string | null) => {
+    if (!dateString) return 'Not set';
+    const date = new Date(dateString + 'T00:00:00'); // Add time to avoid timezone issues
+    const options: Intl.DateTimeFormatOptions = { 
+      day: 'numeric', 
+      month: 'long', 
+      year: 'numeric', 
+      weekday: 'long' 
+    };
+    return date.toLocaleDateString('en-US', options);
+  };
+
+  const handleOpenEditModal = () => {
+    setEditDebitDate(lastDebitDate || '');
+    setEditCreditDate(lastCreditDate || '');
+    setShowEditModal(true);
+  };
+
+  const handleSaveSettlementDates = async () => {
+    if (!editDebitDate || !editCreditDate) {
+      setError('Both dates are required');
+      return;
+    }
+
+    setSavingDates(true);
+    setError(null);
+
+    try {
+      const response = await dailySalesApi.updateSettlementDates(editDebitDate, editCreditDate);
+      setLastDebitDate(response.data.debit_date);
+      setLastCreditDate(response.data.credit_date);
+      setShowEditModal(false);
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to update settlement dates');
+    } finally {
+      setSavingDates(false);
+    }
+  };
+
   const handleExportPDF = async () => {
     if (!reportRef.current) {
       alert('Report content not found');
@@ -150,6 +211,36 @@ const SettlementReportPage: React.FC = () => {
             >
               Back to Sales
             </button>
+          </div>
+        </div>
+
+        {/* Last Settled Dates Section */}
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border border-blue-200 shadow-sm p-6">
+          <div className="flex justify-between items-start mb-4">
+            <h2 className="text-lg font-semibold text-gray-900">Last Settled Dates</h2>
+            <button
+              onClick={handleOpenEditModal}
+              className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center space-x-1"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              <span>Edit</span>
+            </button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-white rounded-lg p-4 shadow-sm">
+              <div className="text-xs font-medium text-gray-600 mb-2">Debit</div>
+              <div className="text-sm font-semibold text-gray-900">
+                {formatDateDisplay(lastDebitDate)}
+              </div>
+            </div>
+            <div className="bg-white rounded-lg p-4 shadow-sm">
+              <div className="text-xs font-medium text-gray-600 mb-2">Credit</div>
+              <div className="text-sm font-semibold text-gray-900">
+                {formatDateDisplay(lastCreditDate)}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -383,6 +474,70 @@ const SettlementReportPage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Edit Settlement Dates Modal */}
+      {showEditModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Edit Last Settled Dates</h3>
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="editDebitDate" className="block text-sm font-medium text-gray-700 mb-1">
+                  Debit Settlement Date
+                </label>
+                <input
+                  type="date"
+                  id="editDebitDate"
+                  value={editDebitDate}
+                  onChange={(e) => setEditDebitDate(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="editCreditDate" className="block text-sm font-medium text-gray-700 mb-1">
+                  Credit Settlement Date
+                </label>
+                <input
+                  type="date"
+                  id="editCreditDate"
+                  value={editCreditDate}
+                  onChange={(e) => setEditCreditDate(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4">
+                <button
+                  onClick={() => setShowEditModal(false)}
+                  disabled={savingDates}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveSettlementDates}
+                  disabled={savingDates}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {savingDates ? 'Saving...' : 'Save'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
