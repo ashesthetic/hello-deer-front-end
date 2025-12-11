@@ -101,6 +101,9 @@ interface DashboardStats {
     formatted_profit?: string;
     total_sale?: number;
     formatted_total_sale?: string;
+    avg_total_sale_per_day?: number;
+    formatted_avg_total_sale_per_day?: string;
+    day_count?: number;
     debit_sale?: number;
     formatted_debit_sale?: string;
     credit_sale?: number;
@@ -125,6 +128,9 @@ interface DashboardStats {
     formatted_profit?: string;
     total_sale?: number;
     formatted_total_sale?: string;
+    avg_total_sale_per_day?: number;
+    formatted_avg_total_sale_per_day?: string;
+    day_count?: number;
     debit_sale?: number;
     formatted_debit_sale?: string;
     credit_sale?: number;
@@ -149,6 +155,9 @@ interface DashboardStats {
     formatted_profit?: string;
     total_sale?: number;
     formatted_total_sale?: string;
+    avg_total_sale_per_day?: number;
+    formatted_avg_total_sale_per_day?: string;
+    day_count?: number;
     debit_sale?: number;
     formatted_debit_sale?: string;
     credit_sale?: number;
@@ -173,6 +182,9 @@ interface DashboardStats {
     formatted_profit?: string;
     total_sale?: number;
     formatted_total_sale?: string;
+    avg_total_sale_per_day?: number;
+    formatted_avg_total_sale_per_day?: string;
+    day_count?: number;
     debit_sale?: number;
     formatted_debit_sale?: string;
     credit_sale?: number;
@@ -547,6 +559,10 @@ const DashboardStatsCards: React.FC = () => {
                   <div className="text-lg font-bold text-gray-900">{stats.current_week_data.formatted_total_sale}</div>
                 </div>
                 <div className="bg-white rounded-lg p-4 shadow-sm">
+                  <div className="text-xs text-gray-600 mb-1">Avg/Day ({stats.current_week_data.day_count} days)</div>
+                  <div className="text-lg font-bold text-blue-600">{stats.current_week_data.formatted_avg_total_sale_per_day}</div>
+                </div>
+                <div className="bg-white rounded-lg p-4 shadow-sm">
                   <div className="text-xs text-gray-600 mb-1">Debit/Credit</div>
                   <div className="text-lg font-bold text-gray-900">{stats.current_week_data.formatted_debit_sale}</div>
                 </div>
@@ -640,6 +656,10 @@ const DashboardStatsCards: React.FC = () => {
                 <div className="bg-white rounded-lg p-4 shadow-sm">
                   <div className="text-xs text-gray-600 mb-1">Total Sale</div>
                   <div className="text-lg font-bold text-gray-900">{stats.last_week_data.formatted_total_sale}</div>
+                </div>
+                <div className="bg-white rounded-lg p-4 shadow-sm">
+                  <div className="text-xs text-gray-600 mb-1">Avg/Day ({stats.last_week_data.day_count} days)</div>
+                  <div className="text-lg font-bold text-blue-600">{stats.last_week_data.formatted_avg_total_sale_per_day}</div>
                 </div>
                 <div className="bg-white rounded-lg p-4 shadow-sm">
                   <div className="text-xs text-gray-600 mb-1">Debit/Credit</div>
@@ -737,6 +757,10 @@ const DashboardStatsCards: React.FC = () => {
                   <div className="text-lg font-bold text-gray-900">{stats.current_month_data.formatted_total_sale}</div>
                 </div>
                 <div className="bg-white rounded-lg p-4 shadow-sm">
+                  <div className="text-xs text-gray-600 mb-1">Avg/Day ({stats.current_month_data.day_count} days)</div>
+                  <div className="text-lg font-bold text-blue-600">{stats.current_month_data.formatted_avg_total_sale_per_day}</div>
+                </div>
+                <div className="bg-white rounded-lg p-4 shadow-sm">
                   <div className="text-xs text-gray-600 mb-1">Debit/Credit</div>
                   <div className="text-lg font-bold text-gray-900">{stats.current_month_data.formatted_debit_sale}</div>
                 </div>
@@ -830,6 +854,10 @@ const DashboardStatsCards: React.FC = () => {
                 <div className="bg-white rounded-lg p-4 shadow-sm">
                   <div className="text-xs text-gray-600 mb-1">Total Sale</div>
                   <div className="text-lg font-bold text-gray-900">{stats.last_month_data.formatted_total_sale}</div>
+                </div>
+                <div className="bg-white rounded-lg p-4 shadow-sm">
+                  <div className="text-xs text-gray-600 mb-1">Avg/Day ({stats.last_month_data.day_count} days)</div>
+                  <div className="text-lg font-bold text-blue-600">{stats.last_month_data.formatted_avg_total_sale_per_day}</div>
                 </div>
                 <div className="bg-white rounded-lg p-4 shadow-sm">
                   <div className="text-xs text-gray-600 mb-1">Debit/Credit</div>
