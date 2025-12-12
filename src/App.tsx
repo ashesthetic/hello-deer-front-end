@@ -102,6 +102,8 @@ import SmokesEditPage from './pages/SmokesEditPage';
 import LotteryPage from './pages/LotteryPage';
 import LotteryAddPage from './pages/LotteryAddPage';
 import LotteryEditPage from './pages/LotteryEditPage';
+import PostPage from './pages/PostPage';
+import PostAddPage from './pages/PostAddPage';
 
 const App: React.FC = () => {
   const dispatch = useDispatch();
@@ -510,6 +512,16 @@ const App: React.FC = () => {
           <Route 
             path="/entry/lottery/:id/edit" 
             element={isAuthenticated ? <Layout><LotteryEditPage /></Layout> : <Navigate to="/login" />} 
+          />
+
+          {/* Post routes */}
+          <Route 
+            path="/entry/post" 
+            element={isAuthenticated ? <Layout><PostPage /></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/entry/post/add" 
+            element={isAuthenticated ? <Layout><PostAddPage /></Layout> : <Navigate to="/login" />} 
           />
 
           {/* Staff Pay Stubs routes */}

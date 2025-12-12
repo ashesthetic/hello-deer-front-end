@@ -1082,4 +1082,24 @@ export const lotteryApi = {
   forceDelete: (id: number) => api.delete(`/lottery/${id}/force-delete`),
 };
 
+// Facebook interfaces
+export interface FuelPricesData {
+  regular87: number | string;
+  midgrade91: number | string;
+  premium94: number | string;
+  diesel: number | string;
+}
+
+export interface FacebookPostResponse {
+  success: boolean;
+  message: string;
+  post_id?: string;
+}
+
+// Facebook API
+export const facebookApi = {
+  postFuelPrices: (data: FuelPricesData) => api.post<FacebookPostResponse>('/facebook/post-fuel-prices', data),
+  testConnection: () => api.get<FacebookPostResponse>('/facebook/test-connection'),
+};
+
 export default api;
