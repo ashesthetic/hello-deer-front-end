@@ -21,13 +21,13 @@ const FuelVolumesPage: React.FC = () => {
     shift: '',
     sort_by: 'date',
     sort_direction: 'desc',
-    per_page: 10
+    per_page: 50
   });
   const [pagination, setPagination] = useState({
     current_page: 1,
     last_page: 1,
     total: 0,
-    per_page: 10
+    per_page: 50
   });
   const [fuelVolumeToDelete, setFuelVolumeToDelete] = useState<FuelVolume | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
