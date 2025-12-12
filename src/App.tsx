@@ -102,6 +102,7 @@ import SmokesEditPage from './pages/SmokesEditPage';
 import LotteryPage from './pages/LotteryPage';
 import LotteryAddPage from './pages/LotteryAddPage';
 import LotteryEditPage from './pages/LotteryEditPage';
+import DataUploadPage from './pages/DataUploadPage';
 
 const App: React.FC = () => {
   const dispatch = useDispatch();
@@ -223,6 +224,12 @@ const App: React.FC = () => {
           <Route 
             path="/import-data" 
             element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="admin"><ImportDataPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
+          />
+          
+          {/* Data Upload Route (SFT Upload) - Available for all authenticated users */}
+          <Route 
+            path="/entry/data-upload" 
+            element={isAuthenticated ? <Layout><DataUploadPage /></Layout> : <Navigate to="/login" />} 
           />
           
           {/* File Imports List Route */}
