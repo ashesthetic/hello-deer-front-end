@@ -119,6 +119,21 @@ const VendorInvoiceAddPage: React.FC = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
+    
+    // Calculate GST automatically when Total is changed
+    if (name === 'total' && value) {
+      const totalValue = parseFloat(value);
+      if (!isNaN(totalValue) && totalValue > 0) {
+        const calculatedGst = totalValue - (totalValue / 1.05);
+        setFormData(prev => ({
+          ...prev,
+          [name]: value,
+          gst: calculatedGst.toFixed(2)
+        }));
+        return;
+      }
+    }
+    
     setFormData(prev => ({
       ...prev,
       [name]: value
