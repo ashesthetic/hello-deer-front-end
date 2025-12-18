@@ -15,6 +15,8 @@ const SettlementReportPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
+  const [includeDebit, setIncludeDebit] = useState(true); // Default debit selected
+  const [includeCredit, setIncludeCredit] = useState(false);
   const [reportData, setReportData] = useState<SettlementReportEntry[]>([]);
   const [showReport, setShowReport] = useState(false);
   const hasInitialized = useRef(false);
@@ -31,11 +33,16 @@ const SettlementReportPage: React.FC = () => {
       return;
     }
 
+    if (!includeDebit && !includeCredit) {
+      setError('Please select at least one transaction type (Debit or Credit)');
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
     try {
-      const response = await dailySalesApi.generateSettlementReport(fromDate, toDate, specificDates);
+      const response = await dailySalesApi.generateSettlementReport(fromDate, toDate, specificDates, includeDebit, includeCredit);
       setReportData(response.data.data);
       setShowReport(true);
       
@@ -189,6 +196,34 @@ const SettlementReportPage: React.FC = () => {
             </div>
           </div>
 
+          {/* Transaction Type Section */}
+          <div className="border-t border-gray-200 pt-6">
+            <h3 className="text-md font-medium text-gray-900 mb-3">Transaction Type</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Select which transaction types to include in the settlement report.
+            </p>
+            <div className="space-y-2">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={includeDebit}
+                  onChange={(e) => setIncludeDebit(e.target.checked)}
+                  className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                />
+                <span className="ml-2 text-sm text-gray-700">Debit (Interac Debit transactions)</span>
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={includeCredit}
+                  onChange={(e) => setIncludeCredit(e.target.checked)}
+                  className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                />
+                <span className="ml-2 text-sm text-gray-700">Credit (All other cards: Visa, Mastercard, Amex, etc.)</span>
+              </label>
+            </div>
+          </div>
+
           {/* Specific Dates Section */}
           <div className="border-t border-gray-200 pt-6">
             <h3 className="text-md font-medium text-gray-900 mb-3">Additional Specific Dates (Optional)</h3>
@@ -270,6 +305,12 @@ const SettlementReportPage: React.FC = () => {
                   Additional dates: {specificDates.join(', ')}
                 </div>
               )}
+              <div className="mt-2 text-xs text-gray-500">
+                Transaction types: {[
+                  includeDebit && 'Debit (Interac)',
+                  includeCredit && 'Credit (All other cards)'
+                ].filter(Boolean).join(', ')}
+              </div>
             </div>
 
             <div className="overflow-x-auto">
