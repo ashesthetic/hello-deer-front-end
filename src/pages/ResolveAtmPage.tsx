@@ -145,36 +145,48 @@ const ResolveAtmPage: React.FC = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Fee
                   </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Balance
+                  </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Action
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {unresolvedAtms.map((atm) => (
-                  <tr key={atm.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {formatDateForDisplay(atm.date)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {atm.no_of_transactions}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                      ${parseFloat(atm.withdraw).toFixed(2)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      ${parseFloat(atm.fee).toFixed(2)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button
-                        onClick={() => handleResolveClick(atm)}
-                        className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
-                      >
-                        Resolve
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {unresolvedAtms.map((atm) => {
+                  const withdraw = parseFloat(atm.withdraw);
+                  const fee = parseFloat(atm.fee);
+                  const balance = withdraw + fee;
+                  
+                  return (
+                    <tr key={atm.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {formatDateForDisplay(atm.date)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {atm.no_of_transactions}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
+                        ${withdraw.toFixed(2)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${fee.toFixed(2)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
+                        ${balance.toFixed(2)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button
+                          onClick={() => handleResolveClick(atm)}
+                          className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                        >
+                          Resolve
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -194,10 +206,22 @@ const ResolveAtmPage: React.FC = () => {
                   {formatDateForDisplay(selectedAtm.date)}
                 </span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Amount:</span>
-                <span className="text-sm font-bold text-green-600">
+              <div className="flex justify-between mb-2">
+                <span className="text-sm text-gray-600">Withdraw:</span>
+                <span className="text-sm font-medium text-gray-900">
                   ${parseFloat(selectedAtm.withdraw).toFixed(2)}
+                </span>
+              </div>
+              <div className="flex justify-between mb-2">
+                <span className="text-sm text-gray-600">Fee:</span>
+                <span className="text-sm font-medium text-gray-900">
+                  ${parseFloat(selectedAtm.fee).toFixed(2)}
+                </span>
+              </div>
+              <div className="flex justify-between pt-2 border-t border-gray-300">
+                <span className="text-sm font-semibold text-gray-900">Balance:</span>
+                <span className="text-sm font-bold text-green-600">
+                  ${(parseFloat(selectedAtm.withdraw) + parseFloat(selectedAtm.fee)).toFixed(2)}
                 </span>
               </div>
             </div>
