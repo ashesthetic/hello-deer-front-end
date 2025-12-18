@@ -25,6 +25,9 @@ export function useUrlState(options: UseUrlStateOptions = {}) {
   const startDate = searchParams.get('startDate') || '';
   const endDate = searchParams.get('endDate') || '';
   const searchTerm = searchParams.get('search') || '';
+  const statusFilter = searchParams.get('status') || '';
+  const typeFilter = searchParams.get('type') || '';
+  const vendorFilter = searchParams.get('vendor') || '';
 
   const updateUrl = (updates: Record<string, string | number>) => {
     const newParams = new URLSearchParams(searchParams);
@@ -68,6 +71,18 @@ export function useUrlState(options: UseUrlStateOptions = {}) {
     updateUrl({ search: newSearchTerm, page: 1 }); // Reset to first page when searching
   };
 
+  const setStatusFilter = (newStatusFilter: string) => {
+    updateUrl({ status: newStatusFilter, page: 1 }); // Reset to first page when filtering
+  };
+
+  const setTypeFilter = (newTypeFilter: string) => {
+    updateUrl({ type: newTypeFilter, page: 1 }); // Reset to first page when filtering
+  };
+
+  const setVendorFilter = (newVendorFilter: string) => {
+    updateUrl({ vendor: newVendorFilter, page: 1 }); // Reset to first page when filtering
+  };
+
   const clearFilters = () => {
     const newParams = new URLSearchParams();
     newParams.set('perPage', defaultPerPage.toString());
@@ -88,6 +103,9 @@ export function useUrlState(options: UseUrlStateOptions = {}) {
     startDate,
     endDate,
     searchTerm,
+    statusFilter,
+    typeFilter,
+    vendorFilter,
     
     // Setters
     setPerPage,
@@ -97,6 +115,9 @@ export function useUrlState(options: UseUrlStateOptions = {}) {
     setStartDate,
     setEndDate,
     setSearchTerm,
+    setStatusFilter,
+    setTypeFilter,
+    setVendorFilter,
     clearFilters,
     
     // Utility
