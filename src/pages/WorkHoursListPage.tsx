@@ -6,6 +6,8 @@ import { canCreate, canUpdate, canDelete } from '../utils/permissions';
 import { workHoursApi, WorkHour } from '../services/api';
 import { usePageTitle } from '../hooks/usePageTitle';
 import ConfirmationModal from '../components/ConfirmationModal';
+import { DataTable, TableColumn, ActionButtons, ActionButton } from '../components/common/DataTable';
+import { formatDate as formatDateUtil } from '../utils/chartConfigs';
 
 const WorkHoursListPage: React.FC = () => {
   usePageTitle('Work Hours');
@@ -102,6 +104,85 @@ const WorkHoursListPage: React.FC = () => {
       return sortOrder === 'asc' ? comparison : -comparison;
     });
 
+  const columns: TableColumn<WorkHour>[] = [
+    {
+      key: 'date',
+      header: 'Date',
+      sortable: true,
+      render: (workHour) => formatDateUtil(workHour.date)
+    },
+    {
+      key: 'employee',
+      header: 'Employee',
+      sortable: true,
+      render: (workHour) => workHour.employee?.full_legal_name
+    },
+    {
+      key: 'time',
+      header: 'Time',
+      render: (workHour) => `${formatTime(workHour.start_time)} - ${formatTime(workHour.end_time)}`
+    },
+    {
+      key: 'total_hours',
+      header: 'Hours',
+      sortable: true,
+      render: (workHour) => `${Number(workHour.total_hours).toFixed(2)}h`
+    },
+    {
+      key: 'project',
+      header: 'Project',
+      render: (workHour) => workHour.project || '-'
+    },
+    {
+      key: 'description',
+      header: 'Description',
+      className: 'table-cell-text',
+      render: (workHour) => workHour.description || '-'
+    },
+    {
+      key: 'actions',
+      header: 'Actions',
+      className: 'table-cell-actions',
+      render: (workHour) => {
+        const actions: ActionButton[] = [
+          {
+            label: 'View',
+            onClick: () => navigate(`/work-hours/${workHour.id}/view`),
+            variant: 'view'
+          }
+        ];
+
+        if (canUpdate(currentUser)) {
+          actions.push({
+            label: 'Edit',
+            onClick: () => navigate(`/work-hours/${workHour.id}/edit`),
+            variant: 'edit-alt'
+          });
+        }
+
+        if (canDelete(currentUser)) {
+          actions.push({
+            label: 'Delete',
+            onClick: () => handleDelete(workHour),
+            variant: 'delete'
+          });
+        }
+
+        return <ActionButtons actions={actions} />;
+      }
+    }
+  ];
+
+  const handleTableSort = (field: string) => {
+    const sortField = field as 'date' | 'employee' | 'total_hours';
+    if (sortBy === sortField) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(sortField);
+      setSortOrder('desc');
+    }
+  };
+
   const formatTime = (time: string) => {
     return new Date(`2000-01-01T${time}`).toLocaleTimeString('en-CA', {
       hour: '2-digit',
@@ -197,113 +278,16 @@ const WorkHoursListPage: React.FC = () => {
         )}
 
         {/* Work Hours Table */}
-        <div className="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th 
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                    onClick={() => handleSort('date')}
-                  >
-                    Date
-                    {sortBy === 'date' && (
-                      <span className="ml-1">{sortOrder === 'asc' ? '↑' : '↓'}</span>
-                    )}
-                  </th>
-                  <th 
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                    onClick={() => handleSort('employee')}
-                  >
-                    Employee
-                    {sortBy === 'employee' && (
-                      <span className="ml-1">{sortOrder === 'asc' ? '↑' : '↓'}</span>
-                    )}
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Time
-                  </th>
-                  <th 
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                    onClick={() => handleSort('total_hours')}
-                  >
-                    Hours
-                    {sortBy === 'total_hours' && (
-                      <span className="ml-1">{sortOrder === 'asc' ? '↑' : '↓'}</span>
-                    )}
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Project
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Description
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredAndSortedWorkHours.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
-                      {searchTerm || dateFilter ? 'No work hours found matching your filters.' : 'No work hours found.'}
-                    </td>
-                  </tr>
-                ) : (
-                  filteredAndSortedWorkHours.map((workHour) => (
-                    <tr key={workHour.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {formatDate(workHour.date)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {workHour.employee?.full_legal_name}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {formatTime(workHour.start_time)} - {formatTime(workHour.end_time)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {Number(workHour.total_hours).toFixed(2)}h
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {workHour.project || '-'}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">
-                        {workHour.description || '-'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={() => navigate(`/work-hours/${workHour.id}/view`)}
-                            className="text-blue-600 hover:text-blue-900"
-                          >
-                            View
-                          </button>
-                          {canUpdate(currentUser) && (
-                            <button
-                              onClick={() => navigate(`/work-hours/${workHour.id}/edit`)}
-                              className="text-indigo-600 hover:text-indigo-900"
-                            >
-                              Edit
-                            </button>
-                          )}
-                          {canDelete(currentUser) && (
-                            <button
-                              onClick={() => handleDelete(workHour)}
-                              className="text-red-600 hover:text-red-900"
-                            >
-                              Delete
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <DataTable
+          data={filteredAndSortedWorkHours}
+          columns={columns}
+          loading={loading}
+          emptyMessage={searchTerm || dateFilter ? 'No work hours found matching your filters.' : 'No work hours found.'}
+          sortField={sortBy}
+          sortDirection={sortOrder}
+          onSort={handleTableSort}
+          rowKey={(workHour) => workHour.id!}
+        />
 
         {/* Summary */}
         {filteredAndSortedWorkHours.length > 0 && (

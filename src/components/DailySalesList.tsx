@@ -3,6 +3,8 @@ import { DailySale, User } from '../types';
 import { canUpdateDailySale, canDelete, getRoleDisplayName } from '../utils/permissions';
 import Tooltip from './Tooltip';
 import Modal from './Modal';
+import { DataTable, TableColumn, ActionButtons, ActionButton } from './common/DataTable';
+import { formatCurrency, formatDate } from '../utils/chartConfigs';
 
 type SortField = 'date' | 'fuel_sale' | 'store_sale' | 'reported_total';
 type SortDirection = 'asc' | 'desc';
@@ -36,48 +38,6 @@ const DailySalesList: React.FC<DailySalesListProps> = ({
   onSort,
   totals
 }) => {
-  const formatDate = (dateString: string) => {
-    // Split the date string and format it directly to avoid timezone issues
-    const [year, month, day] = dateString.split('T')[0].split('-');
-    const date = new Date(Date.UTC(parseInt(year), parseInt(month) - 1, parseInt(day)));
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      timeZone: 'UTC'
-    });
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-CA', {
-      style: 'currency',
-      currency: 'CAD'
-    }).format(amount);
-  };
-
-  const renderSortableHeader = (field: SortField, label: string) => {
-    if (!onSort) {
-      return <span>{label}</span>;
-    }
-
-    const isActive = sortField === field;
-    const isAsc = sortDirection === 'asc';
-    
-    return (
-      <button
-        onClick={() => onSort(field)}
-        className="flex items-center space-x-1 hover:text-blue-600 focus:outline-none focus:text-blue-600"
-      >
-        <span>{label}</span>
-        {isActive && (
-          <span className="text-blue-600">
-            {isAsc ? '↑' : '↓'}
-          </span>
-        )}
-      </button>
-    );
-  };
-
   const [deleteModalOpen, setDeleteModalOpen] = React.useState(false);
   const [saleToDelete, setSaleToDelete] = React.useState<DailySale | null>(null);
   const [deleting, setDeleting] = React.useState(false);
@@ -86,6 +46,7 @@ const DailySalesList: React.FC<DailySalesListProps> = ({
     setSaleToDelete(sale);
     setDeleteModalOpen(true);
   };
+
   const handleConfirmDelete = async () => {
     if (!saleToDelete) return;
     setDeleting(true);
@@ -94,152 +55,129 @@ const DailySalesList: React.FC<DailySalesListProps> = ({
     setDeleteModalOpen(false);
     setSaleToDelete(null);
   };
+
   const handleCancelDelete = () => {
     setDeleteModalOpen(false);
     setSaleToDelete(null);
   };
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
+  const handleSort = (field: string) => {
+    if (onSort) {
+      onSort(field as SortField);
+    }
+  };
 
-  if (sales.length === 0) {
-    return (
-      <div className="text-center py-8">
-        <p className="text-gray-500">No sales found.</p>
-      </div>
-    );
-  }
+  const columns: TableColumn<DailySale>[] = [
+    {
+      key: 'date',
+      header: 'Date',
+      sortable: !!onSort,
+      render: (sale: DailySale) => formatDate(sale.date)
+    },
+    {
+      key: 'fuel_sale',
+      header: 'Fuel Sale',
+      sortable: !!onSort,
+      render: (sale: DailySale) => formatCurrency(sale.fuel_sale ?? 0)
+    },
+    {
+      key: 'store_sale',
+      header: 'Store Sale',
+      sortable: !!onSort,
+      render: (sale: DailySale) => formatCurrency(sale.store_sale ?? 0)
+    },
+    {
+      key: 'reported_total',
+      header: 'Grand Total',
+      sortable: !!onSort,
+      className: 'table-cell-bold',
+      render: (sale: DailySale) => formatCurrency(sale.reported_total ?? 0)
+    },
+    ...(currentUser && (currentUser.role === 'admin' || currentUser.role === 'editor') ? [{
+      key: 'user',
+      header: 'Created By',
+      render: (sale: DailySale) => sale.user ? (
+        <Tooltip content={getRoleDisplayName(sale.user.role)} position="top">
+          <span className="text-sm text-gray-900 cursor-help">
+            {sale.user.name}
+          </span>
+        </Tooltip>
+      ) : (
+        <span className="text-sm text-gray-500">Unknown</span>
+      )
+    }] : []),
+    {
+      key: 'actions',
+      header: 'Actions',
+      className: 'table-cell-actions',
+      render: (sale: DailySale) => {
+        const actions: ActionButton[] = [
+          {
+            label: 'View',
+            onClick: () => onView(sale),
+            variant: 'view'
+          }
+        ];
+
+        if (canUpdateDailySale(currentUser, sale)) {
+          actions.push({
+            label: 'Edit',
+            onClick: () => onEdit(sale),
+            variant: 'edit'
+          });
+        }
+
+        if (canDelete(currentUser)) {
+          actions.push({
+            label: 'Delete',
+            onClick: () => handleDeleteClick(sale),
+            variant: 'delete'
+          });
+        }
+
+        return <ActionButtons actions={actions} />;
+      }
+    }
+  ];
 
   return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full bg-white border border-gray-200 rounded-lg">
-        <thead className="bg-gray-50">
-          <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              {renderSortableHeader('date', 'Date')}
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              {renderSortableHeader('fuel_sale', 'Fuel Sale')}
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              {renderSortableHeader('store_sale', 'Store Sale')}
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              {renderSortableHeader('reported_total', 'Grand Total')}
-            </th>
-            {currentUser && (currentUser.role === 'admin' || currentUser.role === 'editor') && (
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Created By
-              </th>
-            )}
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Actions
-            </th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-200">
-          {sales.map((sale) => (
-            <tr key={sale.id} className="hover:bg-gray-50">
-              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                {formatDate(sale.date)}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {formatCurrency(sale.fuel_sale ?? 0)}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {formatCurrency(sale.store_sale ?? 0)}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                {formatCurrency(sale.reported_total ?? 0)}
-              </td>
-              {currentUser && (currentUser.role === 'admin' || currentUser.role === 'editor') && (
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {sale.user ? (
-                    <Tooltip content={getRoleDisplayName(sale.user.role)} position="top">
-                      <span className="text-sm text-gray-900 cursor-help">
-                        {sale.user.name}
-                      </span>
-                    </Tooltip>
-                  ) : (
-                    <span className="text-sm text-gray-500">Unknown</span>
-                  )}
-                </td>
-              )}
-              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                <div className="flex space-x-2">
-                  <button
-                    onClick={() => onView(sale)}
-                    className="text-blue-600 hover:text-blue-900 px-2 py-1 rounded text-xs"
-                  >
-                    View
-                  </button>
-                  {canUpdateDailySale(currentUser, sale) && (
-                    <button
-                      onClick={() => onEdit(sale)}
-                      className="text-green-600 hover:text-green-900 px-2 py-1 rounded text-xs"
-                    >
-                      Edit
-                    </button>
-                  )}
-                  {canDelete(currentUser) && (
-                    <button
-                      onClick={() => handleDeleteClick(sale)}
-                      className="text-red-600 hover:text-red-900 px-2 py-1 rounded text-xs"
-                    >
-                      Delete
-                    </button>
-                  )}
-                </div>
-              </td>
-            </tr>
-          ))}
-          
-          {/* Totals Row */}
-          {totals && (
-            <tr className="bg-gray-100 font-semibold">
-              <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">
-                Total
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">
-                {formatCurrency(totals.fuel_sale ?? 0)}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">
-                {formatCurrency(totals.store_sale ?? 0)}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">
-                {formatCurrency(totals.reported_total ?? 0)}
-              </td>
-              {currentUser && (currentUser.role === 'admin' || currentUser.role === 'editor') && (
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {/* Empty cell for alignment */}
-                </td>
-              )}
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {/* Empty cell for alignment */}
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+    <>
+      <DataTable
+        data={sales}
+        columns={columns}
+        loading={loading}
+        emptyMessage="No sales found."
+        sortField={sortField}
+        sortDirection={sortDirection}
+        onSort={handleSort}
+        rowKey={(sale) => sale.id!}
+      />
 
-      {/* Modal for delete confirmation */}
+      {/* Totals Row */}
+      {totals && (
+        <div className="mt-4 p-4 bg-gray-100 rounded-lg">
+          <div className="grid grid-cols-4 gap-4 text-sm font-semibold">
+            <div>Total</div>
+            <div>{formatCurrency(totals.fuel_sale ?? 0)}</div>
+            <div>{formatCurrency(totals.store_sale ?? 0)}</div>
+            <div>{formatCurrency(totals.reported_total ?? 0)}</div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
       <Modal
         isOpen={deleteModalOpen}
-        title="Delete Sale"
         onClose={handleCancelDelete}
+        title="Delete Sale"
         onConfirm={handleConfirmDelete}
         confirmText="Delete"
         cancelText="Cancel"
         loading={deleting}
       >
-        Are you sure you want to delete this sale record?
+        Are you sure you want to delete the sale for {saleToDelete ? formatDate(saleToDelete.date) : ''}? This action cannot be undone.
       </Modal>
-    </div>
+    </>
   );
 };
 
