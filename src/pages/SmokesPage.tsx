@@ -234,6 +234,9 @@ const SmokesPage: React.FC = () => {
                     <th className="px-2 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                       End
                     </th>
+                    <th className="px-2 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Sold
+                    </th>
                     <th className="px-2 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Actions
                     </th>
@@ -242,7 +245,7 @@ const SmokesPage: React.FC = () => {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {smokes.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="px-2 py-4 text-center text-gray-500 text-xs">
+                      <td colSpan={7} className="px-2 py-4 text-center text-gray-500 text-xs">
                         No smoke entries found
                       </td>
                     </tr>
@@ -251,6 +254,18 @@ const SmokesPage: React.FC = () => {
                       Object.keys(groupedSmokes[date]).map((item, itemIndex) => {
                         const smoke = groupedSmokes[date][item];
                         const isEvenRow = (dateIndex % 2 === 0);
+                        
+                        // Calculate sold: Current Start + Previous Added - Previous Start
+                        let sold = 0;
+                        const currentDate = new Date(date);
+                        const previousDate = new Date(currentDate);
+                        previousDate.setDate(previousDate.getDate() - 1);
+                        const previousDateKey = previousDate.toISOString().split('T')[0];
+                        
+                        const previousSmoke = groupedSmokes[previousDateKey]?.[item];
+                        if (previousSmoke) {
+                          sold = Number(smoke.start) + Number(previousSmoke.added) - Number(previousSmoke.start);
+                        }
                         
                         return (
                           <tr key={`${date}-${item}`} className={isEvenRow ? 'bg-white' : 'bg-gray-50'}>
@@ -278,6 +293,9 @@ const SmokesPage: React.FC = () => {
                             </td>
                             <td className="px-2 py-2 whitespace-nowrap text-xs text-gray-900 text-right">
                               {Number(smoke.end).toFixed(2)}
+                            </td>
+                            <td className="px-2 py-2 whitespace-nowrap text-xs text-gray-900 text-right font-semibold text-blue-600">
+                              {sold.toFixed(2)}
                             </td>
                             <td className="px-2 py-2 whitespace-nowrap text-center text-xs font-medium">
                               <div className="flex gap-2 justify-center">
