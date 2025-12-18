@@ -797,4 +797,67 @@ export const ownerEquitiesApi = {
   getOwnerSummary: (ownerId: number) => api.get(`/owners/${ownerId}/equity-summary`),
 };
 
+// Work Schedule interfaces
+export interface WorkScheduleDay {
+  id: number;
+  day_of_week: string;
+  date: string;
+  start_time: string | null;
+  end_time: string | null;
+  hours_worked: number;
+  is_working_day: boolean;
+  notes: string | null;
+}
+
+export interface WorkSchedule {
+  id: number;
+  employee_id: number;
+  week_start_date: string;
+  week_end_date: string;
+  title: string | null;
+  notes: string | null;
+  status: string;
+  employee: {
+    id: number;
+    full_legal_name: string;
+    preferred_name: string | null;
+    position: string;
+  };
+  user: {
+    id: number;
+    name: string;
+  };
+  schedule_days: WorkScheduleDay[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface WorkScheduleFormData {
+  employee_id: number;
+  week_start_date: string;
+  title?: string;
+  notes?: string;
+  status?: string;
+  schedule_days: {
+    day_of_week: string;
+    start_time?: string;
+    end_time?: string;
+    notes?: string;
+  }[];
+}
+
+// Work Schedule API
+export const workScheduleApi = {
+  index: () => api.get('/work-schedules'),
+  show: (id: number) => api.get(`/work-schedules/${id}`),
+  create: (data: WorkScheduleFormData) => api.post('/work-schedules', data),
+  update: (id: number, data: WorkScheduleFormData) => api.put(`/work-schedules/${id}`, data),
+  destroy: (id: number) => api.delete(`/work-schedules/${id}`),
+  currentWeek: () => api.get('/work-schedules/current-week'),
+  stats: () => api.get('/work-schedules/stats'),
+  employeesWithoutCurrentWeek: () => api.get('/work-schedules/employees-without-current-week'),
+  weekOptions: () => api.get('/work-schedules/week-options'),
+  employeeSchedules: (employeeId: number) => api.get(`/employees/${employeeId}/work-schedules`),
+};
+
 export default api; 

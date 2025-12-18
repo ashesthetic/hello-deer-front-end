@@ -40,6 +40,8 @@ import ExpenseReportPage from './pages/ExpenseReportPage';
 import IncomeReportPage from './pages/IncomeReportPage';
 import WorkHoursEditPage from './pages/WorkHoursEditPage';
 import WorkHoursViewPage from './pages/WorkHoursViewPage';
+import WorkSchedulesPage from './pages/WorkSchedulesPage';
+import WorkScheduleCreatePage from './pages/WorkScheduleCreatePage';
 import VendorInvoicesPage from './pages/VendorInvoicesPage';
 import VendorInvoiceAddPage from './pages/VendorInvoiceAddPage';
 import VendorInvoiceEditPage from './pages/VendorInvoiceEditPage';
@@ -201,6 +203,16 @@ const App: React.FC = () => {
           <Route 
             path="/work-hours/:id/edit" 
             element={isAuthenticated ? <Layout><WorkHoursEditPage /></Layout> : <Navigate to="/login" />} 
+          />
+          
+          {/* Work Schedule Routes */}
+          <Route 
+            path="/work-schedules" 
+            element={isAuthenticated ? <Layout><WorkSchedulesPage /></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/work-schedules/create" 
+            element={isAuthenticated ? <Layout><WorkScheduleCreatePage /></Layout> : <Navigate to="/login" />} 
           />
           
           {/* Reports Routes */}
