@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import api from '../services/api';
 
 const PayrollUploadPage: React.FC = () => {
   const navigate = useNavigate();
@@ -54,17 +55,16 @@ const PayrollUploadPage: React.FC = () => {
     setUploading(true);
     
     try {
-      // TODO: Implement actual upload API call
-      // const formData = new FormData();
-      // formData.append('file', file);
-      // const response = await uploadPayrollReport(formData);
-      // const reportId = response.data.id;
+      const formData = new FormData();
+      formData.append('file', file);
       
-      // Simulate upload delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const response = await api.post('/payroll-reports/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
       
-      // For now, use a dummy ID. Replace with actual report ID from API response
-      const reportId = Date.now(); // Temporary ID
+      const reportId = response.data.report.id;
       
       // Redirect directly to process page
       navigate(`/employees/payroll/reports/${reportId}/process`);

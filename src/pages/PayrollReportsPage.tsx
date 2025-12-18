@@ -1,10 +1,37 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import api from '../services/api';
+
+interface PayrollReport {
+  id: number;
+  original_name: string;
+  status: 'pending' | 'processed' | 'failed';
+  created_at: string;
+  parsed_data?: {
+    pay_period?: string;
+  };
+}
 
 const PayrollReportsPage: React.FC = () => {
   const navigate = useNavigate();
-  const [reports] = useState([]);
-  const [loading] = useState(false);
+  const [reports, setReports] = useState<PayrollReport[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchReports = async () => {
+      try {
+        const response = await api.get('/payroll-reports');
+        setReports(response.data);
+      } catch (error) {
+        console.error('Error fetching reports:', error);
+        alert('Failed to load reports');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchReports();
+  }, []);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -85,28 +112,30 @@ const PayrollReportsPage: React.FC = () => {
                   </td>
                 </tr>
               ) : (
-                reports.map((report: any) => (
+                reports.map((report) => (
                   <tr key={report.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {report.upload_date}
+                      {new Date(report.created_at).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {report.file_name}
+                      {report.original_name}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {report.pay_period}
+                      {report.parsed_data?.pay_period || '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
                         report.status === 'processed' 
                           ? 'bg-green-100 text-green-800' 
+                          : report.status === 'failed'
+                          ? 'bg-red-100 text-red-800'
                           : 'bg-yellow-100 text-yellow-800'
                       }`}>
                         {report.status}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {report.status === 'pending' ? (
+                      {report.status === 'pending' || report.status === 'failed' ? (
                         <button
                           onClick={() => navigate(`/employees/payroll/reports/${report.id}/process`)}
                           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded text-sm font-medium transition-colors"
@@ -115,7 +144,7 @@ const PayrollReportsPage: React.FC = () => {
                         </button>
                       ) : (
                         <button
-                          onClick={() => navigate(`/employees/payroll/reports/${report.id}`)}
+                          onClick={() => navigate(`/employees/payroll/reports/${report.id}/process`)}
                           className="text-blue-600 hover:text-blue-900"
                         >
                           View
