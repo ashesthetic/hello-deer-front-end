@@ -5,6 +5,7 @@ import { RootState } from '../store';
 import { smokesApi, Smokes, smokesCategoryApi, SmokesCategory } from '../services/api';
 import { canCreate, canDelete, isStaff } from '../utils/permissions';
 import { usePageTitle } from '../hooks/usePageTitle';
+import { start } from 'repl';
 
 const SmokesPage: React.FC = () => {
   usePageTitle('Smokes');
@@ -175,6 +176,20 @@ const SmokesPage: React.FC = () => {
     }
   };
 
+  type SoldItemDetails = {
+    start: string;
+    added: string;
+    end: string;
+  };
+
+  type SoldItems = {
+    [date: string]: {
+      [item: string]: SoldItemDetails;
+    };
+  };
+
+  let soldItems: SoldItems = {};
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="space-y-6">
@@ -283,17 +298,39 @@ const SmokesPage: React.FC = () => {
                         const smoke = groupedSmokes[date][item];
                         const isEvenRow = (dateIndex % 2 === 0);
                         
-                        // Calculate sold: Current Start + Previous Added - Previous Start
+                        // Calculate sold: Previous Start + Previous Added - Current Start
                         let sold = 0;
                         const currentDate = new Date(date);
+                        console.log(currentDate);
                         const previousDate = new Date(currentDate);
                         previousDate.setDate(previousDate.getDate() - 1);
-                        const previousDateKey = previousDate.toISOString().split('T')[0];
                         
+                        const currentDateKey = currentDate.toISOString().split('T')[0];
+                        const previousDateKey = previousDate.toISOString().split('T')[0];
+
                         const previousSmoke = groupedSmokes[previousDateKey]?.[item];
+
                         if (previousSmoke) {
-                          sold = Number(smoke.start) + Number(previousSmoke.added) - Number(previousSmoke.start);
+                          sold = Number(previousSmoke.start) + Number(previousSmoke.added) - Number(smoke.start);
                         }
+
+                        //console.log(currentDate, previousDate);
+                        soldItems['today'] ??= {};
+                        soldItems['yesterday'] ??= {};
+
+                        if (soldItems['today'][item]) {
+                          // Move today's item to yesterday
+                          soldItems['yesterday'][item] = { ...soldItems['today'][item] };
+                        }
+
+                        // Set new object for today
+                        soldItems['today'][item] = {
+                          start: Number(smoke.start).toFixed(2),
+                          added: Number(smoke.added).toFixed(2),
+                          end: Number(smoke.end).toFixed(2),
+                        };
+
+                        console.log(soldItems);
                         
                         return (
                           <tr key={`${date}-${item}`} className={isEvenRow ? 'bg-white' : 'bg-gray-50'}>
