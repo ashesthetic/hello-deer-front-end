@@ -196,6 +196,30 @@ const ScheduleViewPage: React.FC = () => {
     }
   };
 
+  const handleAddToWorkHours = () => {
+    // Prepare the schedule data to pass to work hours creation
+    const workHoursData = schedules.flatMap(schedule => 
+      schedule.shift_info
+        .filter(shift => shift.start_time && shift.end_time) // Only include shifts with times
+        .map(shift => ({
+          employee_id: schedule.employee_id,
+          employee_name: schedule.employee.preferred_name || schedule.employee.full_legal_name,
+          date: shift.date,
+          start_time: shift.start_time,
+          end_time: shift.end_time,
+          total_hours: shift.total_hour
+        }))
+    );
+
+    // Navigate to work hours creation page with the data
+    navigate('/work-hours/create-from-schedule', { 
+      state: { 
+        scheduleData: workHoursData,
+        weekRange: `${firstSchedule.week_start_date} to ${firstSchedule.week_end_date}`
+      } 
+    });
+  };
+
   const handleSendSchedule = async () => {
     setShowSendModal(false);
     
@@ -453,6 +477,15 @@ const ScheduleViewPage: React.FC = () => {
                   <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
                 </svg>
                 <span>Export PDF</span>
+              </button>
+              <button
+                onClick={handleAddToWorkHours}
+                className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center space-x-2"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
+                </svg>
+                <span>Add to Work Hours</span>
               </button>
             </div>
           </div>
