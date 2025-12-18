@@ -19,6 +19,11 @@ const FuelVolumeViewPage: React.FC = () => {
 
   useEffect(() => {
     const fetchFuelVolume = async () => {
+      // Don't fetch if user is not loaded yet
+      if (!currentUser) {
+        return;
+      }
+
       try {
         setLoading(true);
         const response = isStaff(currentUser)

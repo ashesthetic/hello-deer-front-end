@@ -33,6 +33,11 @@ const FuelVolumesPage: React.FC = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const fetchFuelVolumes = useCallback(async () => {
+    // Don't fetch if user is not loaded yet
+    if (!currentUser) {
+      return;
+    }
+
     try {
       setLoading(true);
       
@@ -76,7 +81,7 @@ const FuelVolumesPage: React.FC = () => {
 
   useEffect(() => {
     fetchFuelVolumes();
-  }, [filters, fetchFuelVolumes]);
+  }, [fetchFuelVolumes]);
 
   const handleFilterChange = (key: string, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }));
