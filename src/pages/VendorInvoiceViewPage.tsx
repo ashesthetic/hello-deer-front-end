@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
-import { canUpdate, canDelete } from '../utils/permissions';
+import { canUpdate, canDelete, isStaff } from '../utils/permissions';
 import ConfirmationModal from '../components/ConfirmationModal';
 import { vendorInvoicesApi, VendorInvoice } from '../services/api';
 import { usePageTitle } from '../hooks/usePageTitle';
@@ -25,7 +25,9 @@ const VendorInvoiceViewPage: React.FC = () => {
     
     try {
       setLoading(true);
-      const response = await vendorInvoicesApi.getById(parseInt(id));
+      const response = isStaff(currentUser)
+        ? await vendorInvoicesApi.getForStaff(parseInt(id))
+        : await vendorInvoicesApi.getById(parseInt(id));
       setInvoice(response.data);
       setError(null);
     } catch (err: any) {
@@ -34,14 +36,19 @@ const VendorInvoiceViewPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  }, [id, currentUser]);
 
   useEffect(() => {
     fetchInvoice();
   }, [id, fetchInvoice]);
 
   const handleEdit = () => {
-    navigate(`/accounting/vendor-invoices/${id}/edit`);
+    if (isStaff(currentUser)) {
+      // Staff users cannot edit - redirect to list
+      navigate('/vendor-invoices');
+    } else {
+      navigate(`/accounting/vendor-invoices/${id}/edit`);
+    }
   };
 
   const handleDelete = () => {
@@ -53,14 +60,22 @@ const VendorInvoiceViewPage: React.FC = () => {
     
     try {
       await vendorInvoicesApi.delete(invoice.id);
-      navigate('/accounting/vendor-invoices');
+      if (isStaff(currentUser)) {
+        navigate('/vendor-invoices');
+      } else {
+        navigate('/accounting/vendor-invoices');
+      }
     } catch (err: any) {
       setError(err.message);
     }
   };
 
   const handleBack = () => {
-    navigate('/accounting/vendor-invoices');
+    if (isStaff(currentUser)) {
+      navigate('/vendor-invoices');
+    } else {
+      navigate('/accounting/vendor-invoices');
+    }
   };
 
   const handleDownloadFile = async () => {

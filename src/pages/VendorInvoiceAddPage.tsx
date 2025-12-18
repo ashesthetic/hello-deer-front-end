@@ -82,7 +82,6 @@ const VendorInvoiceAddPage: React.FC = () => {
         : await vendorInvoicesApi.getVendors();
       setVendors(response.data);
     } catch (err: any) {
-      console.error('Vendor fetch error:', err);
       setError(`Failed to fetch vendors: ${err.response?.data?.message || err.message || 'Unknown error'}`);
     }
   };
@@ -92,7 +91,6 @@ const VendorInvoiceAddPage: React.FC = () => {
       const response = await vendorInvoicesApi.getBankAccounts();
       setBankAccounts(response.data);
     } catch (err: any) {
-      console.error('Bank accounts fetch error:', err);
       setError(`Failed to fetch bank accounts: ${err.response?.data?.message || err.message || 'Unknown error'}`);
     }
   };
