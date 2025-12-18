@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 import { fuelVolumeApi } from '../services/api';
-import { canCreate, canDelete } from '../utils/permissions';
+import { canCreate, canDelete, isStaff } from '../utils/permissions';
 import { FuelVolume } from '../types';
 import { formatDateForDisplay } from '../utils/dateUtils';
 import ConfirmationModal from '../components/ConfirmationModal';
@@ -21,7 +21,9 @@ const FuelVolumeViewPage: React.FC = () => {
     const fetchFuelVolume = async () => {
       try {
         setLoading(true);
-        const response = await fuelVolumeApi.show(parseInt(id!));
+        const response = isStaff(currentUser)
+          ? await fuelVolumeApi.getForStaff(parseInt(id!))
+          : await fuelVolumeApi.show(parseInt(id!));
         setFuelVolume(response.data);
       } catch (err: any) {
         setError(err.response?.data?.message || 'Failed to fetch fuel volume');
@@ -33,7 +35,7 @@ const FuelVolumeViewPage: React.FC = () => {
     if (id) {
       fetchFuelVolume();
     }
-  }, [id]);
+  }, [id, currentUser]);
 
   const formatNumber = (value: number | null | undefined) => {
     if (value === null || value === undefined || isNaN(value)) {
@@ -116,7 +118,7 @@ const FuelVolumeViewPage: React.FC = () => {
           >
             Back to List
           </button>
-          {canCreate(currentUser) && (
+          {!isStaff(currentUser) && canCreate(currentUser) && (
             <button
               onClick={() => navigate(`/fuel-volumes/${fuelVolume.id}/edit`)}
               className="inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:w-auto"
@@ -124,7 +126,7 @@ const FuelVolumeViewPage: React.FC = () => {
               Edit
             </button>
           )}
-          {canDelete(currentUser) && (
+          {!isStaff(currentUser) && canDelete(currentUser) && (
             <button
               onClick={handleDelete}
               className="inline-flex items-center justify-center rounded-md border border-transparent bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 sm:w-auto"

@@ -147,11 +147,11 @@ const App: React.FC = () => {
           {/* Fuel Volume Routes */}
           <Route 
             path="/fuel-volumes" 
-            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><FuelVolumesPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><FuelVolumesPage /></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/fuel-volumes/:id" 
-            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><FuelVolumeViewPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><FuelVolumeViewPage /></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/fuel-volumes/:id/edit" 
@@ -159,7 +159,7 @@ const App: React.FC = () => {
           />
           <Route 
             path="/fuel-volumes/new" 
-            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><FuelVolumeEditPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><FuelVolumeEditPage /></Layout> : <Navigate to="/login" />} 
           />
           
           {/* Import Data Route */}

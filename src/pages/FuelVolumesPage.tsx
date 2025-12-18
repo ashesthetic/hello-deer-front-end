@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 import { fuelVolumeApi } from '../services/api';
-import { canCreate, canDelete } from '../utils/permissions';
+import { canCreate, canDelete, isStaff } from '../utils/permissions';
 import { FuelVolume } from '../types';
 import { formatDateForDisplay } from '../utils/dateUtils';
 import ConfirmationModal from '../components/ConfirmationModal';
@@ -44,7 +44,9 @@ const FuelVolumesPage: React.FC = () => {
         }
       });
 
-      const response = await fuelVolumeApi.index(params.toString());
+      const response = isStaff(currentUser)
+        ? await fuelVolumeApi.getAllForStaff(params.toString())
+        : await fuelVolumeApi.index(params.toString());
       setFuelVolumes(response.data.data);
       setPagination({
         current_page: response.data.current_page,
@@ -60,7 +62,9 @@ const FuelVolumesPage: React.FC = () => {
       if (filters.shift) allDataParams.append('shift', filters.shift);
       allDataParams.append('per_page', '1000'); // Get a large number to ensure we have enough data
 
-      const allDataResponse = await fuelVolumeApi.index(allDataParams.toString());
+      const allDataResponse = isStaff(currentUser)
+        ? await fuelVolumeApi.getAllForStaff(allDataParams.toString())
+        : await fuelVolumeApi.index(allDataParams.toString());
       setAllFuelVolumes(allDataResponse.data.data || []);
       
     } catch (err: any) {
@@ -68,7 +72,7 @@ const FuelVolumesPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [filters]);
+  }, [filters, currentUser]);
 
   useEffect(() => {
     fetchFuelVolumes();
@@ -253,7 +257,7 @@ const FuelVolumesPage: React.FC = () => {
           </p>
         </div>
         <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
-          {canCreate(currentUser) && (
+          {(canCreate(currentUser) || isStaff(currentUser)) && (
             <button
               onClick={() => navigate('/fuel-volumes/new')}
               className="inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:w-auto"
@@ -443,7 +447,7 @@ const FuelVolumesPage: React.FC = () => {
                           >
                             View
                           </button>
-                          {canCreate(currentUser) && (
+                          {!isStaff(currentUser) && canCreate(currentUser) && (
                             <button
                               onClick={() => navigate(`/fuel-volumes/${fuelVolume.id}/edit`)}
                               className="text-indigo-600 hover:text-indigo-900 mr-4"
@@ -451,7 +455,7 @@ const FuelVolumesPage: React.FC = () => {
                               Edit
                             </button>
                           )}
-                          {canDelete(currentUser) && (
+                          {!isStaff(currentUser) && canDelete(currentUser) && (
                             <button
                               onClick={() => handleDelete(fuelVolume)}
                               className="text-red-600 hover:text-red-900"
