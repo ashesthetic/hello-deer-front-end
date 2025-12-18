@@ -34,6 +34,7 @@ const VendorInvoicesPage: React.FC = () => {
     searchTerm,
     statusFilter,
     typeFilter,
+    referenceFilter,
     vendorFilter,
     startDate: startDateFilter,
     endDate: endDateFilter,
@@ -44,6 +45,7 @@ const VendorInvoicesPage: React.FC = () => {
     setSearchTerm,
     setStatusFilter,
     setTypeFilter,
+    setReferenceFilter,
     setVendorFilter,
     setStartDate: setStartDateFilter,
     setEndDate: setEndDateFilter,
@@ -74,7 +76,7 @@ const VendorInvoicesPage: React.FC = () => {
   useEffect(() => {
     fetchInvoices(currentPage);
     // eslint-disable-next-line
-  }, [currentPage, sortField, sortDirection, perPage, searchTerm, statusFilter, typeFilter, vendorFilter, startDateFilter, endDateFilter]);
+  }, [currentPage, sortField, sortDirection, perPage, searchTerm, statusFilter, typeFilter, referenceFilter, vendorFilter, startDateFilter, endDateFilter]);
 
   const fetchInvoices = async (page: number) => {
     setLoading(true);
@@ -98,6 +100,9 @@ const VendorInvoicesPage: React.FC = () => {
       }
       if (typeFilter) {
         params.type = typeFilter;
+      }
+      if (referenceFilter) {
+        params.reference = referenceFilter;
       }
       if (vendorFilter) {
         params.vendor_id = vendorFilter;
@@ -245,6 +250,21 @@ const VendorInvoicesPage: React.FC = () => {
                 <option value="">All Types</option>
                 <option value="Income">Income</option>
                 <option value="Expense">Expense</option>
+              </select>
+            </div>
+
+            {/* Reference Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+              <select
+                value={referenceFilter}
+                onChange={(e) => setReferenceFilter(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">All References</option>
+                <option value="Vendor">Vendor</option>
+                <option value="Ash">Ash</option>
+                <option value="Nafi">Nafi</option>
               </select>
             </div>
 
