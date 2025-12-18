@@ -1,7 +1,100 @@
 import axios from 'axios';
 import { DailySale, DailyFuel, LoginCredentials, CreateUserData, UpdateUserData, Vendor, CreateVendorData, UpdateVendorData } from '../types';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8001/api';
+// Employee interfaces
+export interface Employee {
+  id: number;
+  full_legal_name: string;
+  preferred_name?: string;
+  date_of_birth: string;
+  address: string;
+  postal_code?: string;
+  country: string;
+  phone_number: string;
+  alternate_number?: string;
+  email: string;
+  emergency_name: string;
+  emergency_relationship: string;
+  emergency_address_line1?: string;
+  emergency_address_line2?: string;
+  emergency_city?: string;
+  emergency_state?: string;
+  emergency_postal_code?: string;
+  emergency_country?: string;
+  emergency_phone: string;
+  emergency_alternate_number?: string;
+  status_in_canada: string;
+  other_status?: string;
+  sin_number: string;
+  position: string;
+  department: string;
+  hire_date: string;
+  hourly_rate: string;
+  facebook?: string;
+  linkedin?: string;
+  twitter?: string;
+  government_id_file?: string;
+  work_permit_file?: string;
+  resume_file?: string;
+  photo_file?: string;
+  void_cheque_file?: string;
+  user_id: number;
+  status: 'active' | 'inactive';
+  created_at: string;
+  updated_at: string;
+  user?: {
+    id: number;
+    name: string;
+    email: string;
+  };
+}
+
+export interface EmployeeFormData {
+  full_legal_name: string;
+  preferred_name?: string;
+  date_of_birth: string;
+  address: string;
+  postal_code?: string;
+  country: string;
+  phone_number: string;
+  alternate_number?: string;
+  email: string;
+  emergency_name: string;
+  emergency_relationship: string;
+  emergency_address_line1?: string;
+  emergency_address_line2?: string;
+  emergency_city?: string;
+  emergency_state?: string;
+  emergency_postal_code?: string;
+  emergency_country?: string;
+  emergency_phone: string;
+  emergency_alternate_number?: string;
+  status_in_canada: string;
+  other_status?: string;
+  sin_number: string;
+  position: string;
+  department: string;
+  hire_date: string;
+  hourly_rate: string;
+  status?: 'active' | 'inactive';
+  facebook?: string;
+  linkedin?: string;
+  twitter?: string;
+  government_id_file?: File;
+  work_permit_file?: File;
+  resume_file?: File;
+  photo_file?: File;
+  void_cheque_file?: File;
+}
+
+export interface EmployeeStats {
+  total: number;
+  active: number;
+  inactive: number;
+  avg_tenure: string;
+}
+
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
 
 // Create axios instance with default config
 const api = axios.create({
@@ -192,6 +285,59 @@ export const vendorsApi = {
     });
   },
   delete: (id: number) => api.delete(`/vendors/${id}`),
+};
+
+// Employee API
+export const employeesApi = {
+  getAll: (params?: any) => api.get('/employees', { params }),
+  getById: (id: number) => api.get(`/employees/${id}`),
+  create: (data: EmployeeFormData) => {
+    const formData = new FormData();
+    
+    // Add all form fields to FormData
+    Object.keys(data).forEach(key => {
+      const value = (data as any)[key];
+      if (value !== null && value !== undefined && value !== '') {
+        if (value instanceof File) {
+          formData.append(key, value);
+        } else {
+          formData.append(key, String(value));
+        }
+      }
+    });
+
+    return api.post('/employees', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+  update: (id: number, data: EmployeeFormData) => {
+    const formData = new FormData();
+    
+    // Add all form fields to FormData
+    Object.keys(data).forEach(key => {
+      const value = (data as any)[key];
+      if (value !== null && value !== undefined && value !== '') {
+        if (value instanceof File) {
+          formData.append(key, value);
+        } else {
+          formData.append(key, String(value));
+        }
+      }
+    });
+
+    // Laravel fix: use POST with _method=PUT
+    formData.append('_method', 'PUT');
+
+    return api.post(`/employees/${id}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+  delete: (id: number) => api.delete(`/employees/${id}`),
+  getStats: () => api.get('/employees/stats'),
 };
 
 // User Management API (Admin only)
