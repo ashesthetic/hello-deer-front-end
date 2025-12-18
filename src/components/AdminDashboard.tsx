@@ -7,6 +7,7 @@ import WeeklyFuelTrendCard from './WeeklyFuelTrendCard';
 import MonthlySalesTrendCard from './MonthlySalesTrendCard';
 import MonthlyFuelTrendCard from './MonthlyFuelTrendCard';
 import FuelTrendCard from './FuelTrendCard';
+import DashboardStatsCards from './DashboardStatsCards';
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -22,6 +23,12 @@ const AdminDashboard: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
       <div className="px-4 py-6 sm:px-0 space-y-8">
+        {/* Dashboard Stats Cards */}
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Overview</h2>
+          <DashboardStatsCards />
+        </div>
+
         {/* Dashboard Section */}
         <div>
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Dashboard</h2>
