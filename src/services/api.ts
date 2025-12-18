@@ -196,6 +196,7 @@ export const authApi = {
   login: (credentials: LoginCredentials) => api.post('/login', credentials),
   logout: () => api.post('/logout'),
   profile: () => api.get('/user/profile'),
+  updateProfile: (data: { name: string; email: string; password?: string }) => api.put('/user/profile', data),
 };
 
 // Settlement Report interface

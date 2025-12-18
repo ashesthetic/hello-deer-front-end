@@ -195,6 +195,7 @@ const UserManagementPage: React.FC = () => {
                     <option value="viewer">Viewer</option>
                     <option value="editor">Editor</option>
                     <option value="admin">Admin</option>
+                    <option value="staff">Staff</option>
                   </select>
                 </div>
                 <div className="flex space-x-3">

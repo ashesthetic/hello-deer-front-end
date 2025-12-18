@@ -2,7 +2,7 @@ export interface User {
   id: number;
   name: string;
   email: string;
-  role: 'admin' | 'editor' | 'viewer';
+  role: 'admin' | 'editor' | 'viewer' | 'staff';
   email_verified_at?: string;
   created_at: string;
   updated_at: string;
@@ -36,14 +36,14 @@ export interface CreateUserData {
   name: string;
   email: string;
   password: string;
-  role: 'admin' | 'editor' | 'viewer';
+  role: 'admin' | 'editor' | 'viewer' | 'staff';
 }
 
 export interface UpdateUserData {
   name: string;
   email: string;
   password?: string;
-  role: 'admin' | 'editor' | 'viewer';
+  role: 'admin' | 'editor' | 'viewer' | 'staff';
 }
 
 export interface DailySale {

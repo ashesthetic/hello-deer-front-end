@@ -12,6 +12,10 @@ export const isViewer = (user: User | null): boolean => {
   return user?.role === 'viewer';
 };
 
+export const isStaff = (user: User | null): boolean => {
+  return user?.role === 'staff';
+};
+
 export const canCreate = (user: User | null): boolean => {
   return isAdmin(user) || isEditor(user);
 };
@@ -92,6 +96,8 @@ export const getRoleDisplayName = (role: string): string => {
       return 'Editor';
     case 'viewer':
       return 'Viewer';
+    case 'staff':
+      return 'Staff';
     default:
       return role;
   }
@@ -105,6 +111,8 @@ export const getRoleColor = (role: string): string => {
       return 'bg-blue-100 text-blue-800';
     case 'viewer':
       return 'bg-gray-100 text-gray-800';
+    case 'staff':
+      return 'bg-purple-100 text-purple-800';
     default:
       return 'bg-gray-100 text-gray-800';
   }
