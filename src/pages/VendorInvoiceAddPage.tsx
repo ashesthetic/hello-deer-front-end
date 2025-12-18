@@ -5,7 +5,7 @@ import { RootState } from '../store';
 import { vendorInvoicesApi, VendorInvoiceFormData } from '../services/api';
 import { canCreate } from '../utils/permissions';
 import { usePageTitle } from '../hooks/usePageTitle';
-import { getTodayString } from '../utils/dateUtils';
+import { getTodayForInput } from '../utils/dateUtils';
 import { setupDateInput } from '../utils/dateInputUtils';
 
 interface Vendor {
@@ -29,7 +29,7 @@ const VendorInvoiceAddPage: React.FC = () => {
   const [formData, setFormData] = useState<VendorInvoiceFormData>({
     vendor_id: 0,
     invoice_number: '',
-    invoice_date: getTodayString(),
+    invoice_date: getTodayForInput(),
     status: 'Unpaid',
     type: 'Expense',
     payment_date: '',

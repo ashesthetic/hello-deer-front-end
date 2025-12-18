@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { DailySale, DailyFuel, FuelVolume, LoginCredentials, CreateUserData, UpdateUserData, Vendor, CreateVendorData, UpdateVendorData } from '../types';
+import { DailySale, DailyFuel, FuelVolume, LoginCredentials, CreateUserData, UpdateUserData, Vendor, CreateVendorData, UpdateVendorData, Owner, CreateOwnerData, UpdateOwnerData, OwnerEquity, CreateOwnerEquityData, UpdateOwnerEquityData, OwnerEquitySummary, OwnerSummary } from '../types';
 
 // Employee interfaces
 export interface Employee {
@@ -775,6 +775,26 @@ export interface ProfitPercentages {
 
 export const profitApi = {
   getPercentages: () => api.get<ProfitPercentages>('/profit/percentages'),
+};
+
+// Owner API
+export const ownersApi = {
+  getAll: (params?: any) => api.get('/owners', { params }),
+  getById: (id: number) => api.get(`/owners/${id}`),
+  create: (data: CreateOwnerData) => api.post('/owners', data),
+  update: (id: number, data: UpdateOwnerData) => api.put(`/owners/${id}`, data),
+  delete: (id: number) => api.delete(`/owners/${id}`),
+};
+
+// Owner Equity API
+export const ownerEquitiesApi = {
+  getAll: (params?: any) => api.get('/owner-equities', { params }),
+  getById: (id: number) => api.get(`/owner-equities/${id}`),
+  create: (data: CreateOwnerEquityData) => api.post('/owner-equities', data),
+  update: (id: number, data: UpdateOwnerEquityData) => api.put(`/owner-equities/${id}`, data),
+  delete: (id: number) => api.delete(`/owner-equities/${id}`),
+  getSummary: () => api.get('/owner-equities/summary'),
+  getOwnerSummary: (ownerId: number) => api.get(`/owners/${ownerId}/equity-summary`),
 };
 
 export default api; 

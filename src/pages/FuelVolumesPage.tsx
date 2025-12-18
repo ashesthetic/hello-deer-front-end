@@ -98,9 +98,21 @@ const FuelVolumesPage: React.FC = () => {
   };
 
   const getVolumeEndOfDay = (fuelVolume: FuelVolume) => {
+    // For evening shifts, return the volume end of day if available
     if (fuelVolume.shift === 'evening' && fuelVolume.volume_end_of_day) {
       return fuelVolume.volume_end_of_day;
     }
+    
+    // For morning shifts, find the corresponding evening shift for the same date
+    if (fuelVolume.shift === 'morning') {
+      const eveningShift = allFuelVolumes.find(fv => 
+        fv.date === fuelVolume.date && fv.shift === 'evening'
+      );
+      if (eveningShift && eveningShift.volume_end_of_day) {
+        return eveningShift.volume_end_of_day;
+      }
+    }
+    
     return null;
   };
 

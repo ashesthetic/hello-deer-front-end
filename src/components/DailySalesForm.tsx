@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { DailySale } from '../types';
 import { formatCurrency } from '../utils/currencyUtils';
+import { getTodayForInput } from '../utils/dateUtils';
 
 interface DailySalesFormProps {
   initialData?: DailySale;
@@ -15,8 +16,10 @@ const DailySalesForm: React.FC<DailySalesFormProps> = ({
   onCancel,
   loading = false
 }) => {
+  const todayDate = getTodayForInput();
+  
   const [formData, setFormData] = useState<DailySale>({
-    date: new Date().toISOString().split('T')[0], // Set today's date as default
+    date: todayDate, // Use today's date for input field
     fuel_sale: undefined,
     store_sale: undefined,
     store_discount: undefined,
@@ -51,10 +54,28 @@ const DailySalesForm: React.FC<DailySalesFormProps> = ({
     aeroplan_discount: undefined,
     tobacco_25: undefined,
     tobacco_20: undefined,
+    tobacco_30: undefined,
+    tobacco_35: undefined,
+    tobacco_40: undefined,
+    tobacco_45: undefined,
+    tobacco_50: undefined,
+    tobacco_55: undefined,
+    tobacco_60: undefined,
+    tobacco_65: undefined,
+    tobacco_70: undefined,
+    tobacco_75: undefined,
+    tobacco_80: undefined,
+    tobacco_85: undefined,
+    tobacco_90: undefined,
+    tobacco_95: undefined,
+    tobacco_100: undefined,
     lottery: undefined,
     prepay: undefined,
     notes: ''
   });
+
+  // Separate state for cash on hand input display
+  const [cashOnHandInput, setCashOnHandInput] = useState<string>('');
 
   useEffect(() => {
     if (initialData) {
@@ -95,9 +116,29 @@ const DailySalesForm: React.FC<DailySalesFormProps> = ({
         aeroplan_discount: initialData.aeroplan_discount,
         tobacco_25: initialData.tobacco_25,
         tobacco_20: initialData.tobacco_20,
+        tobacco_30: initialData.tobacco_30,
+        tobacco_35: initialData.tobacco_35,
+        tobacco_40: initialData.tobacco_40,
+        tobacco_45: initialData.tobacco_45,
+        tobacco_50: initialData.tobacco_50,
+        tobacco_55: initialData.tobacco_55,
+        tobacco_60: initialData.tobacco_60,
+        tobacco_65: initialData.tobacco_65,
+        tobacco_70: initialData.tobacco_70,
+        tobacco_75: initialData.tobacco_75,
+        tobacco_80: initialData.tobacco_80,
+        tobacco_85: initialData.tobacco_85,
+        tobacco_90: initialData.tobacco_90,
+        tobacco_95: initialData.tobacco_95,
+        tobacco_100: initialData.tobacco_100,
         lottery: initialData.lottery,
         prepay: initialData.prepay,
       });
+      
+      // Initialize cash on hand input display
+      if (initialData.cash_on_hand !== undefined) {
+        setCashOnHandInput(initialData.cash_on_hand.toString());
+      }
     }
   }, [initialData]);
 
@@ -109,6 +150,56 @@ const DailySalesForm: React.FC<DailySalesFormProps> = ({
   };
 
   const handleCurrencyInputChange = (field: keyof DailySale, value: string) => {
+    // Special handling for cash_on_hand to allow negative values
+    if (field === 'cash_on_hand') {
+      // Update the input display value
+      setCashOnHandInput(value);
+      
+      // Allow negative numbers, decimal points, and digits
+      let cleanValue = value.replace(/[^\d.-]/g, '');
+      
+      // Handle empty input
+      if (!cleanValue) {
+        setFormData(prev => ({
+          ...prev,
+          [field]: undefined
+        }));
+        return;
+      }
+      
+      // Handle just a minus sign - allow it to be typed but don't store as number yet
+      if (cleanValue === '-') {
+        // Don't update the form data yet, just allow the input to show the minus sign
+        return;
+      }
+      
+      // Ensure only one decimal point
+      const parts = cleanValue.split('.');
+      if (parts.length > 2) {
+        cleanValue = parts[0] + '.' + parts.slice(1).join('');
+      }
+      
+      // Ensure minus sign is only at the beginning
+      if (cleanValue.includes('-') && !cleanValue.startsWith('-')) {
+        cleanValue = cleanValue.replace(/-/g, '');
+      }
+      
+      // Convert to number
+      const numberValue = parseFloat(cleanValue);
+      
+      // Check if it's a valid number
+      if (isNaN(numberValue)) {
+        return;
+      }
+      
+      setFormData(prev => ({
+        ...prev,
+        [field]: numberValue
+      }));
+      return;
+    }
+    
+    // Original behavior for all other fields
     // Remove all non-numeric characters
     const numericValue = value.replace(/[^\d]/g, '');
     
@@ -167,6 +258,21 @@ const DailySalesForm: React.FC<DailySalesFormProps> = ({
       aeroplan_discount: formData.aeroplan_discount || 0,
       tobacco_25: formData.tobacco_25 || 0,
       tobacco_20: formData.tobacco_20 || 0,
+      tobacco_30: formData.tobacco_30 || 0,
+      tobacco_35: formData.tobacco_35 || 0,
+      tobacco_40: formData.tobacco_40 || 0,
+      tobacco_45: formData.tobacco_45 || 0,
+      tobacco_50: formData.tobacco_50 || 0,
+      tobacco_55: formData.tobacco_55 || 0,
+      tobacco_60: formData.tobacco_60 || 0,
+      tobacco_65: formData.tobacco_65 || 0,
+      tobacco_70: formData.tobacco_70 || 0,
+      tobacco_75: formData.tobacco_75 || 0,
+      tobacco_80: formData.tobacco_80 || 0,
+      tobacco_85: formData.tobacco_85 || 0,
+      tobacco_90: formData.tobacco_90 || 0,
+      tobacco_95: formData.tobacco_95 || 0,
+      tobacco_100: formData.tobacco_100 || 0,
       lottery: formData.lottery || 0,
       prepay: formData.prepay || 0,
     };
@@ -199,8 +305,7 @@ const DailySalesForm: React.FC<DailySalesFormProps> = ({
   
   const totalLoyaltyDiscounts = (Number(formData.journey_discount) || 0) + (Number(formData.aeroplan_discount) || 0);
   
-  const totalLowMarginItems = (Number(formData.tobacco_25) || 0) + (Number(formData.tobacco_20) || 0) + 
-                              (Number(formData.lottery) || 0) + (Number(formData.prepay) || 0);
+  const totalLowMarginItems = (Number(formData.tobacco_25) || 0) + (Number(formData.tobacco_20) || 0) + (Number(formData.lottery) || 0) + (Number(formData.prepay) || 0);
 
   return (
     <div className="max-w-6xl mx-auto p-6 bg-white rounded-lg shadow-lg">
@@ -275,10 +380,10 @@ const DailySalesForm: React.FC<DailySalesFormProps> = ({
               <input
                 type="text"
                 required
-                value={formData.cash_on_hand !== undefined ? Number(formData.cash_on_hand).toFixed(2) : ''}
+                value={cashOnHandInput}
                 onChange={(e) => handleCurrencyInputChange('cash_on_hand', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="0.00"
+                placeholder="0.00 (negative allowed)"
               />
             </div>
           </div>

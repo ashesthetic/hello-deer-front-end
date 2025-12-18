@@ -398,62 +398,94 @@ const VendorInvoicesPage: React.FC = () => {
                     </td>
                   </tr>
                 ) : (
-                  invoices.map((invoice) => (
-                    <tr key={invoice.id} className="hover:bg-gray-50">
-                      <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {invoice.id}
+                  <>
+                    {invoices.map((invoice) => (
+                      <tr key={invoice.id} className="hover:bg-gray-50">
+                        <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {invoice.id}
+                        </td>
+                        <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {invoice.invoice_number || '-'}
+                        </td>
+                        <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {formatDateForDisplay(invoice.invoice_date)}
+                        </td>
+                        <td className="px-3 py-4 text-sm text-gray-900">
+                          <div className="truncate max-w-xs" title={invoice.vendor?.name}>
+                            {invoice.vendor?.name}
+                          </div>
+                        </td>
+                        <td className="px-3 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          {formatCurrency(Number(invoice.total))}
+                        </td>
+                        <td className="px-3 py-4 whitespace-nowrap">
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getTypeBadgeClass(invoice.type)}`}>
+                            {invoice.type}
+                          </span>
+                        </td>
+                        <td className="px-3 py-4 whitespace-nowrap">
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeClass(invoice.status)}`}>
+                            {invoice.status}
+                          </span>
+                        </td>
+                        <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {invoice.payment_date ? formatDateForDisplay(invoice.payment_date) : '-'}
+                        </td>
+                        <td className="px-3 py-4 whitespace-nowrap text-sm font-medium">
+                          <div className="flex space-x-1">
+                            <button
+                              onClick={() => handleViewInvoice(invoice)}
+                              className="text-blue-600 hover:text-blue-900 text-xs"
+                            >
+                              View
+                            </button>
+                            <button
+                              onClick={() => handleEditInvoice(invoice)}
+                              className="text-indigo-600 hover:text-indigo-900 text-xs"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDeleteInvoice(invoice)}
+                              className="text-red-600 hover:text-red-900 text-xs"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                    {/* Total Row */}
+                    <tr className="bg-gray-50 border-t-2 border-gray-300">
+                      <td className="px-3 py-4 whitespace-nowrap text-sm font-bold text-gray-900">
+                        Total
                       </td>
                       <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {invoice.invoice_number || '-'}
+                        -
                       </td>
                       <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {formatDateForDisplay(invoice.invoice_date)}
+                        -
                       </td>
                       <td className="px-3 py-4 text-sm text-gray-900">
-                        <div className="truncate max-w-xs" title={invoice.vendor?.name}>
-                          {invoice.vendor?.name}
-                        </div>
+                        -
                       </td>
-                      <td className="px-3 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {formatCurrency(Number(invoice.total))}
-                      </td>
-                      <td className="px-3 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getTypeBadgeClass(invoice.type)}`}>
-                          {invoice.type}
-                        </span>
-                      </td>
-                      <td className="px-3 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeClass(invoice.status)}`}>
-                          {invoice.status}
-                        </span>
+                      <td className="px-3 py-4 whitespace-nowrap text-sm font-bold text-gray-900">
+                        {formatCurrency(invoices.reduce((sum, invoice) => sum + Number(invoice.total), 0))}
                       </td>
                       <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {invoice.payment_date ? formatDateForDisplay(invoice.payment_date) : '-'}
+                        -
                       </td>
-                      <td className="px-3 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex space-x-1">
-                          <button
-                            onClick={() => handleViewInvoice(invoice)}
-                            className="text-blue-600 hover:text-blue-900 text-xs"
-                          >
-                            View
-                          </button>
-                          <button
-                            onClick={() => handleEditInvoice(invoice)}
-                            className="text-indigo-600 hover:text-indigo-900 text-xs"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDeleteInvoice(invoice)}
-                            className="text-red-600 hover:text-red-900 text-xs"
-                          >
-                            Delete
-                          </button>
-                        </div>
+                      <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
+                        -
+                      </td>
+                      <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
+                        -
+                      </td>
+                      <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
+                        -
                       </td>
                     </tr>
-                  ))
+                  </>
                 )}
               </tbody>
             </table>

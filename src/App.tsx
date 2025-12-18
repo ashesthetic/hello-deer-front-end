@@ -53,6 +53,14 @@ import ProviderBillsPage from './pages/ProviderBillsPage';
 import ProviderBillAddPage from './pages/ProviderBillAddPage';
 import ProviderBillEditPage from './pages/ProviderBillEditPage';
 import ProviderBillViewPage from './pages/ProviderBillViewPage';
+import OwnersPage from './pages/OwnersPage';
+import OwnerAddPage from './pages/OwnerAddPage';
+import OwnerEditPage from './pages/OwnerEditPage';
+import OwnerViewPage from './pages/OwnerViewPage';
+import OwnerEquitiesPage from './pages/OwnerEquitiesPage';
+import OwnerEquityAddPage from './pages/OwnerEquityAddPage';
+import OwnerEquityEditPage from './pages/OwnerEquityEditPage';
+import OwnerEquityViewPage from './pages/OwnerEquityViewPage';
 
 const App: React.FC = () => {
   const dispatch = useDispatch();
@@ -297,6 +305,42 @@ const App: React.FC = () => {
           <Route 
             path="/accounting/provider-bills/:id/edit" 
             element={isAuthenticated ? <Layout><ProviderBillEditPage /></Layout> : <Navigate to="/login" />} 
+          />
+          
+          {/* Owner Routes */}
+          <Route 
+            path="/accounting/owners" 
+            element={isAuthenticated ? <Layout><OwnersPage /></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/accounting/owners/add" 
+            element={isAuthenticated ? <Layout><OwnerAddPage /></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/accounting/owners/:id" 
+            element={isAuthenticated ? <Layout><OwnerViewPage /></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/accounting/owners/:id/edit" 
+            element={isAuthenticated ? <Layout><OwnerEditPage /></Layout> : <Navigate to="/login" />} 
+          />
+          
+          {/* Owner Equity Routes */}
+          <Route 
+            path="/accounting/owner-equities" 
+            element={isAuthenticated ? <Layout><OwnerEquitiesPage /></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/accounting/owner-equities/add" 
+            element={isAuthenticated ? <Layout><OwnerEquityAddPage /></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/accounting/owner-equities/:id" 
+            element={isAuthenticated ? <Layout><OwnerEquityViewPage /></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/accounting/owner-equities/:id/edit" 
+            element={isAuthenticated ? <Layout><OwnerEquityEditPage /></Layout> : <Navigate to="/login" />} 
           />
           
           {/* Users Route */}
