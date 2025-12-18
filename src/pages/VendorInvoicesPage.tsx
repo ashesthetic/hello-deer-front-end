@@ -335,7 +335,7 @@ const VendorInvoicesPage: React.FC = () => {
                     #
                   </th>
                   <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
-                    Invoice No.
+                    Reference
                   </th>
                   <th 
                     className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 w-24"
@@ -405,7 +405,7 @@ const VendorInvoicesPage: React.FC = () => {
                           {invoice.id}
                         </td>
                         <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {invoice.invoice_number || '-'}
+                          {invoice.reference || '-'}
                         </td>
                         <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
                           {formatDateForDisplay(invoice.invoice_date)}
