@@ -8,6 +8,8 @@ import { Transaction, TransactionFilters, TransactionSummary, BankAccount } from
 import { canCreate } from '../utils/permissions';
 import { usePageTitle } from '../hooks/usePageTitle';
 import { useUrlState } from '../hooks/useUrlState';
+import TransactionView from '../components/TransactionView';
+import BankTransferModal from '../components/BankTransferModal';
 
 type SortField = 'created_at' | 'amount' | 'type' | 'description';
 
@@ -26,6 +28,8 @@ const TransactionsPage: React.FC = () => {
   const [totalItems, setTotalItems] = useState(0);
   const [activeTab, setActiveTab] = useState<'all' | 'income' | 'expense' | 'transfer'>('all');
   const [showBankTransferModal, setShowBankTransferModal] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const [showTransactionView, setShowTransactionView] = useState(false);
   
   // Filter states
   const [selectedBankAccount, setSelectedBankAccount] = useState<string>('all');
@@ -119,7 +123,8 @@ const TransactionsPage: React.FC = () => {
   };
 
   const handleViewTransaction = (transaction: Transaction) => {
-    navigate(`/accounting/transactions/${transaction.id}`);
+    setSelectedTransaction(transaction);
+    setShowTransactionView(true);
   };
 
   const handleEditTransaction = (transaction: Transaction) => {
@@ -613,26 +618,25 @@ const TransactionsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Bank Transfer Modal would go here */}
-      {showBankTransferModal && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div className="mt-3 text-center">
-              <h3 className="text-lg font-medium text-gray-900">Bank Transfer</h3>
-              <p className="text-sm text-gray-500 mt-2">
-                Bank transfer modal will be implemented here.
-              </p>
-              <div className="mt-4">
-                <button
-                  onClick={() => setShowBankTransferModal(false)}
-                  className="px-4 py-2 bg-gray-300 text-black rounded-md hover:bg-gray-400"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+      {/* Bank Transfer Modal */}
+      <BankTransferModal
+        isOpen={showBankTransferModal}
+        onClose={() => setShowBankTransferModal(false)}
+        onSuccess={() => {
+          fetchTransactions(currentPage);
+          fetchSummary();
+        }}
+      />
+
+      {/* Transaction View Modal */}
+      {showTransactionView && selectedTransaction && (
+        <TransactionView
+          transaction={selectedTransaction}
+          onClose={() => {
+            setShowTransactionView(false);
+            setSelectedTransaction(null);
+          }}
+        />
       )}
     </div>
   );
