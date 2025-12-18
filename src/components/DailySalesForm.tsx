@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
 import { DailySale } from '../types';
 
 interface DailySalesFormProps {
@@ -49,15 +47,7 @@ const DailySalesForm: React.FC<DailySalesFormProps> = ({
     onSubmit(formData);
   };
 
-  const quillModules = {
-    toolbar: [
-      [{ 'header': [1, 2, false] }],
-      ['bold', 'italic', 'underline', 'strike'],
-      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-      ['link', 'image'],
-      ['clean']
-    ],
-  };
+
 
   return (
     <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-lg">
@@ -197,12 +187,12 @@ const DailySalesForm: React.FC<DailySalesFormProps> = ({
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Notes
           </label>
-          <ReactQuill
+          <textarea
             value={formData.notes || ''}
-            onChange={(value) => handleInputChange('notes', value)}
-            modules={quillModules}
-            className="bg-white"
-            style={{ height: '150px' }}
+            onChange={(e) => handleInputChange('notes', e.target.value)}
+            rows={6}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-vertical"
+            placeholder="Enter any additional notes or comments..."
           />
         </div>
 

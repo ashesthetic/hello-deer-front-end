@@ -134,10 +134,9 @@ const DailySalesDetail: React.FC<DailySalesDetailProps> = ({
       {sale.notes && (
         <div className="mt-6 bg-gray-50 p-4 rounded-lg">
           <h3 className="text-lg font-semibold mb-4 text-gray-800">Notes</h3>
-          <div 
-            className="prose max-w-none"
-            dangerouslySetInnerHTML={{ __html: sale.notes }}
-          />
+          <div className="whitespace-pre-wrap text-gray-900">
+            {sale.notes}
+          </div>
         </div>
       )}
     </div>
