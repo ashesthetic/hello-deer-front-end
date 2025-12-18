@@ -11,7 +11,7 @@ import { formatCurrency } from '../utils/dateUtils';
 import Modal from '../components/Modal';
 import { ownersApi } from '../services/api';
 
-type SortField = 'transaction_date' | 'amount' | 'transaction_type' | 'created_at' | 'updated_at';
+type SortField = 'date' | 'amount' | 'type' | 'created_at' | 'updated_at';
 
 const PER_PAGE_OPTIONS = [50, 100, 150, 200];
 
@@ -47,7 +47,7 @@ const OwnerEquitiesPage: React.FC = () => {
     clearFilters
   } = useUrlState({
     defaultPerPage: 50,
-    defaultSortField: 'transaction_date',
+    defaultSortField: 'date',
     defaultSortDirection: 'desc'
   });
 
@@ -226,8 +226,8 @@ const OwnerEquitiesPage: React.FC = () => {
             <p className="text-2xl font-bold text-gray-900">{formatCurrency(summary.total_equity)}</p>
           </div>
           <div className="bg-white p-4 rounded-lg shadow">
-            <h3 className="text-sm font-medium text-gray-500">Total Contributions</h3>
-            <p className="text-2xl font-bold text-green-600">{formatCurrency(summary.total_contributions)}</p>
+            <h3 className="text-sm font-medium text-gray-500">Total Investments</h3>
+            <p className="text-2xl font-bold text-green-600">{formatCurrency(summary.total_investments)}</p>
           </div>
         </div>
       )}
@@ -287,18 +287,18 @@ const OwnerEquitiesPage: React.FC = () => {
                 <tr>
                   <th 
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                    onClick={() => handleSort('transaction_date')}
+                    onClick={() => handleSort('date')}
                   >
-                    Date {getSortIcon('transaction_date')}
+                    Date {getSortIcon('date')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Owner
                   </th>
                   <th 
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                    onClick={() => handleSort('transaction_type')}
+                    onClick={() => handleSort('type')}
                   >
-                    Type {getSortIcon('transaction_type')}
+                    Type {getSortIcon('type')}
                   </th>
                   <th 
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
@@ -318,23 +318,23 @@ const OwnerEquitiesPage: React.FC = () => {
                 {transactions.map((transaction) => (
                   <tr key={transaction.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{transaction.formatted_transaction_date}</div>
+                      <div className="text-sm text-gray-900">{transaction.formatted_date}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">{transaction.owner?.name}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        transaction.is_positive 
+                        transaction.is_investment 
                           ? 'bg-green-100 text-green-800' 
                           : 'bg-red-100 text-red-800'
                       }`}>
-                        {transaction.transaction_type_display}
+                        {transaction.type_display}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className={`text-sm font-medium ${
-                        transaction.is_positive ? 'text-green-600' : 'text-red-600'
+                        transaction.is_investment ? 'text-green-600' : 'text-red-600'
                       }`}>
                         {transaction.formatted_amount}
                       </div>
@@ -471,9 +471,9 @@ const OwnerEquitiesPage: React.FC = () => {
         {transactionToDelete && (
           <div className="mt-2 text-sm text-gray-600">
             <p><strong>Owner:</strong> {transactionToDelete.owner?.name}</p>
-            <p><strong>Type:</strong> {transactionToDelete.transaction_type_display}</p>
+            <p><strong>Type:</strong> {transactionToDelete.type_display}</p>
             <p><strong>Amount:</strong> {transactionToDelete.formatted_amount}</p>
-            <p><strong>Date:</strong> {transactionToDelete.formatted_transaction_date}</p>
+            <p><strong>Date:</strong> {transactionToDelete.formatted_date}</p>
           </div>
         )}
       </Modal>

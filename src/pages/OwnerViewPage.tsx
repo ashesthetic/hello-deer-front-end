@@ -179,16 +179,12 @@ const OwnerViewPage: React.FC = () => {
                 <p className="text-sm text-gray-900 font-semibold">{formatCurrency(owner.total_equity || 0)}</p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-500">Total Contributions</label>
-                <p className="text-sm text-gray-900">{formatCurrency(owner.total_contributions || 0)}</p>
+                <label className="block text-sm font-medium text-gray-500">Total Investments</label>
+                <p className="text-sm text-gray-900">{formatCurrency(owner.total_investments || 0)}</p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-500">Total Withdrawals</label>
                 <p className="text-sm text-gray-900">{formatCurrency(owner.total_withdrawals || 0)}</p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-500">Total Distributions</label>
-                <p className="text-sm text-gray-900">{formatCurrency(owner.total_distributions || 0)}</p>
               </div>
             </div>
           </div>
@@ -219,15 +215,15 @@ const OwnerViewPage: React.FC = () => {
                     {owner.equity_transactions.map((transaction) => (
                       <tr key={transaction.id}>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {transaction.formatted_transaction_date}
+                          {transaction.formatted_date}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                            transaction.is_positive 
+                            transaction.is_investment 
                               ? 'bg-green-100 text-green-800' 
                               : 'bg-red-100 text-red-800'
                           }`}>
-                            {transaction.transaction_type_display}
+                            {transaction.type_display}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">

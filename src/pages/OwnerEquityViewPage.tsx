@@ -84,45 +84,31 @@ const OwnerEquityViewPage: React.FC = () => {
             <p className="text-sm text-gray-900">{transaction.owner?.name || '-'}</p>
           </div>
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-500">Transaction Type</label>
+            <label className="block text-sm font-medium text-gray-500">Type</label>
             <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-              transaction.is_positive 
+              transaction.is_investment 
                 ? 'bg-green-100 text-green-800' 
                 : 'bg-red-100 text-red-800'
             }`}>
-              {transaction.transaction_type_display}
+              {transaction.type_display}
             </span>
           </div>
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-500">Amount</label>
-            <p className={`text-lg font-semibold ${transaction.is_positive ? 'text-green-600' : 'text-red-600'}`}>{transaction.formatted_amount}</p>
+            <p className={`text-lg font-semibold ${transaction.is_investment ? 'text-green-600' : 'text-red-600'}`}>{transaction.formatted_amount}</p>
           </div>
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-500">Transaction Date</label>
-            <p className="text-sm text-gray-900">{transaction.formatted_transaction_date}</p>
+            <label className="block text-sm font-medium text-gray-500">Date</label>
+            <p className="text-sm text-gray-900">{transaction.formatted_date}</p>
           </div>
-          {transaction.reference_number && (
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-500">Description</label>
+            <p className="text-sm text-gray-900">{transaction.description || '-'}</p>
+          </div>
+          {transaction.note && (
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-500">Reference Number</label>
-              <p className="text-sm text-gray-900">{transaction.reference_number}</p>
-            </div>
-          )}
-          {transaction.payment_method && (
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-500">Payment Method</label>
-              <p className="text-sm text-gray-900">{transaction.payment_method}</p>
-            </div>
-          )}
-          {transaction.description && (
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-500">Description</label>
-              <p className="text-sm text-gray-900">{transaction.description}</p>
-            </div>
-          )}
-          {transaction.notes && (
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-500">Notes</label>
-              <p className="text-sm text-gray-900 whitespace-pre-wrap">{transaction.notes}</p>
+              <label className="block text-sm font-medium text-gray-500">Note</label>
+              <p className="text-sm text-gray-900 whitespace-pre-wrap">{transaction.note}</p>
             </div>
           )}
         </div>

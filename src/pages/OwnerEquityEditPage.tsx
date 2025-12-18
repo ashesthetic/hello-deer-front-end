@@ -18,13 +18,11 @@ const OwnerEquityEditPage: React.FC = () => {
   const [owners, setOwners] = useState<Owner[]>([]);
   const [formData, setFormData] = useState<UpdateOwnerEquityData>({
     owner_id: 0,
-    transaction_type: 'contribution',
+    type: 'investment',
     amount: 0,
-    transaction_date: '',
-    reference_number: '',
-    payment_method: '',
+    date: '',
     description: '',
-    notes: '',
+    note: '',
   });
 
   useEffect(() => {
@@ -42,19 +40,17 @@ const OwnerEquityEditPage: React.FC = () => {
       setTransaction(transactionData);
       
       // Format the date for the input field (YYYY-MM-DD format)
-      const formattedDate = transactionData.transaction_date ? 
-        new Date(transactionData.transaction_date).toISOString().split('T')[0] : 
+      const formattedDate = transactionData.date ? 
+        new Date(transactionData.date).toISOString().split('T')[0] : 
         '';
       
       setFormData({
         owner_id: transactionData.owner_id,
-        transaction_type: transactionData.transaction_type,
+        type: transactionData.type,
         amount: transactionData.amount,
-        transaction_date: formattedDate,
-        reference_number: transactionData.reference_number || '',
-        payment_method: transactionData.payment_method || '',
+        date: formattedDate,
         description: transactionData.description || '',
-        notes: transactionData.notes || '',
+        note: transactionData.note || '',
       });
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to fetch transaction');
@@ -99,14 +95,7 @@ const OwnerEquityEditPage: React.FC = () => {
     setError(null);
 
     try {
-      // Ensure the data is in the correct format for the backend
-      const submitData = {
-        ...formData,
-        transaction_date: formData.transaction_date, // Already in YYYY-MM-DD format
-        transaction_type: formData.transaction_type, // Ensure this is properly set
-      };
-      
-      await ownerEquitiesApi.update(parseInt(id), submitData);
+      await ownerEquitiesApi.update(parseInt(id), formData);
       navigate('/accounting/owner-equities');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to update transaction');
@@ -188,21 +177,19 @@ const OwnerEquityEditPage: React.FC = () => {
             </div>
 
             <div>
-              <label htmlFor="transaction_type" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-2">
                 Transaction Type *
               </label>
               <select
-                id="transaction_type"
-                name="transaction_type"
-                value={formData.transaction_type}
+                id="type"
+                name="type"
+                value={formData.type}
                 onChange={handleInputChange}
                 required
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="contribution">Contribution</option>
+                <option value="investment">Investment</option>
                 <option value="withdrawal">Withdrawal</option>
-                <option value="distribution">Distribution</option>
-                <option value="adjustment">Adjustment</option>
               </select>
             </div>
 
@@ -224,46 +211,16 @@ const OwnerEquityEditPage: React.FC = () => {
             </div>
 
             <div>
-              <label htmlFor="transaction_date" className="block text-sm font-medium text-gray-700 mb-2">
-                Transaction Date *
+              <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-2">
+                Date *
               </label>
               <input
                 type="date"
-                id="transaction_date"
-                name="transaction_date"
-                value={formData.transaction_date}
+                id="date"
+                name="date"
+                value={formData.date}
                 onChange={handleInputChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="reference_number" className="block text-sm font-medium text-gray-700 mb-2">
-                Reference Number
-              </label>
-              <input
-                type="text"
-                id="reference_number"
-                name="reference_number"
-                value={formData.reference_number}
-                onChange={handleInputChange}
-                placeholder="Check number, transfer ID, etc."
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="payment_method" className="block text-sm font-medium text-gray-700 mb-2">
-                Payment Method
-              </label>
-              <input
-                type="text"
-                id="payment_method"
-                name="payment_method"
-                value={formData.payment_method}
-                onChange={handleInputChange}
-                placeholder="Cash, Check, E-transfer, etc."
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -275,7 +232,7 @@ const OwnerEquityEditPage: React.FC = () => {
 
             <div className="md:col-span-2">
               <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
-                Description
+                Description *
               </label>
               <input
                 type="text"
@@ -284,18 +241,19 @@ const OwnerEquityEditPage: React.FC = () => {
                 value={formData.description}
                 onChange={handleInputChange}
                 placeholder="Brief description of the transaction"
+                required
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
             <div className="md:col-span-2">
-              <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-2">
-                Notes
+              <label htmlFor="note" className="block text-sm font-medium text-gray-700 mb-2">
+                Note
               </label>
               <textarea
-                id="notes"
-                name="notes"
-                value={formData.notes}
+                id="note"
+                name="note"
+                value={formData.note}
                 onChange={handleInputChange}
                 rows={4}
                 placeholder="Additional notes about this transaction"
