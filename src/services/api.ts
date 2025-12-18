@@ -983,4 +983,64 @@ export const dailyAtmApi = {
   resolve: (id: number, data: { bank_account_id: number; notes?: string }) => api.post(`/daily-atm/${id}/resolve`, data),
 };
 
+// Smokes Category Interfaces
+export interface SmokesCategory {
+  id: number;
+  name: string;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+export interface SmokesCategoryFormData {
+  name: string;
+}
+
+// Smokes Category API
+export const smokesCategoryApi = {
+  getAll: (params?: any) => api.get('/smokes-categories', { params }),
+  getById: (id: number) => api.get(`/smokes-categories/${id}`),
+  create: (data: SmokesCategoryFormData) => api.post('/smokes-categories', data),
+  update: (id: number, data: SmokesCategoryFormData) => api.put(`/smokes-categories/${id}`, data),
+  delete: (id: number) => api.delete(`/smokes-categories/${id}`),
+  withTrashed: (params?: any) => api.get('/smokes-categories/with-trashed', { params }),
+  restore: (id: number) => api.post(`/smokes-categories/${id}/restore`),
+  forceDelete: (id: number) => api.delete(`/smokes-categories/${id}/force-delete`),
+};
+
+// Smokes Interfaces
+export interface Smokes {
+  id: number;
+  date: string;
+  item: string;
+  shift: 'Morning' | 'Evening';
+  start: number;
+  end: number;
+  added: number;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+export interface SmokesFormData {
+  date: string;
+  item: string;
+  shift: 'Morning' | 'Evening';
+  start: number | string;
+  end: number | string;
+  added?: number | string;
+}
+
+// Smokes API
+export const smokesApi = {
+  getAll: (params?: any) => api.get('/smokes', { params }),
+  getById: (id: number) => api.get(`/smokes/${id}`),
+  create: (data: SmokesFormData) => api.post('/smokes', data),
+  update: (id: number, data: SmokesFormData) => api.put(`/smokes/${id}`, data),
+  delete: (id: number) => api.delete(`/smokes/${id}`),
+  withTrashed: (params?: any) => api.get('/smokes/with-trashed', { params }),
+  restore: (id: number) => api.post(`/smokes/${id}/restore`),
+  forceDelete: (id: number) => api.delete(`/smokes/${id}/force-delete`),
+};
+
 export default api;
