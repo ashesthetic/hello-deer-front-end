@@ -54,6 +54,8 @@ import PayrollDetailPage from './pages/PayrollDetailPage';
 import PayrollReportsPage from './pages/PayrollReportsPage';
 import PayrollUploadPage from './pages/PayrollUploadPage';
 import PayrollProcessPage from './pages/PayrollProcessPage';
+import StaffPayStubsListPage from './pages/StaffPayStubsListPage';
+import StaffPayStubDetailPage from './pages/StaffPayStubDetailPage';
 import ResolveHoursPage from './pages/ResolveHoursPage';
 import WorkHoursListPage from './pages/WorkHoursListPage';
 import ExpenseReportPage from './pages/ExpenseReportPage';
@@ -457,6 +459,16 @@ const App: React.FC = () => {
           <Route 
             path="/accounting/vendor-invoices/:id/edit" 
             element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><VendorInvoiceEditPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
+          />
+
+          {/* Staff Pay Stubs routes */}
+          <Route 
+            path="/staff/pay-stubs" 
+            element={isAuthenticated ? <Layout><StaffPayStubsListPage /></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/staff/pay-stubs/:id" 
+            element={isAuthenticated ? <Layout><StaffPayStubDetailPage /></Layout> : <Navigate to="/login" />} 
           />
           
           {/* Provider Routes */}
