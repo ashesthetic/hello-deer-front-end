@@ -198,6 +198,21 @@ export const authApi = {
   profile: () => api.get('/user/profile'),
 };
 
+// Settlement Report interface
+export interface SettlementReportEntry {
+  date: string;
+  remarks: string;
+  debit: number;
+  credit: number;
+}
+
+export interface SettlementReportResponse {
+  data: SettlementReportEntry[];
+  from_date: string;
+  to_date: string;
+  total_entries: number;
+}
+
 // Daily Sales API
 export const dailySalesApi = {
   getAll: (params?: any) => api.get('/daily-sales', { params }),
@@ -209,6 +224,8 @@ export const dailySalesApi = {
     const url = year && month ? `/daily-sales/month/${year}/${month}` : '/daily-sales/month';
     return api.get(url);
   },
+  generateSettlementReport: (fromDate: string, toDate: string) => 
+    api.post('/daily-sales/settlement-report', { from_date: fromDate, to_date: toDate }),
 };
 
 // Daily Fuels API
@@ -424,17 +441,47 @@ export const workHoursApi = {
   getEmployeeHours: (employeeId: number) => api.get(`/employees/${employeeId}/work-hours`),
 };
 
+// Provider interfaces
+export interface Provider {
+  id: number;
+  name: string;
+  service: string;
+  payment_method: 'PAD' | 'Credit Card' | 'E-transfer' | 'Direct Deposit';
+  phone?: string;
+  email?: string;
+  user_id: number;
+  created_at: string;
+  updated_at: string;
+  user?: {
+    id: number;
+    name: string;
+    email: string;
+  };
+}
+
+export interface ProviderFormData {
+  name: string;
+  service: string;
+  payment_method: 'PAD' | 'Credit Card' | 'E-transfer' | 'Direct Deposit';
+  phone?: string;
+  email?: string;
+}
+
 // Vendor Invoice interfaces
 export interface VendorInvoice {
   id: number;
   vendor_id: number;
+  invoice_number?: string;
   invoice_date: string;
   status: 'Paid' | 'Unpaid';
   type: 'Income' | 'Expense';
   payment_date?: string;
   payment_method?: 'Card' | 'Cash' | 'Bank';
   invoice_file_path?: string;
-  amount: number | string;
+  subtotal: number | string;
+  gst: number | string;
+  total: number | string;
+  notes?: string;
   description?: string;
   user_id: number;
   created_at: string;
@@ -452,15 +499,147 @@ export interface VendorInvoice {
 
 export interface VendorInvoiceFormData {
   vendor_id: number;
+  invoice_number?: string;
   invoice_date: string;
   status: 'Paid' | 'Unpaid';
   type: 'Income' | 'Expense';
   payment_date?: string;
   payment_method?: 'Card' | 'Cash' | 'Bank';
   invoice_file?: File;
-  amount: string;
+  gst: string;
+  total: string;
+  notes?: string;
   description?: string;
 }
+
+// Provider API
+export const providersApi = {
+  getAll: (params?: any) => api.get('/providers', { params }),
+  getById: (id: number) => api.get(`/providers/${id}`),
+  create: (data: ProviderFormData) => api.post('/providers', data),
+  update: (id: number, data: ProviderFormData) => api.put(`/providers/${id}`, data),
+  delete: (id: number) => api.delete(`/providers/${id}`),
+};
+
+// Provider Bill interfaces
+export interface ProviderBill {
+  id: number;
+  provider_id: number;
+  billing_date: string;
+  service_date_from: string;
+  service_date_to: string;
+  due_date: string;
+  subtotal: number | string;
+  gst: number | string;
+  total: number | string;
+  notes?: string;
+  invoice_file_path?: string;
+  status: 'Pending' | 'Paid';
+  date_paid?: string;
+  user_id: number;
+  created_at: string;
+  updated_at: string;
+  provider?: {
+    id: number;
+    name: string;
+    service: string;
+  };
+  user?: {
+    id: number;
+    name: string;
+    email: string;
+  };
+}
+
+export interface ProviderBillFormData {
+  provider_id: number;
+  billing_date: string;
+  service_date_from: string;
+  service_date_to: string;
+  due_date: string;
+  gst: string;
+  total: string;
+  notes?: string;
+  invoice_file?: File;
+  status: 'Pending' | 'Paid';
+  date_paid?: string;
+}
+
+// Provider Bill API
+export const providerBillsApi = {
+  getAll: (params?: any) => api.get('/provider-bills', { params }),
+  getById: (id: number) => api.get(`/provider-bills/${id}`),
+  create: (data: ProviderBillFormData) => {
+    const formData = new FormData();
+    
+    // Add basic fields
+    formData.append('provider_id', data.provider_id.toString());
+    formData.append('billing_date', data.billing_date);
+    formData.append('service_date_from', data.service_date_from);
+    formData.append('service_date_to', data.service_date_to);
+    formData.append('due_date', data.due_date);
+    formData.append('gst', data.gst);
+    formData.append('total', data.total);
+    formData.append('status', data.status);
+    
+    // Add optional fields
+    if (data.date_paid) {
+      formData.append('date_paid', data.date_paid);
+    }
+    if (data.notes) {
+      formData.append('notes', data.notes);
+    }
+    
+    // Add file if provided
+    if (data.invoice_file) {
+      formData.append('invoice_file', data.invoice_file);
+    }
+    
+    return api.post('/provider-bills', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+  update: (id: number, data: ProviderBillFormData) => {
+    const formData = new FormData();
+    
+    // Add basic fields
+    formData.append('provider_id', data.provider_id.toString());
+    formData.append('billing_date', data.billing_date);
+    formData.append('service_date_from', data.service_date_from);
+    formData.append('service_date_to', data.service_date_to);
+    formData.append('due_date', data.due_date);
+    formData.append('gst', data.gst);
+    formData.append('total', data.total);
+    formData.append('status', data.status);
+    
+    // Add optional fields
+    if (data.date_paid) {
+      formData.append('date_paid', data.date_paid);
+    }
+    if (data.notes) {
+      formData.append('notes', data.notes);
+    }
+    
+    // Add file if provided
+    if (data.invoice_file) {
+      formData.append('invoice_file', data.invoice_file);
+    }
+
+    // Laravel fix: use POST with _method=PUT
+    formData.append('_method', 'PUT');
+    
+    return api.post(`/provider-bills/${id}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+  delete: (id: number) => api.delete(`/provider-bills/${id}`),
+  getProviders: () => api.get('/provider-bills/providers'),
+  downloadFile: (id: number) => api.get(`/provider-bills/${id}/download`, { responseType: 'blob' }),
+};
 
 // Vendor Invoice API
 export const vendorInvoicesApi = {
@@ -471,10 +650,14 @@ export const vendorInvoicesApi = {
     
     // Add basic fields
     formData.append('vendor_id', data.vendor_id.toString());
+    if (data.invoice_number) {
+      formData.append('invoice_number', data.invoice_number);
+    }
     formData.append('invoice_date', data.invoice_date);
     formData.append('status', data.status);
     formData.append('type', data.type);
-    formData.append('amount', data.amount);
+    formData.append('gst', data.gst);
+    formData.append('total', data.total);
     
     // Add optional fields
     if (data.payment_date) {
@@ -485,6 +668,9 @@ export const vendorInvoicesApi = {
     }
     if (data.description) {
       formData.append('description', data.description);
+    }
+    if (data.notes) {
+      formData.append('notes', data.notes);
     }
     
     // Add file if provided
@@ -503,10 +689,14 @@ export const vendorInvoicesApi = {
     
     // Add basic fields
     formData.append('vendor_id', data.vendor_id.toString());
+    if (data.invoice_number) {
+      formData.append('invoice_number', data.invoice_number);
+    }
     formData.append('invoice_date', data.invoice_date);
     formData.append('status', data.status);
     formData.append('type', data.type);
-    formData.append('amount', data.amount);
+    formData.append('gst', data.gst);
+    formData.append('total', data.total);
     
     // Add optional fields
     if (data.payment_date) {
@@ -517,6 +707,9 @@ export const vendorInvoicesApi = {
     }
     if (data.description) {
       formData.append('description', data.description);
+    }
+    if (data.notes) {
+      formData.append('notes', data.notes);
     }
     
     // Add file if provided
