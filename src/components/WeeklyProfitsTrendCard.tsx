@@ -40,10 +40,16 @@ interface DailyData {
   value: number;
 }
 
+interface TrendData {
+  trend1: number;
+  trend2: number;
+  trend3: number;
+}
+
 const WeeklyProfitsTrendCard: React.FC<WeeklyProfitsTrendCardProps> = ({ title, color }) => {
   const [data, setData] = useState<DailyData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [percentageChange, setPercentageChange] = useState<number>(0);
+  const [percentageChange, setPercentageChange] = useState<TrendData>({ trend1: 0, trend2: 0, trend3: 0 });
 
   const fetchDailyProfitsData = useCallback(async () => {
     setLoading(true);
@@ -59,7 +65,7 @@ const WeeklyProfitsTrendCard: React.FC<WeeklyProfitsTrendCardProps> = ({ title, 
       
       if (salesData.length === 0) {
         setData([]);
-        setPercentageChange(0);
+        setPercentageChange({ trend1: 0, trend2: 0, trend3: 0 });
         setLoading(false);
         return;
       }
@@ -101,12 +107,21 @@ const WeeklyProfitsTrendCard: React.FC<WeeklyProfitsTrendCardProps> = ({ title, 
 
       setData(sortedData);
 
-      // Calculate percentage change - compare first and last days
-      if (sortedData.length >= 2) {
-        const firstDayValue = sortedData[0].value;
-        const lastDayValue = sortedData[sortedData.length - 1].value;
-        const change = firstDayValue !== 0 ? ((lastDayValue - firstDayValue) / firstDayValue) * 100 : 0;
-        setPercentageChange(change);
+      // Calculate percentage changes
+      if (sortedData.length >= 3) {
+        const firstValue = sortedData[0].value;
+        const middleIndex = Math.floor(sortedData.length / 2);
+        const middleValue = sortedData[middleIndex].value;
+        const lastValue = sortedData[sortedData.length - 1].value;
+        
+        // First to middle, middle to last, first to last
+        const trend1 = firstValue !== 0 ? ((middleValue - firstValue) / firstValue) * 100 : 0;
+        const trend2 = middleValue !== 0 ? ((lastValue - middleValue) / middleValue) * 100 : 0;
+        const trend3 = firstValue !== 0 ? ((lastValue - firstValue) / firstValue) * 100 : 0;
+        
+        setPercentageChange({ trend1, trend2, trend3 });
+      } else {
+        setPercentageChange({ trend1: 0, trend2: 0, trend3: 0 });
       }
 
     } catch (error) {
@@ -129,27 +144,87 @@ const WeeklyProfitsTrendCard: React.FC<WeeklyProfitsTrendCardProps> = ({ title, 
     });
   };
 
+  // Create point colors array - first, middle, and last points get yellow color
+  const getPointColors = () => {
+    const colors = data.map(() => color);
+    if (data.length > 0) {
+      colors[0] = '#EAB308'; // Yellow for first
+      if (data.length > 2) {
+        const middleIndex = Math.floor(data.length / 2);
+        colors[middleIndex] = '#EAB308'; // Yellow for middle
+      }
+      colors[data.length - 1] = '#EAB308'; // Yellow for last
+    }
+    return colors;
+  };
+
+  // Create label colors array - matching the point colors
+  const getLabelColors = () => {
+    const colors = data.map(() => '#374151');
+    if (data.length > 0) {
+      colors[0] = '#EAB308'; // Yellow for first
+      if (data.length > 2) {
+        const middleIndex = Math.floor(data.length / 2);
+        colors[middleIndex] = '#EAB308'; // Yellow for middle
+      }
+      colors[data.length - 1] = '#EAB308'; // Yellow for last
+    }
+    return colors;
+  };
+
   const chartData = {
     labels: data.map(item => formatDate(item.date)),
-    datasets: [createLineDataset(title, data.map(item => item.value), color)],
+    datasets: [{
+      ...createLineDataset(title, data.map(item => item.value), color),
+      pointBackgroundColor: getPointColors(),
+    }],
+  };
+
+  const customOptions = {
+    ...lineChartOptions,
+    plugins: {
+      ...lineChartOptions.plugins,
+      datalabels: {
+        ...lineChartOptions.plugins.datalabels,
+        color: (context: any) => {
+          const colors = getLabelColors();
+          return colors[context.dataIndex];
+        },
+      }
+    }
   };
 
   return (
     <ChartCard 
       title={
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between w-full">
           <span>{title}</span>
-          <div className={`text-sm font-medium ${
-            percentageChange >= 0 ? 'text-green-600' : 'text-red-600'
-          }`}>
-            {percentageChange >= 0 ? '+' : ''}{percentageChange.toFixed(1)}%
+          <div className="flex flex-col items-end gap-1">
+            <div className="flex items-center gap-2 text-xs">
+              <span className="text-gray-600">1st→2nd:</span>
+              <span className={`font-medium ${percentageChange.trend1 >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {percentageChange.trend1 >= 0 ? '+' : ''}{percentageChange.trend1.toFixed(1)}%
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-xs">
+              <span className="text-gray-600">2nd→3rd:</span>
+              <span className={`font-medium ${percentageChange.trend2 >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {percentageChange.trend2 >= 0 ? '+' : ''}{percentageChange.trend2.toFixed(1)}%
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-xs">
+              <span className="text-gray-600">1st→3rd:</span>
+              <span className={`font-medium ${percentageChange.trend3 >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {percentageChange.trend3 >= 0 ? '+' : ''}{percentageChange.trend3.toFixed(1)}%
+              </span>
+            </div>
           </div>
         </div>
       }
       subtitle="First to last date trend"
       loading={loading}
     >
-      <Line data={chartData} options={lineChartOptions} />
+      <Line data={chartData} options={customOptions} />
     </ChartCard>
   );
 };

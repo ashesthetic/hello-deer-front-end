@@ -36,10 +36,16 @@ interface SalesData {
   value: number;
 }
 
+interface TrendData {
+  trend1: number;
+  trend2: number;
+  trend3: number;
+}
+
 const SalesReportCard: React.FC<SalesReportCardProps> = ({ title, dataField, color }) => {
   const [data, setData] = useState<SalesData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [percentageChange, setPercentageChange] = useState<number>(0);
+  const [percentageChange, setPercentageChange] = useState<TrendData>({ trend1: 0, trend2: 0, trend3: 0 });
 
   const fetchLast7DaysData = useCallback(async () => {
     setLoading(true);
@@ -55,7 +61,7 @@ const SalesReportCard: React.FC<SalesReportCardProps> = ({ title, dataField, col
       
       if (salesData.length === 0) {
         setData([]);
-        setPercentageChange(0);
+        setPercentageChange({ trend1: 0, trend2: 0, trend3: 0 });
         setLoading(false);
         return;
       }
@@ -64,7 +70,7 @@ const SalesReportCard: React.FC<SalesReportCardProps> = ({ title, dataField, col
       const lastEntryDateStr = salesData[0].date.split('T')[0]; // Get just the date part
       const lastEntryDate = new Date(lastEntryDateStr + 'T00:00:00'); // Create date at midnight
       const startDate = new Date(lastEntryDate);
-      startDate.setDate(startDate.getDate() - 7); // 8 days before the last entry
+      startDate.setDate(startDate.getDate() - 14); // 15 days before the last entry
 
       // Format dates for API using timezone-aware formatting
       const startDateStr = startDate.toLocaleDateString('en-CA', {
@@ -115,7 +121,7 @@ const SalesReportCard: React.FC<SalesReportCardProps> = ({ title, dataField, col
       const sortedData: SalesData[] = Array.from(dateMap.entries())
         .map(([date, value]) => ({ date, value }))
         .sort((a, b) => a.date.localeCompare(b.date))
-        .slice(-8); // Take only the last 8 entries
+        .slice(-15); // Take only the last 15 entries
 
       console.log('SalesReportCard - Final data:', {
         rangeDataCount: rangeData.length,
@@ -125,14 +131,21 @@ const SalesReportCard: React.FC<SalesReportCardProps> = ({ title, dataField, col
 
       setData(sortedData);
 
-      // Calculate percentage change - compare first and last dates
-      if (sortedData.length >= 2) {
-        // Compare the first date with the last date
-        const firstDateValue = sortedData[0].value;
-        const lastDateValue = sortedData[sortedData.length - 1].value;
+      // Calculate percentage changes
+      if (sortedData.length >= 3) {
+        const firstValue = sortedData[0].value;
+        const middleIndex = Math.floor(sortedData.length / 2);
+        const middleValue = sortedData[middleIndex].value;
+        const lastValue = sortedData[sortedData.length - 1].value;
         
-        const change = firstDateValue !== 0 ? ((lastDateValue - firstDateValue) / firstDateValue) * 100 : 0;
-        setPercentageChange(change);
+        // First to middle, middle to last, first to last
+        const trend1 = firstValue !== 0 ? ((middleValue - firstValue) / firstValue) * 100 : 0;
+        const trend2 = middleValue !== 0 ? ((lastValue - middleValue) / middleValue) * 100 : 0;
+        const trend3 = firstValue !== 0 ? ((lastValue - firstValue) / firstValue) * 100 : 0;
+        
+        setPercentageChange({ trend1, trend2, trend3 });
+      } else {
+        setPercentageChange({ trend1: 0, trend2: 0, trend3: 0 });
       }
 
     } catch (error) {
@@ -159,6 +172,20 @@ const SalesReportCard: React.FC<SalesReportCardProps> = ({ title, dataField, col
     return formatDateForDisplay(dateString);
   };
 
+  // Create point colors array - first, middle, and last points get yellow color
+  const getPointColors = () => {
+    const colors = data.map(() => color);
+    if (data.length > 0) {
+      colors[0] = '#EAB308'; // Yellow for first
+      if (data.length > 2) {
+        const middleIndex = Math.floor(data.length / 2);
+        colors[middleIndex] = '#EAB308'; // Yellow for middle
+      }
+      colors[data.length - 1] = '#EAB308'; // Yellow for last
+    }
+    return colors;
+  };
+
   const chartData = {
     labels: data.map(item => formatDate(item.date)),
     datasets: [
@@ -170,7 +197,7 @@ const SalesReportCard: React.FC<SalesReportCardProps> = ({ title, dataField, col
         borderWidth: 2,
         fill: true,
         tension: 0.4,
-        pointBackgroundColor: color,
+        pointBackgroundColor: getPointColors(),
         pointBorderColor: '#fff',
         pointBorderWidth: 2,
         pointRadius: 4,
@@ -204,7 +231,13 @@ const SalesReportCard: React.FC<SalesReportCardProps> = ({ title, dataField, col
       },
       datalabels: {
         display: true,
-        color: '#374151',
+        color: (context: any) => {
+          const index = context.dataIndex;
+          if (index === 0) return '#EAB308'; // Yellow for first
+          if (data.length > 2 && index === Math.floor(data.length / 2)) return '#EAB308'; // Yellow for middle
+          if (index === data.length - 1) return '#EAB308'; // Yellow for last
+          return '#374151';
+        },
         font: {
           weight: 'bold' as const,
           size: 11
@@ -268,10 +301,25 @@ const SalesReportCard: React.FC<SalesReportCardProps> = ({ title, dataField, col
     <div className="bg-white rounded-lg shadow-lg p-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-        <div className={`text-sm font-medium ${
-          percentageChange >= 0 ? 'text-green-600' : 'text-red-600'
-        }`}>
-          {percentageChange >= 0 ? '+' : ''}{percentageChange.toFixed(1)}%
+        <div className="flex flex-col items-end gap-1">
+          <div className="flex items-center gap-2 text-xs">
+            <span className="text-gray-600">1st→2nd:</span>
+            <span className={`font-medium ${percentageChange.trend1 >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {percentageChange.trend1 >= 0 ? '+' : ''}{percentageChange.trend1.toFixed(1)}%
+            </span>
+          </div>
+          <div className="flex items-center gap-2 text-xs">
+            <span className="text-gray-600">2nd→3rd:</span>
+            <span className={`font-medium ${percentageChange.trend2 >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {percentageChange.trend2 >= 0 ? '+' : ''}{percentageChange.trend2.toFixed(1)}%
+            </span>
+          </div>
+          <div className="flex items-center gap-2 text-xs">
+            <span className="text-gray-600">1st→3rd:</span>
+            <span className={`font-medium ${percentageChange.trend3 >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {percentageChange.trend3 >= 0 ? '+' : ''}{percentageChange.trend3.toFixed(1)}%
+            </span>
+          </div>
         </div>
       </div>
       

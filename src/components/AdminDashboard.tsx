@@ -63,6 +63,11 @@ const AdminDashboard: React.FC = () => {
               dataField="fuel_sale" 
               color="#F59E0B" 
             />
+            <WeeklyFuelTrendCard 
+              title="Weekly Fuel Sales (Litre)" 
+              dataField="total_quantity" 
+              color="#EC4899" 
+            />
           </div>
         </div>
 
