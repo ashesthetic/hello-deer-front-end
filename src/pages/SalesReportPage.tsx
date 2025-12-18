@@ -318,6 +318,22 @@ const SalesReportPage: React.FC = () => {
     };
   };
 
+  const calculateGrowth = (metric: keyof DailySale) => {
+    if (sales.length < 2) return null;
+    
+    const sortedSales = [...sales].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    const data = sortedSales.map(sale => Number(sale[metric]) || 0);
+    
+    // Compare first and last day
+    const firstDay = data[0];
+    const lastDay = data[data.length - 1];
+    
+    if (firstDay === 0) return lastDay > 0 ? 100 : 0;
+    
+    const growth = ((lastDay - firstDay) / firstDay) * 100;
+    return growth;
+  };
+
   const createFuelChartData = (metric: keyof DailyFuel, label: string, color: string, isLiters: boolean = false) => {
     const sortedFuels = [...fuels].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     const data = sortedFuels.map(fuel => Number(fuel[metric]) || 0);
@@ -347,6 +363,22 @@ const SalesReportPage: React.FC = () => {
         borderSkipped: false,
       }]
     };
+  };
+
+  const calculateFuelGrowth = (metric: keyof DailyFuel) => {
+    if (fuels.length < 2) return null;
+    
+    const sortedFuels = [...fuels].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    const data = sortedFuels.map(fuel => Number(fuel[metric]) || 0);
+    
+    // Compare first and last day
+    const firstDay = data[0];
+    const lastDay = data[data.length - 1];
+    
+    if (firstDay === 0) return lastDay > 0 ? 100 : 0;
+    
+    const growth = ((lastDay - firstDay) / firstDay) * 100;
+    return growth;
   };
 
   const createDayOfWeekChartData = (metric: keyof DailySale, label: string, color: string) => {
@@ -594,6 +626,26 @@ const SalesReportPage: React.FC = () => {
         }
       }
     }
+  };
+
+  const GrowthIndicator = ({ growth }: { growth: number | null }) => {
+    if (growth === null) return null;
+    
+    const isPositive = growth > 0;
+    const isNegative = growth < 0;
+    const isNeutral = growth === 0;
+    
+    return (
+      <div className="absolute top-2 right-2 z-10">
+        <div className={`px-2 py-1 rounded-md text-xs font-medium ${
+          isPositive ? 'bg-green-100 text-green-800' :
+          isNegative ? 'bg-red-100 text-red-800' :
+          'bg-gray-100 text-gray-800'
+        }`}>
+          {isPositive ? '↗' : isNegative ? '↘' : '→'} {Math.abs(growth).toFixed(1)}%
+        </div>
+      </div>
+    );
   };
 
   const DayOfWeekLegend = () => {
@@ -874,7 +926,8 @@ const SalesReportPage: React.FC = () => {
             {/* Date vs Reported Total */}
             <div className="bg-white rounded-lg shadow-lg p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Date vs Reported Total</h3>
-              <div className="h-80">
+              <div className="h-80 relative">
+                <GrowthIndicator growth={calculateGrowth('reported_total')} />
                 <Bar data={createChartData('reported_total', 'Reported Total', '#3B82F6')} options={chartOptions} />
               </div>
             </div>
@@ -883,7 +936,8 @@ const SalesReportPage: React.FC = () => {
             <div className="bg-white rounded-lg shadow-lg p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Weekly Groups vs Reported Total</h3>
               <p className="text-sm text-gray-600 mb-4">Grouped by: 1,8,15,22,29 | 2,9,16,23,30 | 3,10,17,24,31 | etc.</p>
-              <div className="h-80">
+              <div className="h-80 relative">
+                <GrowthIndicator growth={calculateGrowth('reported_total')} />
                 <Bar data={createWeeklyGroupChartData('reported_total', 'Reported Total', '#3B82F6')} options={chartOptions} />
               </div>
               <DayOfWeekLegend />
@@ -893,7 +947,8 @@ const SalesReportPage: React.FC = () => {
             {fuels.length > 0 && (
               <div className="bg-white rounded-lg shadow-lg p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Date vs Fuel ($$$)</h3>
-                <div className="h-80">
+                <div className="h-80 relative">
+                  <GrowthIndicator growth={calculateFuelGrowth('total_amount')} />
                   <Bar data={createFuelChartData('total_amount', 'Fuel Total', '#10B981')} options={chartOptions} />
                 </div>
               </div>
@@ -903,7 +958,8 @@ const SalesReportPage: React.FC = () => {
             {fuels.length > 0 && (
               <div className="bg-white rounded-lg shadow-lg p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Date vs Fuel (Ltr)</h3>
-                <div className="h-80">
+                <div className="h-80 relative">
+                  <GrowthIndicator growth={calculateFuelGrowth('total_quantity')} />
                   <Bar data={createFuelChartData('total_quantity', 'Fuel Quantity', '#10B981')} options={fuelChartOptions} />
                 </div>
               </div>
@@ -912,7 +968,8 @@ const SalesReportPage: React.FC = () => {
             {/* Date vs Store Sale */}
             <div className="bg-white rounded-lg shadow-lg p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Date vs Store Sale</h3>
-              <div className="h-80">
+              <div className="h-80 relative">
+                <GrowthIndicator growth={calculateGrowth('store_sale')} />
                 <Bar data={createChartData('store_sale', 'Store Sale', '#F59E0B')} options={chartOptions} />
               </div>
             </div>
@@ -920,7 +977,8 @@ const SalesReportPage: React.FC = () => {
             {/* Date vs Card */}
             <div className="bg-white rounded-lg shadow-lg p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Date vs Card</h3>
-              <div className="h-80">
+              <div className="h-80 relative">
+                <GrowthIndicator growth={calculateGrowth('card')} />
                 <Bar data={createChartData('card', 'Card', '#8B5CF6')} options={chartOptions} />
               </div>
             </div>
@@ -928,7 +986,8 @@ const SalesReportPage: React.FC = () => {
             {/* Date vs Cash */}
             <div className="bg-white rounded-lg shadow-lg p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Date vs Cash</h3>
-              <div className="h-80">
+              <div className="h-80 relative">
+                <GrowthIndicator growth={calculateGrowth('cash')} />
                 <Bar data={createChartData('cash', 'Cash', '#EF4444')} options={chartOptions} />
               </div>
             </div>
@@ -936,7 +995,8 @@ const SalesReportPage: React.FC = () => {
             {/* Day of Week vs Reported Total (Average) */}
             <div className="bg-white rounded-lg shadow-lg p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Day of Week vs Reported Total (Average)</h3>
-              <div className="h-80">
+              <div className="h-80 relative">
+                <GrowthIndicator growth={calculateGrowth('reported_total')} />
                 <Bar data={createDayOfWeekChartData('reported_total', 'Reported Total', '#3B82F6')} options={chartOptions} />
               </div>
               <DayOfWeekLegend />
@@ -945,22 +1005,24 @@ const SalesReportPage: React.FC = () => {
             {/* Day of Week vs Store Sale (Average) */}
             <div className="bg-white rounded-lg shadow-lg p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Day of Week vs Store Sale (Average)</h3>
-              <div className="h-80">
+              <div className="h-80 relative">
+                <GrowthIndicator growth={calculateGrowth('store_sale')} />
                 <Bar data={createDayOfWeekChartData('store_sale', 'Store Sale', '#F59E0B')} options={chartOptions} />
               </div>
               <DayOfWeekLegend />
             </div>
 
-                         {/* Day of Week vs Fuel Sale (Ltr) (Average) */}
-             {fuels.length > 0 && (
-               <div className="bg-white rounded-lg shadow-lg p-6">
-                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Day of Week vs Fuel Sale (Ltr) (Average)</h3>
-                 <div className="h-80">
-                   <Bar data={createFuelDayOfWeekChartData('total_quantity', 'Fuel Quantity', '#10B981')} options={fuelChartOptions} />
-                 </div>
-                 <DayOfWeekLegend />
-               </div>
-             )}
+                                     {/* Day of Week vs Fuel Sale (Ltr) (Average) */}
+            {fuels.length > 0 && (
+              <div className="bg-white rounded-lg shadow-lg p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Day of Week vs Fuel Sale (Ltr) (Average)</h3>
+                <div className="h-80 relative">
+                  <GrowthIndicator growth={calculateFuelGrowth('total_quantity')} />
+                  <Bar data={createFuelDayOfWeekChartData('total_quantity', 'Fuel Quantity', '#10B981')} options={fuelChartOptions} />
+                </div>
+                <DayOfWeekLegend />
+              </div>
+            )}
 
             {/* Data Table View */}
             <div className="bg-white rounded-lg shadow-lg p-6">
