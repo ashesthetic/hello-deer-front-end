@@ -1,10 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { RootState } from '../store';
+import { canUpdate } from '../utils/permissions';
 import { dailySalesApi } from '../services/api';
 import { DailySale } from '../types';
+import { usePageTitle } from '../hooks/usePageTitle';
 import DailySalesForm from '../components/DailySalesForm';
 
 const DailySalesEditPage: React.FC = () => {
+  usePageTitle('Edit Daily Sale');
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [sale, setSale] = useState<DailySale | null>(null);

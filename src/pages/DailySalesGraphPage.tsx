@@ -12,6 +12,7 @@ import { Bar } from 'react-chartjs-2';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { dailySalesApi } from '../services/api';
 import { DailySale } from '../types';
+import { usePageTitle } from '../hooks/usePageTitle';
 
 ChartJS.register(
   CategoryScale,
@@ -24,6 +25,7 @@ ChartJS.register(
 );
 
 const DailySalesGraphPage: React.FC = () => {
+  usePageTitle('Daily Sales Graph');
   const [sales, setSales] = useState<DailySale[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { employeesApi, Employee, EmployeeFormData } from '../services/api';
+import { usePageTitle } from '../hooks/usePageTitle';
 
 const EmployeeEditPage: React.FC = () => {
+  usePageTitle('Edit Employee');
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [formData, setFormData] = useState<EmployeeFormData>({

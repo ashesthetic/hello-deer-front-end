@@ -6,6 +6,7 @@ import { dailyFuelsApi } from '../services/api';
 import { DailyFuel } from '../types';
 import DailyFuelsList from '../components/DailyFuelsList';
 import { canCreate } from '../utils/permissions';
+import { usePageTitle } from '../hooks/usePageTitle';
 
 type SortField = 'date' | 'total_quantity' | 'total_amount' | 'regular_total_sale' | 'plus_total_sale' | 'sup_plus_total_sale' | 'diesel_total_sale';
 type SortDirection = 'asc' | 'desc';
@@ -13,6 +14,7 @@ type SortDirection = 'asc' | 'desc';
 const PER_PAGE_OPTIONS = [10, 25, 50, 100];
 
 const DailyFuelsPage: React.FC = () => {
+  usePageTitle('Daily Fuels');
   const navigate = useNavigate();
   const currentUser = useSelector((state: RootState) => (state as any).auth.user);
   const [fuels, setFuels] = useState<DailyFuel[]>([]);

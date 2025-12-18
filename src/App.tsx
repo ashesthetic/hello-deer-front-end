@@ -29,6 +29,7 @@ import AddHoursPage from './pages/AddHoursPage';
 import EmployeeViewPage from './pages/EmployeeViewPage';
 import EmployeeEditPage from './pages/EmployeeEditPage';
 import EmployeeEarningsPage from './pages/EmployeeEarningsPage';
+import WorkHourReportPage from './pages/WorkHourReportPage';
 import WorkHoursListPage from './pages/WorkHoursListPage';
 import WorkHoursEditPage from './pages/WorkHoursEditPage';
 import WorkHoursViewPage from './pages/WorkHoursViewPage';
@@ -120,6 +121,10 @@ const App: React.FC = () => {
           <Route 
             path="/employees/earnings" 
             element={isAuthenticated ? <Layout><EmployeeEarningsPage /></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/employees/work-hour-report" 
+            element={isAuthenticated ? <Layout><WorkHourReportPage /></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/employees/:id" 

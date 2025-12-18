@@ -405,6 +405,9 @@ export const employeesApi = {
   delete: (id: number) => api.delete(`/employees/${id}`),
   getStats: () => api.get('/employees/stats'),
   getEarnings: () => api.get('/employees/earnings'),
+  getPayDays: () => api.get('/employees/pay-days'),
+  generateWorkHourReport: (data: { pay_day: string; employee_ids: number[] }) => 
+    api.post('/employees/work-hour-report', data),
 };
 
 // Work Hours API

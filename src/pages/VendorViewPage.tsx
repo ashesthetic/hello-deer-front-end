@@ -6,8 +6,10 @@ import { vendorsApi } from '../services/api';
 import { Vendor } from '../types';
 import VendorView from '../components/VendorView';
 import Modal from '../components/Modal';
+import { usePageTitle } from '../hooks/usePageTitle';
 
 const VendorViewPage: React.FC = () => {
+  usePageTitle('Vendor Details');
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const currentUser = useSelector((state: RootState) => (state as any).auth.user);

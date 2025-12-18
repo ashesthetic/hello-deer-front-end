@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 import { canManageUsers, getRoleDisplayName, getRoleColor } from '../utils/permissions';
+import { helloDeerLogo } from '../assets/images';
 
 interface NavItem {
   path: string;
@@ -97,6 +98,15 @@ const Navigation: React.FC = () => {
           icon: (
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+            </svg>
+          )
+        },
+        {
+          path: '/employees/work-hour-report',
+          label: 'Work Hour Report',
+          icon: (
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
           )
         }
@@ -311,11 +321,11 @@ const Navigation: React.FC = () => {
               className="flex items-center cursor-pointer"
               onClick={() => navigate('/dashboard')}
             >
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center mr-3">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-              </div>
+              <img 
+                src={helloDeerLogo} 
+                alt="Hello Deer!" 
+                className="w-8 h-8 mr-3"
+              />
               <h1 className="text-xl font-semibold text-gray-900">
                 Hello Deer!
               </h1>

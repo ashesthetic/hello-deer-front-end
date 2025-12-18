@@ -5,6 +5,7 @@ import { RootState } from '../store';
 import { canCreate } from '../utils/permissions';
 import ConfirmationModal from '../components/ConfirmationModal';
 import { employeesApi, Employee as ApiEmployee } from '../services/api';
+import { usePageTitle } from '../hooks/usePageTitle';
 
 // Get the storage URL from environment or derive from API URL
 const getStorageUrl = () => {
@@ -19,6 +20,7 @@ const getStorageUrl = () => {
   return apiUrl.replace(/\/api$/, '');
 };
 const EmployeeViewPage: React.FC = () => {
+  usePageTitle('Employee Details');
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const currentUser = useSelector((state: RootState) => (state as any).auth.user);

@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { usePageTitle } from '../hooks/usePageTitle';
 import SalesReportCard from './SalesReportCard';
 import WeeklyReportCard from './WeeklyReportCard';
 import WeeklyTrendCard from './WeeklyTrendCard';
@@ -9,6 +10,7 @@ import MonthlyFuelTrendCard from './MonthlyFuelTrendCard';
 import FuelTrendCard from './FuelTrendCard';
 
 const Dashboard: React.FC = () => {
+  usePageTitle('Dashboard');
   const navigate = useNavigate();
 
   const handleNavigateToDailySales = () => {

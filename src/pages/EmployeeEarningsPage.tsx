@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { employeesApi } from '../services/api';
+import { usePageTitle } from '../hooks/usePageTitle';
 import { parseDateSafely } from '../utils/dateUtils';
 
 interface EmployeeEarning {
@@ -35,6 +36,7 @@ interface EarningsData {
 }
 
 const EmployeeEarningsPage: React.FC = () => {
+  usePageTitle('Employee Earnings');
   const [earningsData, setEarningsData] = useState<EarningsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

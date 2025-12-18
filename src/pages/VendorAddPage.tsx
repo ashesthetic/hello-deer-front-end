@@ -6,8 +6,10 @@ import { vendorsApi } from '../services/api';
 import { CreateVendorData } from '../types';
 import VendorForm from '../components/VendorForm';
 import { canCreate } from '../utils/permissions';
+import { usePageTitle } from '../hooks/usePageTitle';
 
 const VendorAddPage: React.FC = () => {
+  usePageTitle('Add Vendor');
   const navigate = useNavigate();
   const currentUser = useSelector((state: RootState) => (state as any).auth.user);
   const [loading, setLoading] = useState(false);

@@ -3,10 +3,12 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 import { canUpdate, canDelete } from '../utils/permissions';
-import { workHoursApi, WorkHour } from '../services/api';
 import ConfirmationModal from '../components/ConfirmationModal';
+import { workHoursApi, WorkHour } from '../services/api';
+import { usePageTitle } from '../hooks/usePageTitle';
 
 const WorkHoursViewPage: React.FC = () => {
+  usePageTitle('Work Hours Details');
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const currentUser = useSelector((state: RootState) => (state as any).auth.user);

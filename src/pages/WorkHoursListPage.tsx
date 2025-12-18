@@ -4,9 +4,11 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 import { canCreate, canUpdate, canDelete } from '../utils/permissions';
 import { workHoursApi, WorkHour } from '../services/api';
+import { usePageTitle } from '../hooks/usePageTitle';
 import ConfirmationModal from '../components/ConfirmationModal';
 
 const WorkHoursListPage: React.FC = () => {
+  usePageTitle('Work Hours');
   const navigate = useNavigate();
   const currentUser = useSelector((state: RootState) => (state as any).auth.user);
   const [workHours, setWorkHours] = useState<WorkHour[]>([]);

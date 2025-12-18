@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { employeesApi, EmployeeFormData } from '../services/api';
+import { usePageTitle } from '../hooks/usePageTitle';
 
 interface EmployeeForm {
   // Personal Information
@@ -50,6 +51,7 @@ interface EmployeeForm {
 }
 
 const AddEmployeePage: React.FC = () => {
+  usePageTitle('Add Employee');
   const navigate = useNavigate();
   const [formData, setFormData] = useState<EmployeeForm>({
     // Personal Information
