@@ -167,7 +167,7 @@ const DailySalesPage: React.FC = () => {
     try {
       // Create a text-based PDF export for the sales table
       const exportSalesTableToPDF = async () => {
-        const { jsPDF } = await import('jspdf');
+        const jsPDF = (await import('jspdf')).default;
         
         // Create PDF with landscape orientation
         const pdf = new jsPDF({
