@@ -15,7 +15,16 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requiredPermission,
   fallbackPath = '/dashboard'
 }) => {
-  const currentUser = useSelector((state: RootState) => (state as any).auth.user);
+  const { user: currentUser, loading } = useSelector((state: RootState) => (state as any).auth);
+
+  // Show loading while fetching user profile
+  if (loading && !currentUser) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   if (!currentUser) {
     return <Navigate to="/login" replace />;
