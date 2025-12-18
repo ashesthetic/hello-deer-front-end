@@ -1,7 +1,9 @@
 import axios from 'axios';
+import { DailySale, DailyFuel, LoginCredentials, CreateUserData, UpdateUserData } from '../types';
 
-const API_BASE_URL = 'http://127.0.0.1:8001/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
 
+// Create axios instance with default config
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -9,21 +11,16 @@ const api = axios.create({
   },
 });
 
-// Request interceptor to add auth token
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
+// Add token to requests if available
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
-);
+  return config;
+});
 
-// Response interceptor to handle auth errors
+// Handle 401 responses
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -35,26 +32,43 @@ api.interceptors.response.use(
   }
 );
 
+// Auth API
 export const authApi = {
-  login: (email: string, password: string) =>
-    api.post('/login', { email, password }),
-  
+  login: (credentials: LoginCredentials) => api.post('/login', credentials),
   logout: () => api.post('/logout'),
-  
-  getProfile: () => api.get('/user/profile'),
+  profile: () => api.get('/user/profile'),
 };
 
+// Daily Sales API
 export const dailySalesApi = {
-  getAll: (page = 1, perPage = 10) => api.get(`/daily-sales?page=${page}&per_page=${perPage}`),
-  getByMonth: (year?: number, month?: number) => {
-    const currentYear = year || new Date().getFullYear();
-    const currentMonth = month || new Date().getMonth() + 1;
-    return api.get(`/daily-sales/month/${currentYear}/${currentMonth}`);
-  },
+  getAll: (params?: any) => api.get('/daily-sales', { params }),
   getById: (id: number) => api.get(`/daily-sales/${id}`),
-  create: (data: any) => api.post('/daily-sales', data),
-  update: (id: number, data: any) => api.put(`/daily-sales/${id}`, data),
+  create: (data: Omit<DailySale, 'id'>) => api.post('/daily-sales', data),
+  update: (id: number, data: Partial<DailySale>) => api.put(`/daily-sales/${id}`, data),
   delete: (id: number) => api.delete(`/daily-sales/${id}`),
+  getByMonth: (year?: number, month?: number) => {
+    const url = year && month ? `/daily-sales/month/${year}/${month}` : '/daily-sales/month';
+    return api.get(url);
+  },
+};
+
+// Daily Fuels API
+export const dailyFuelsApi = {
+  getAll: (params?: any) => api.get('/daily-fuels', { params }),
+  getById: (id: number) => api.get(`/daily-fuels/${id}`),
+  create: (data: Omit<DailyFuel, 'id'>) => api.post('/daily-fuels', data),
+  update: (id: number, data: Partial<DailyFuel>) => api.put(`/daily-fuels/${id}`, data),
+  delete: (id: number) => api.delete(`/daily-fuels/${id}`),
+};
+
+// User Management API (Admin only)
+export const usersApi = {
+  getAll: (params?: any) => api.get('/users', { params }),
+  getById: (id: number) => api.get(`/users/${id}`),
+  create: (data: CreateUserData) => api.post('/users', data),
+  update: (id: number, data: UpdateUserData) => api.put(`/users/${id}`, data),
+  delete: (id: number) => api.delete(`/users/${id}`),
+  profile: () => api.get('/user/profile'),
 };
 
 export default api; 

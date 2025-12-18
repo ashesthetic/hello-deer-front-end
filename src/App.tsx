@@ -1,7 +1,11 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useAppSelector } from './hooks/useAppSelector';
+import { useDispatch } from 'react-redux';
+import { loginSuccess } from './store/slices/authSlice';
+import { authApi } from './services/api';
 import LoginForm from './components/LoginForm';
+import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
 import DailySalesPage from './pages/DailySalesPage';
 import DailySalesViewPage from './pages/DailySalesViewPage';
@@ -9,18 +13,29 @@ import DailySalesEditPage from './pages/DailySalesEditPage';
 import DailyFuelsPage from './pages/DailyFuelsPage';
 import ReportGraphPage from './pages/ReportGraphPage';
 import DailySalesGraphPage from './pages/DailySalesGraphPage';
+import UserManagementPage from './pages/UserManagementPage';
 
 const App: React.FC = () => {
-  const { isAuthenticated, user } = useAppSelector((state) => state.auth);
+  const dispatch = useDispatch();
+  const { isAuthenticated, user } = useAppSelector((state) => (state as any).auth);
 
   useEffect(() => {
     // Check if user is authenticated on app load
     const token = localStorage.getItem('token');
     if (token && !user) {
-      // You could dispatch an action to fetch user profile here
-      // For now, we'll just check if the token exists
+      // Fetch user profile to get current user data
+      const fetchUserProfile = async () => {
+        try {
+          const response = await authApi.profile();
+          dispatch(loginSuccess({ user: response.data, token }));
+        } catch (error) {
+          console.error('Failed to fetch user profile:', error);
+          localStorage.removeItem('token');
+        }
+      };
+      fetchUserProfile();
     }
-  }, [user]);
+  }, [user, dispatch]);
 
   return (
     <Router>
@@ -32,35 +47,39 @@ const App: React.FC = () => {
           />
           <Route 
             path="/dashboard" 
-            element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><Dashboard /></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/daily-sales" 
-            element={isAuthenticated ? <DailySalesPage /> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><DailySalesPage /></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/daily-sales/:id" 
-            element={isAuthenticated ? <DailySalesViewPage /> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><DailySalesViewPage /></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/daily-sales/:id/edit" 
-            element={isAuthenticated ? <DailySalesEditPage /> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><DailySalesEditPage /></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/daily-sales/new" 
-            element={isAuthenticated ? <DailySalesEditPage /> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><DailySalesEditPage /></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/daily-fuels" 
-            element={isAuthenticated ? <DailyFuelsPage /> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><DailyFuelsPage /></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/report-graph" 
-            element={isAuthenticated ? <ReportGraphPage /> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ReportGraphPage /></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/daily-sales-graph" 
-            element={isAuthenticated ? <DailySalesGraphPage /> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><DailySalesGraphPage /></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/users" 
+            element={isAuthenticated ? <Layout><UserManagementPage /></Layout> : <Navigate to="/login" />} 
           />
           <Route 
             path="/" 

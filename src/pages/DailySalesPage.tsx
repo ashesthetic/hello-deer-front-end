@@ -1,30 +1,59 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { RootState } from '../store';
 import { dailySalesApi } from '../services/api';
 import { DailySale } from '../types';
 import DailySalesList from '../components/DailySalesList';
+import { canCreate } from '../utils/permissions';
 
-const PER_PAGE = 10;
+type SortField = 'date' | 'total_product_sale' | 'total_counter_sale' | 'reported_total';
+type SortDirection = 'asc' | 'desc';
+
+const PER_PAGE_OPTIONS = [10, 25, 50, 100];
 
 const DailySalesPage: React.FC = () => {
   const navigate = useNavigate();
+  const currentUser = useSelector((state: RootState) => (state as any).auth.user);
   const [sales, setSales] = useState<DailySale[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
+  const [sortField, setSortField] = useState<SortField>('date');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  
+  // New filter states
+  const [perPage, setPerPage] = useState(10);
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
 
   useEffect(() => {
     fetchSales(currentPage);
     // eslint-disable-next-line
-  }, [currentPage]);
+  }, [currentPage, sortField, sortDirection, perPage, startDate, endDate]);
 
   const fetchSales = async (page: number) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await dailySalesApi.getAll(page, PER_PAGE);
+      const params: any = { 
+        page, 
+        per_page: perPage,
+        sort_by: sortField,
+        sort_direction: sortDirection
+      };
+
+      // Add date filters if provided
+      if (startDate) {
+        params.start_date = startDate;
+      }
+      if (endDate) {
+        params.end_date = endDate;
+      }
+
+      const response = await dailySalesApi.getAll(params);
       setSales(response.data.data || []);
       setTotalPages(response.data.last_page || 1);
       setTotalItems(response.data.total || 0);
@@ -73,18 +102,125 @@ const DailySalesPage: React.FC = () => {
     }
   };
 
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      // Toggle direction if same field
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      // Set new field with default direction
+      setSortField(field);
+      setSortDirection('asc');
+    }
+    setCurrentPage(1); // Reset to first page when sorting
+  };
+
+  const handlePerPageChange = (newPerPage: number) => {
+    setPerPage(newPerPage);
+    setCurrentPage(1); // Reset to first page when changing per page
+  };
+
+  const handleDateFilterChange = () => {
+    setCurrentPage(1); // Reset to first page when changing date filters
+  };
+
+  const clearFilters = () => {
+    setStartDate('');
+    setEndDate('');
+    setCurrentPage(1);
+  };
+
+  // Calculate totals for the current page
+  const calculateTotals = () => {
+    return sales.reduce((totals, sale) => ({
+      total_product_sale: totals.total_product_sale + (sale.total_product_sale || 0),
+      total_counter_sale: totals.total_counter_sale + (sale.total_counter_sale || 0),
+      reported_total: totals.reported_total + (sale.reported_total || 0),
+    }), {
+      total_product_sale: 0,
+      total_counter_sale: 0,
+      reported_total: 0,
+    });
+  };
+
+  const totals = calculateTotals();
+
   return (
-    <div className="min-h-screen bg-gray-100 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="space-y-6">
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold text-gray-900">Daily Sales</h1>
-            <button
-              onClick={handleCreate}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              Add New Sale
-            </button>
+            {canCreate(currentUser) && (
+              <button
+                onClick={handleCreate}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                Add New Sale
+              </button>
+            )}
+          </div>
+
+          {/* Filters Section */}
+          <div className="bg-white p-4 rounded-lg border border-gray-200">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+              <div>
+                <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 mb-1">
+                  Date From
+                </label>
+                <input
+                  type="date"
+                  id="startDate"
+                  value={startDate}
+                  onChange={(e) => {
+                    setStartDate(e.target.value);
+                    handleDateFilterChange();
+                  }}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 mb-1">
+                  Date To
+                </label>
+                <input
+                  type="date"
+                  id="endDate"
+                  value={endDate}
+                  onChange={(e) => {
+                    setEndDate(e.target.value);
+                    handleDateFilterChange();
+                  }}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="perPage" className="block text-sm font-medium text-gray-700 mb-1">
+                  Rows per page
+                </label>
+                <select
+                  id="perPage"
+                  value={perPage}
+                  onChange={(e) => handlePerPageChange(Number(e.target.value))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  {PER_PAGE_OPTIONS.map(option => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <button
+                  onClick={clearFilters}
+                  className="w-full px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                >
+                  Clear Filters
+                </button>
+              </div>
+            </div>
           </div>
 
           {error && (
@@ -95,10 +231,15 @@ const DailySalesPage: React.FC = () => {
 
           <DailySalesList
             sales={sales}
+            currentUser={currentUser}
             onView={handleView}
             onEdit={handleEdit}
             onDelete={handleDelete}
             loading={loading}
+            sortField={sortField}
+            sortDirection={sortDirection}
+            onSort={handleSort}
+            totals={totals}
           />
 
           {/* Pagination Controls */}
@@ -134,7 +275,6 @@ const DailySalesPage: React.FC = () => {
           </div>
         </div>
       </div>
-    </div>
   );
 };
 

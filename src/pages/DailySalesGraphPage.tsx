@@ -52,13 +52,16 @@ const DailySalesGraphPage: React.FC = () => {
   const formatDate = (dateString: string) => {
     // Split the date string and format it directly to avoid timezone issues
     const [year, month, day] = dateString.split('T')[0].split('-');
-    const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    // Use UTC to avoid timezone issues
+    const date = new Date(Date.UTC(parseInt(year), parseInt(month) - 1, parseInt(day)));
     const dateStr = date.toLocaleDateString('en-US', {
       month: 'short',
-      day: 'numeric'
+      day: 'numeric',
+      timeZone: 'UTC'
     });
     const dayStr = date.toLocaleDateString('en-US', {
-      weekday: 'short'
+      weekday: 'short',
+      timeZone: 'UTC'
     });
     return `${dateStr}\n${dayStr}`;
   };
@@ -111,8 +114,8 @@ const DailySalesGraphPage: React.FC = () => {
     
     sales.forEach(sale => {
       const [year, month, day] = sale.date.split('T')[0].split('-');
-      const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-      const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+      const date = new Date(Date.UTC(parseInt(year), parseInt(month) - 1, parseInt(day)));
+      const dayName = date.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' });
       dayOfWeekData[dayName].push(Number(sale[metric]) || 0);
     });
     
@@ -195,9 +198,9 @@ const DailySalesGraphPage: React.FC = () => {
       
       if (firstSaleWithThisDay) {
         const [year, month, dayStr] = firstSaleWithThisDay.date.split('T')[0].split('-');
-        const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(dayStr));
-        const monthStr = date.toLocaleDateString('en-US', { month: 'short' });
-        const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+        const date = new Date(Date.UTC(parseInt(year), parseInt(month) - 1, parseInt(dayStr)));
+        const monthStr = date.toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' });
+        const dayName = date.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' });
         return `${monthStr} ${day}\n${dayName}`;
       }
       
