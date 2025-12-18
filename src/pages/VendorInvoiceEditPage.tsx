@@ -5,7 +5,7 @@ import { RootState } from '../store';
 import { vendorInvoicesApi, VendorInvoiceFormData, VendorInvoice } from '../services/api';
 import { canUpdate } from '../utils/permissions';
 import { usePageTitle } from '../hooks/usePageTitle';
-import { formatDateForAPI, parseDateSafely } from '../utils/dateUtils';
+import { formatDateForAPI, parseDateSafely, getTodayForInput } from '../utils/dateUtils';
 import GoogleDriveAuth from '../components/GoogleDriveAuth';
 
 interface Vendor {
@@ -126,6 +126,16 @@ const VendorInvoiceEditPage: React.FC = () => {
         payment_date: '',
         payment_method: undefined,
         bank_account_id: undefined
+      }));
+    }
+    
+    // Pre-populate payment fields when status is changed to Paid
+    if (name === 'status' && value === 'Paid') {
+      setFormData(prev => ({
+        ...prev,
+        payment_date: getTodayForInput(),
+        payment_method: 'Bank',
+        bank_account_id: 2 // RBC
       }));
     }
   };
