@@ -140,8 +140,17 @@ const FuelTrendCard: React.FC<FuelTrendCardProps> = ({ title, dataField, color }
       
       setData(allDates);
 
-      // Calculate percentage change
-      if (allDates.length >= 2) {
+      // Calculate percentage change - compare last 4 days with previous 4 days for 8-day chart
+      if (allDates.length >= 8) {
+        // Calculate sum of last 4 days
+        const last4DaysSum = allDates.slice(-4).reduce((sum, item) => sum + item.value, 0);
+        // Calculate sum of previous 4 days
+        const previous4DaysSum = allDates.slice(-8, -4).reduce((sum, item) => sum + item.value, 0);
+        
+        const change = previous4DaysSum !== 0 ? ((last4DaysSum - previous4DaysSum) / previous4DaysSum) * 100 : 0;
+        setPercentageChange(change);
+      } else if (allDates.length >= 2) {
+        // Fallback: if we don't have 8 days, compare last day with previous day
         const currentValue = allDates[allDates.length - 1].value;
         const previousValue = allDates[allDates.length - 2].value;
         const change = previousValue !== 0 ? ((currentValue - previousValue) / previousValue) * 100 : 0;
@@ -209,7 +218,31 @@ const FuelTrendCard: React.FC<FuelTrendCardProps> = ({ title, dataField, color }
         }
       },
       datalabels: {
-        display: false,
+        display: true,
+        color: '#374151',
+        font: {
+          weight: 'bold' as const,
+          size: 11
+        },
+        formatter: function(value: any) {
+          const numValue = parseFloat(value) || 0;
+          if (dataField === 'total_quantity') {
+            return formatQuantity(numValue);
+          } else {
+            return formatCurrency(numValue);
+          }
+        },
+        anchor: 'end' as const,
+        align: 'top' as const,
+        offset: 12,
+        backgroundColor: 'rgba(255, 255, 255, 0.8)',
+        borderRadius: 4,
+        padding: {
+          top: 2,
+          bottom: 2,
+          left: 4,
+          right: 4
+        }
       },
     },
     scales: {

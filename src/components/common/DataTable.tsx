@@ -18,6 +18,7 @@ export interface DataTableProps<T> {
   onSort?: (field: string) => void;
   className?: string;
   rowKey?: (item: T) => string | number;
+  footer?: React.ReactNode;
 }
 
 export function DataTable<T>({
@@ -29,7 +30,8 @@ export function DataTable<T>({
   sortDirection,
   onSort,
   className = '',
-  rowKey
+  rowKey,
+  footer
 }: DataTableProps<T>) {
   const handleSort = (field: string) => {
     if (onSort) {
@@ -102,6 +104,11 @@ export function DataTable<T>({
               </tr>
             ))}
           </tbody>
+          {footer && (
+            <tfoot className="table-footer">
+              {footer}
+            </tfoot>
+          )}
         </table>
       </div>
     </div>

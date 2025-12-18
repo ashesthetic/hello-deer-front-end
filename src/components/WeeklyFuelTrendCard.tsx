@@ -116,13 +116,12 @@ const WeeklyFuelTrendCard: React.FC<WeeklyFuelTrendCardProps> = ({ title, dataFi
 
       setData(sortedData);
 
-      // Calculate percentage change
+      // Calculate percentage change - compare last week with previous week
       if (sortedData.length >= 2) {
-        const firstValue = sortedData[0].value;
-        const lastValue = sortedData[sortedData.length - 1].value;
-        const change = lastValue - firstValue;
-        const percentage = firstValue > 0 ? (change / firstValue) * 100 : 0;
-        setPercentageChange(percentage);
+        const lastWeekValue = sortedData[sortedData.length - 1].value;
+        const previousWeekValue = sortedData[sortedData.length - 2].value;
+        const change = previousWeekValue !== 0 ? ((lastWeekValue - previousWeekValue) / previousWeekValue) * 100 : 0;
+        setPercentageChange(change);
       }
 
     } catch (error) {

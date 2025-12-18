@@ -408,6 +408,8 @@ export const employeesApi = {
   getPayDays: () => api.get('/employees/pay-days'),
   generateWorkHourReport: (data: { pay_day: string; employee_ids: number[] }) => 
     api.post('/employees/work-hour-report', data),
+  generatePayStubs: (data: { pay_day: string; employee_ids: number[] }, endpoint?: string) => 
+    api.post(endpoint || '/employees/pay-stubs', data),
 };
 
 // Work Hours API
