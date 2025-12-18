@@ -203,8 +203,6 @@ export interface Vendor {
   institute_number?: string;
   account_number?: string;
   void_check_path?: string;
-  order_before_days: string[];
-  possible_delivery_days: string[];
   notes?: string;
   user_id?: number;
   user?: User;
@@ -228,8 +226,6 @@ export interface CreateVendorData {
   institute_number?: string;
   account_number?: string;
   void_check?: File;
-  order_before_days: string[];
-  possible_delivery_days: string[];
   notes?: string;
 }
 
@@ -247,8 +243,6 @@ export interface UpdateVendorData {
   institute_number?: string;
   account_number?: string;
   void_check?: File;
-  order_before_days: string[];
-  possible_delivery_days: string[];
   notes?: string;
 }
 

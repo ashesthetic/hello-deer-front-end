@@ -289,14 +289,6 @@ export const vendorsApi = {
       formData.append('contact_person_title', data.contact_person_title);
     }
     
-    // Add arrays as individual items
-    data.order_before_days.forEach(day => {
-      formData.append('order_before_days[]', day);
-    });
-    data.possible_delivery_days.forEach(day => {
-      formData.append('possible_delivery_days[]', day);
-    });
-    
     if (data.notes) {
       formData.append('notes', data.notes);
     }
@@ -344,14 +336,6 @@ export const vendorsApi = {
     if (data.contact_person_title) {
       formData.append('contact_person_title', data.contact_person_title);
     }
-    
-    // Add arrays as individual items
-    data.order_before_days.forEach(day => {
-      formData.append('order_before_days[]', day);
-    });
-    data.possible_delivery_days.forEach(day => {
-      formData.append('possible_delivery_days[]', day);
-    });
     
     if (data.notes) {
       formData.append('notes', data.notes);

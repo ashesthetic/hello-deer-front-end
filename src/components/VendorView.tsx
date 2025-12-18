@@ -16,12 +16,6 @@ const VendorView: React.FC<VendorViewProps> = ({
   canEdit,
   canDelete,
 }) => {
-  const formatDays = (days: string[]) => {
-    if (days.length === 0) return 'None';
-    if (days.length === 7) return 'All days';
-    return days.join(', ');
-  };
-
   const formatPaymentMethod = (method: string) => {
     switch (method) {
       case 'PAD':
@@ -195,23 +189,6 @@ const VendorView: React.FC<VendorViewProps> = ({
             </div>
           </>
         )}
-
-        {/* Schedule Information */}
-        <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">Order & Delivery Schedule</h2>
-        </div>
-        <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Order Before Days</label>
-              <p className="text-gray-900">{formatDays(vendor.order_before_days)}</p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Possible Delivery Days</label>
-              <p className="text-gray-900">{formatDays(vendor.possible_delivery_days)}</p>
-            </div>
-          </div>
-        </div>
 
         {/* Notes */}
         {vendor.notes && (
