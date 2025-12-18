@@ -55,7 +55,10 @@ const VendorInvoiceAddPage: React.FC = () => {
 
   useEffect(() => {
     fetchVendors();
-    fetchBankAccounts();
+    // Only fetch bank accounts for non-staff users since staff can only create unpaid invoices
+    if (!isStaff(currentUser)) {
+      fetchBankAccounts();
+    }
   }, []);
 
   // Set up date input enhancements
