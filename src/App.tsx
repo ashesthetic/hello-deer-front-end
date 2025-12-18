@@ -19,6 +19,11 @@ import FileImportsListPage from './pages/FileImportsListPage';
 import FileImportsByDatePage from './pages/FileImportsByDatePage';
 import FuelVolumeViewPage from './pages/FuelVolumeViewPage';
 import FuelVolumeEditPage from './pages/FuelVolumeEditPage';
+import DailyAtmPage from './pages/DailyAtmPage';
+import DailyAtmAddPage from './pages/DailyAtmAddPage';
+import DailyAtmViewPage from './pages/DailyAtmViewPage';
+import DailyAtmEditPage from './pages/DailyAtmEditPage';
+import ResolveAtmPage from './pages/ResolveAtmPage';
 import SalesReportPage from './pages/SalesReportPage';
 import FuelsReportPage from './pages/FuelsReportPage';
 import VendorsPage from './pages/VendorsPage';
@@ -175,6 +180,24 @@ const App: React.FC = () => {
           <Route 
             path="/fuel-volumes/new" 
             element={isAuthenticated ? <Layout><FuelVolumeEditPage /></Layout> : <Navigate to="/login" />} 
+          />
+          
+          {/* Daily ATM Routes */}
+          <Route 
+            path="/daily-atm" 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="admin"><DailyAtmPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/daily-atm/add" 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="admin"><DailyAtmAddPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/daily-atm/:id" 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="admin"><DailyAtmViewPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/daily-atm/:id/edit" 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="admin"><DailyAtmEditPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           
           {/* Import Data Route */}
@@ -345,6 +368,12 @@ const App: React.FC = () => {
           <Route 
             path="/resolve-pending" 
             element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="admin"><ResolvePendingPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
+          />
+          
+          {/* Resolve ATM Route (Admin only) */}
+          <Route 
+            path="/resolve-atm" 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="admin"><ResolveAtmPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           
           <Route 
