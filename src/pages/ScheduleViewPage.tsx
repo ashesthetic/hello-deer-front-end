@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../services/api';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 interface ShiftInfo {
   date: string;
@@ -124,6 +126,69 @@ const ScheduleViewPage: React.FC = () => {
 
   const totalWeeklyHours = schedules.reduce((sum, s) => sum + Number(s.weekly_total_hours), 0);
 
+  const handleExportPDF = async () => {
+    try {
+      const element = document.getElementById('schedule-table-export');
+      if (!element) {
+        console.error('Element not found');
+        return;
+      }
+
+      // Make element visible but off-screen for capture
+      element.style.display = 'block';
+      element.style.position = 'absolute';
+      element.style.left = '-9999px';
+      element.style.top = '0';
+      element.style.width = '1200px';
+      element.style.padding = '40px';
+      element.style.backgroundColor = '#ffffff';
+
+      // Wait a bit for rendering
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Capture the element as canvas
+      const canvas = await html2canvas(element, {
+        scale: 1.5,
+        logging: false,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        width: 1200,
+        windowWidth: 1200
+      });
+
+      // Hide element again
+      element.style.display = 'none';
+      element.style.position = '';
+      element.style.left = '';
+      element.style.top = '';
+
+      // Convert to JPEG with compression for smaller file size
+      const imgData = canvas.toDataURL('image/jpeg', 0.85);
+      
+      // Create PDF with A4 landscape dimensions
+      const pdf = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: 'a4',
+        compress: true
+      });
+
+      // Calculate dimensions to fit the image with margins
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const imgWidth = pdfWidth - 20; // 10mm margin on each side
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      // Add image with margins
+      pdf.addImage(imgData, 'JPEG', 10, 10, imgWidth, imgHeight);
+      
+      const fileName = `schedule_${firstSchedule.week_start_date}_to_${firstSchedule.week_end_date}.pdf`;
+      pdf.save(fileName);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Failed to generate PDF: ' + (error as Error).message);
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       {/* Header */}
@@ -181,7 +246,19 @@ const ScheduleViewPage: React.FC = () => {
 
         {/* Shifts Table */}
         <div className="bg-white shadow rounded-lg p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Employee Schedules</h3>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-medium text-gray-900">Employee Schedules</h3>
+            <button
+              onClick={handleExportPDF}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center space-x-2"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+              <span>Export PDF</span>
+            </button>
+          </div>
+          
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200 border border-gray-200">
               <thead className="bg-gray-50">
@@ -251,6 +328,60 @@ const ScheduleViewPage: React.FC = () => {
               </tfoot>
             </table>
           </div>
+        </div>
+
+        {/* Hidden export content */}
+        <div id="schedule-table-export" style={{ display: 'none' }}>
+          <div style={{ marginBottom: '30px', textAlign: 'center' }}>
+            <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#111827', margin: 0 }}>
+              Schedules ({getWeekRangeString(firstSchedule.week_start_date, firstSchedule.week_end_date)})
+            </h1>
+          </div>
+          
+          <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #e5e7eb' }}>
+            <thead style={{ backgroundColor: '#f9fafb' }}>
+              <tr>
+                <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: '500', color: '#6b7280', textTransform: 'uppercase', borderRight: '1px solid #e5e7eb', borderBottom: '1px solid #e5e7eb' }}>
+                  Employee
+                </th>
+                {weekDates.map(date => (
+                  <th key={date} style={{ padding: '12px 16px', textAlign: 'center', fontSize: '12px', fontWeight: '500', color: '#6b7280', textTransform: 'uppercase', borderRight: '1px solid #e5e7eb', borderBottom: '1px solid #e5e7eb', whiteSpace: 'pre-line' }}>
+                    {getDayLabel(date)}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {schedules.map((schedule, idx) => (
+                <tr key={schedule.id} style={{ backgroundColor: idx % 2 === 0 ? '#ffffff' : '#f9fafb' }}>
+                  <td style={{ padding: '12px 16px', borderRight: '1px solid #e5e7eb', borderBottom: '1px solid #e5e7eb' }}>
+                    <div style={{ fontSize: '14px', fontWeight: '500', color: '#111827', marginBottom: '4px' }}>
+                      {schedule.employee.preferred_name || schedule.employee.full_legal_name}
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#6b7280' }}>
+                      {schedule.employee.position}
+                    </div>
+                  </td>
+                  {weekDates.map(date => {
+                    const shift = schedule.shift_info.find(s => s.date === date);
+                    return (
+                      <td key={date} style={{ padding: '12px 8px', textAlign: 'center', borderRight: '1px solid #e5e7eb', borderBottom: '1px solid #e5e7eb' }}>
+                        {shift ? (
+                          <div style={{ fontSize: '12px' }}>
+                            <div style={{ fontWeight: '500', color: '#111827' }}>{shift.start_time}</div>
+                            <div style={{ color: '#6b7280' }}>to</div>
+                            <div style={{ fontWeight: '500', color: '#111827' }}>{shift.end_time}</div>
+                          </div>
+                        ) : (
+                          <div style={{ color: '#9ca3af', fontSize: '12px' }}>-</div>
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
 
         {/* Metadata */}
