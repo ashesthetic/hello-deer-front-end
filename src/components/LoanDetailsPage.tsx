@@ -36,7 +36,7 @@ const LoanDetailsPage: React.FC = () => {
       setLoading(true);
       setError(null);
       const response = await loanApi.getById(parseInt(id!));
-      const data = response.data;
+      const data = response.data.data; // Backend returns { data: loan }
       setLoan(data);
       setFormData({
         name: data.name,
