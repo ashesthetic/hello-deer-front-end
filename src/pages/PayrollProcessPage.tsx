@@ -4,6 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 interface PayrollFormData {
   employee_id: string;
   pay_date: string;
+  pay_period: string;
   regular_hours: string;
   regular_rate: string;
   regular_current: string;
@@ -44,6 +45,7 @@ const PayrollProcessPage: React.FC = () => {
   const [formData, setFormData] = useState<PayrollFormData>({
     employee_id: '',
     pay_date: '',
+    pay_period: '',
     regular_hours: '0.00',
     regular_rate: '0.00',
     regular_current: '0.00',
@@ -177,7 +179,7 @@ const PayrollProcessPage: React.FC = () => {
             {/* Basic Information */}
             <div className="mb-8">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Basic Information</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Employee</label>
                   <select
@@ -192,6 +194,17 @@ const PayrollProcessPage: React.FC = () => {
                       <option key={emp.id} value={emp.id}>{emp.name}</option>
                     ))}
                   </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Pay Period</label>
+                  <input
+                    type="text"
+                    name="pay_period"
+                    value={formData.pay_period}
+                    onChange={handleInputChange}
+                    placeholder="e.g., Nov 1-15, 2025"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Pay Date</label>
