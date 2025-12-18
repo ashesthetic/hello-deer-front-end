@@ -325,6 +325,12 @@ const App: React.FC = () => {
             path="/accounting/vendor-invoices/add" 
             element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><VendorInvoiceAddPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
+          
+          {/* Staff-specific invoice add route */}
+          <Route 
+            path="/vendor-invoices/add" 
+            element={isAuthenticated ? <Layout><VendorInvoiceAddPage /></Layout> : <Navigate to="/login" />} 
+          />
           <Route 
             path="/accounting/vendor-invoices/:id" 
             element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><VendorInvoiceViewPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
