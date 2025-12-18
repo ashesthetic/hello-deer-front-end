@@ -29,15 +29,6 @@ const LoanDetailsPage: React.FC = () => {
   
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  useEffect(() => {
-    if (id) {
-      loadLoan();
-      if (!isEditMode) {
-        loadPaymentHistory();
-      }
-    }
-  }, [id, isEditMode]);
-
   const loadLoan = async () => {
     try {
       setLoading(true);
@@ -70,6 +61,16 @@ const LoanDetailsPage: React.FC = () => {
       setLoadingHistory(false);
     }
   };
+
+  useEffect(() => {
+    if (id) {
+      loadLoan();
+      if (!isEditMode) {
+        loadPaymentHistory();
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, isEditMode]);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
