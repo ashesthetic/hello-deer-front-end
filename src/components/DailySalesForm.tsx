@@ -172,7 +172,8 @@ const DailySalesForm: React.FC<DailySalesFormProps> = ({
                      (Number(formData.penny_rounding) || 0);
   
   const breakdownTotal = (Number(formData.card) || 0) + (Number(formData.cash) || 0) + 
-                         (Number(formData.coupon) || 0) + (Number(formData.delivery) || 0);
+                         (Number(formData.coupon) || 0) + (Number(formData.delivery) || 0) + 
+                         (Number(formData.lottery_payout) || 0);
   
   const totalPosTransactions = (Number(formData.pos_visa) || 0) + (Number(formData.pos_mastercard) || 0) + 
                               (Number(formData.pos_amex) || 0) + (Number(formData.pos_commercial) || 0) + 
