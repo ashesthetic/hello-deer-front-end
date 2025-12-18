@@ -286,10 +286,6 @@ const StaffPayStubDetailPage: React.FC = () => {
             <label className="block text-sm font-medium text-gray-700 mb-1">Pay Date</label>
             <p className="text-gray-900">{formatDate(payroll.pay_date)}</p>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Payment Date</label>
-            <p className="text-gray-900">{formatDate(payroll.payment_date)}</p>
-          </div>
         </div>
 
         {/* Earnings Table */}
