@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
-import { smokesApi, Smokes } from '../services/api';
+import { smokesApi, Smokes, smokesCategoryApi, SmokesCategory } from '../services/api';
 import { canCreate, canDelete, isStaff } from '../utils/permissions';
 import { usePageTitle } from '../hooks/usePageTitle';
 
@@ -11,6 +11,7 @@ const SmokesPage: React.FC = () => {
   const navigate = useNavigate();
   const currentUser = useSelector((state: RootState) => (state as any).auth.user);
   const [smokes, setSmokes] = useState<Smokes[]>([]);
+  const [categories, setCategories] = useState<SmokesCategory[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -18,9 +19,19 @@ const SmokesPage: React.FC = () => {
   const [dailySales, setDailySales] = useState<any[]>([]);
 
   useEffect(() => {
+    fetchCategories();
     fetchSmokes();
     // eslint-disable-next-line
   }, [currentPage]);
+
+  const fetchCategories = async () => {
+    try {
+      const response = await smokesCategoryApi.getAll({ per_page: 100, sort_by: 'id', sort_direction: 'asc' });
+      setCategories(response.data.data || []);
+    } catch (err: any) {
+      console.error('Failed to fetch categories:', err);
+    }
+  };
 
   const calculateDailySales = (allSmokes: Smokes[]) => {
     // Group by date and item
@@ -121,6 +132,19 @@ const SmokesPage: React.FC = () => {
     new Date(b).getTime() - new Date(a).getTime()
   );
 
+  // Helper function to sort items by category order
+  const getSortedItems = (items: string[]) => {
+    const categoryOrder = categories.map(cat => cat.name);
+    return items.sort((a, b) => {
+      const indexA = categoryOrder.indexOf(a);
+      const indexB = categoryOrder.indexOf(b);
+      // If item not in categories, put it at the end
+      if (indexA === -1) return 1;
+      if (indexB === -1) return -1;
+      return indexA - indexB;
+    });
+  };
+
   const handleAddSmoke = () => {
     navigate('/entry/smokes/add');
   };
@@ -194,14 +218,17 @@ const SmokesPage: React.FC = () => {
                     }).replace(/,/g, '')}
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                    {Object.entries(daySale.items).map(([item, sold]: [string, any]) => (
-                      <div key={item} className="bg-gray-50 rounded px-3 py-2">
-                        <span className="text-xs font-medium text-gray-700">{item}:</span>
-                        <span className="ml-2 text-xs font-semibold text-blue-600">
-                          {sold.toFixed(2)}
-                        </span>
-                      </div>
-                    ))}
+                    {getSortedItems(Object.keys(daySale.items)).map((item) => {
+                      const sold = daySale.items[item];
+                      return (
+                        <div key={item} className="bg-gray-50 rounded px-3 py-2">
+                          <span className="text-xs font-medium text-gray-700">{item}:</span>
+                          <span className="ml-2 text-xs font-semibold text-blue-600">
+                            {sold.toFixed(2)}
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               ))}
@@ -250,8 +277,9 @@ const SmokesPage: React.FC = () => {
                       </td>
                     </tr>
                   ) : (
-                    sortedDates.map((date, dateIndex) => 
-                      Object.keys(groupedSmokes[date]).map((item, itemIndex) => {
+                    sortedDates.map((date, dateIndex) => {
+                      const sortedItems = getSortedItems(Object.keys(groupedSmokes[date]));
+                      return sortedItems.map((item, itemIndex) => {
                         const smoke = groupedSmokes[date][item];
                         const isEvenRow = (dateIndex % 2 === 0);
                         
@@ -317,8 +345,8 @@ const SmokesPage: React.FC = () => {
                             </td>
                           </tr>
                         );
-                      })
-                    )
+                      });
+                    })
                   )}
                 </tbody>
               </table>
