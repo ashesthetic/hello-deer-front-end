@@ -945,6 +945,7 @@ export const loanApi = {
   forceDelete: (id: number) => api.delete(`/loans/${id}/force-delete`),
   processPayment: (id: number, data: { date: string; amount: number; type: 'deposit' | 'withdrawal'; bank_account_id: number; notes?: string }) => 
     api.post(`/loans/${id}/payment`, data),
+  getPaymentHistory: (id: number) => api.get(`/loans/${id}/payment-history`),
 };
 
 export default api;

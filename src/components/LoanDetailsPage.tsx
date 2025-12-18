@@ -17,6 +17,8 @@ const LoanDetailsPage: React.FC = () => {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [paymentHistory, setPaymentHistory] = useState<any[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
   
   const [formData, setFormData] = useState<LoanFormData>({
     name: '',
@@ -30,8 +32,11 @@ const LoanDetailsPage: React.FC = () => {
   useEffect(() => {
     if (id) {
       loadLoan();
+      if (!isEditMode) {
+        loadPaymentHistory();
+      }
     }
-  }, [id]);
+  }, [id, isEditMode]);
 
   const loadLoan = async () => {
     try {
@@ -51,6 +56,18 @@ const LoanDetailsPage: React.FC = () => {
       setError('Failed to load loan details');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadPaymentHistory = async () => {
+    try {
+      setLoadingHistory(true);
+      const response = await loanApi.getPaymentHistory(parseInt(id!));
+      setPaymentHistory(response.data.data || []);
+    } catch (err: any) {
+      console.error('Error loading payment history:', err);
+    } finally {
+      setLoadingHistory(false);
     }
   };
 
@@ -147,8 +164,9 @@ const LoanDetailsPage: React.FC = () => {
         bank_account_id: parseInt(data.bank_account_id.toString()),
         notes: data.notes,
       });
-      // Reload loan data to get updated amount
+      // Reload loan data and payment history to get updated amount and new transaction
       await loadLoan();
+      await loadPaymentHistory();
       setPaymentModalOpen(false);
     } catch (err) {
       console.error('Error processing payment:', err);
@@ -365,15 +383,16 @@ const LoanDetailsPage: React.FC = () => {
           </div>
         </form>
       ) : (
-        <div className="bg-white shadow-sm rounded-lg p-6">
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-500 mb-1">
-                  Loan Name
-                </label>
-                <p className="text-lg text-gray-900">{loan?.name}</p>
-              </div>
+        <>
+          <div className="bg-white shadow-sm rounded-lg p-6">
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-500 mb-1">
+                    Loan Name
+                  </label>
+                  <p className="text-lg text-gray-900">{loan?.name}</p>
+                </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-500 mb-1">
@@ -413,6 +432,84 @@ const LoanDetailsPage: React.FC = () => {
             )}
           </div>
         </div>
+
+        {/* Payment History Section */}
+        <div className="mt-6 bg-white shadow-sm rounded-lg p-6">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">Payment History</h2>
+          
+          {loadingHistory ? (
+            <div className="flex justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+          ) : paymentHistory.length === 0 ? (
+            <p className="text-gray-500 text-center py-8">No payment history yet.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Date
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Type
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Amount
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Bank Account
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Description
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Reference
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {paymentHistory.map((transaction) => (
+                    <tr key={transaction.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                        {new Date(transaction.transaction_date).toLocaleDateString()}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm">
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                          transaction.type === 'income' 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {transaction.type === 'income' ? 'Withdrawal' : 'Deposit'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold">
+                        <span className={transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}>
+                          {transaction.type === 'income' ? '+' : '-'}${parseFloat(transaction.amount).toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-900">
+                        {transaction.bank_account?.account_name || 'N/A'}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-900">
+                        <div className="max-w-xs truncate" title={transaction.description}>
+                          {transaction.description}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                        {transaction.reference_number || '-'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+        </>
       )}
 
       {/* Delete Confirmation Modal */}
