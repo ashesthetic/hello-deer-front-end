@@ -15,9 +15,7 @@ import { dailySalesApi } from '../services/api';
 import { ChartCard } from './common/ChartCard';
 import { 
   lineChartOptions, 
-  createLineDataset, 
-  formatCurrency, 
-  formatWeek 
+  createLineDataset
 } from '../utils/chartConfigs';
 import { parseDateSafely } from '../utils/dateUtils';
 
