@@ -1,4 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { bankAccountsApi } from '../services/api';
+
+interface BankAccount {
+  id: number;
+  account_name: string;
+  account_number: string;
+  bank_name: string;
+  is_active: boolean;
+}
 
 interface LoanPaymentModalProps {
   isOpen: boolean;
@@ -11,6 +20,7 @@ export interface PaymentFormData {
   date: string;
   amount: number | string;
   type: 'deposit' | 'withdrawal';
+  bank_account_id: number | string;
   notes: string;
 }
 
@@ -20,15 +30,44 @@ const LoanPaymentModal: React.FC<LoanPaymentModalProps> = ({
   onClose,
   onSubmit,
 }) => {
+  const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
+  const [loadingAccounts, setLoadingAccounts] = useState(true);
+  
   const [formData, setFormData] = useState<PaymentFormData>({
     date: new Date().toISOString().split('T')[0],
     amount: '',
     type: 'deposit',
+    bank_account_id: '',
     notes: '',
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchBankAccounts();
+    }
+  }, [isOpen]);
+
+  const fetchBankAccounts = async () => {
+    try {
+      setLoadingAccounts(true);
+      const response = await bankAccountsApi.getAll();
+      const accounts = response.data.data || response.data;
+      setBankAccounts(accounts);
+      
+      // Set first active account as default
+      const activeAccount = accounts.find((acc: BankAccount) => acc.is_active);
+      if (activeAccount && !formData.bank_account_id) {
+        setFormData(prev => ({ ...prev, bank_account_id: activeAccount.id }));
+      }
+    } catch (error) {
+      console.error('Error fetching bank accounts:', error);
+    } finally {
+      setLoadingAccounts(false);
+    }
+  };
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -43,6 +82,10 @@ const LoanPaymentModal: React.FC<LoanPaymentModalProps> = ({
 
     if (!formData.type) {
       newErrors.type = 'Payment type is required';
+    }
+
+    if (!formData.bank_account_id) {
+      newErrors.bank_account_id = 'Bank account is required';
     }
 
     setErrors(newErrors);
@@ -63,10 +106,12 @@ const LoanPaymentModal: React.FC<LoanPaymentModalProps> = ({
         amount: parseFloat(formData.amount.toString()),
       });
       // Reset form
+      const defaultAccount = bankAccounts.find(acc => acc.is_active);
       setFormData({
         date: new Date().toISOString().split('T')[0],
         amount: '',
         type: 'deposit',
+        bank_account_id: defaultAccount?.id || '',
         notes: '',
       });
       setErrors({});
@@ -96,10 +141,12 @@ const LoanPaymentModal: React.FC<LoanPaymentModalProps> = ({
 
   const handleClose = () => {
     if (!loading) {
+      const defaultAccount = bankAccounts.find(acc => acc.is_active);
       setFormData({
         date: new Date().toISOString().split('T')[0],
         amount: '',
         type: 'deposit',
+        bank_account_id: defaultAccount?.id || '',
         notes: '',
       });
       setErrors({});
@@ -196,6 +243,31 @@ const LoanPaymentModal: React.FC<LoanPaymentModalProps> = ({
               </div>
               {errors.amount && (
                 <p className="mt-1 text-sm text-red-600">{errors.amount}</p>
+              )}
+            </div>
+
+            {/* Bank Account */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Bank Account *
+              </label>
+              <select
+                value={formData.bank_account_id}
+                onChange={(e) => handleInputChange('bank_account_id', e.target.value)}
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  errors.bank_account_id ? 'border-red-500' : 'border-gray-300'
+                }`}
+                disabled={loading || loadingAccounts}
+              >
+                <option value="">Select a bank account</option>
+                {bankAccounts.map((account) => (
+                  <option key={account.id} value={account.id}>
+                    {account.account_name} - {account.bank_name} ({account.account_number})
+                  </option>
+                ))}
+              </select>
+              {errors.bank_account_id && (
+                <p className="mt-1 text-sm text-red-600">{errors.bank_account_id}</p>
               )}
             </div>
 
