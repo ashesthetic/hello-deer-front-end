@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const PayrollPage: React.FC = () => {
+const PayrollReportsPage: React.FC = () => {
   const navigate = useNavigate();
-  const [payrolls] = useState([]);
+  const [reports] = useState([]);
   const [loading] = useState(false);
 
   return (
@@ -12,42 +12,45 @@ const PayrollPage: React.FC = () => {
         {/* Header */}
         <div className="mb-6 flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Payrolls</h1>
-            <p className="text-gray-600 mt-2">Manage employee payroll records</p>
+            <button
+              onClick={() => navigate('/employees/payroll')}
+              className="text-blue-600 hover:text-blue-800 mb-2 flex items-center"
+            >
+              <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Back to Payrolls
+            </button>
+            <h1 className="text-3xl font-bold text-gray-900">Payroll Reports</h1>
+            <p className="text-gray-600 mt-2">Upload and process payroll reports</p>
           </div>
           <button
-            onClick={() => navigate('/employees/payroll/reports')}
+            onClick={() => navigate('/employees/payroll/reports/upload')}
             className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center"
           >
             <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>
-            Upload Payroll Report
+            Upload New Report
           </button>
         </div>
 
-        {/* Payroll Table */}
+        {/* Reports Table */}
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Pay Date
+                  Upload Date
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Employee
+                  File Name
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Total Hours
+                  Pay Period
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Gross Pay
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Deductions
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Net Pay
+                  Status
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
@@ -57,23 +60,23 @@ const PayrollPage: React.FC = () => {
             <tbody className="bg-white divide-y divide-gray-200">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
+                  <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
                     <div className="flex justify-center">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                     </div>
                   </td>
                 </tr>
-              ) : payrolls.length === 0 ? (
+              ) : reports.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center">
+                  <td colSpan={5} className="px-6 py-12 text-center">
                     <div className="flex flex-col items-center">
                       <svg className="w-16 h-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">No payroll records yet</h3>
-                      <p className="text-gray-500 mb-4">Get started by uploading a payroll report</p>
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No reports uploaded yet</h3>
+                      <p className="text-gray-500 mb-4">Upload a payroll report to get started</p>
                       <button
-                        onClick={() => navigate('/employees/payroll/reports')}
+                        onClick={() => navigate('/employees/payroll/reports/upload')}
                         className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
                       >
                         Upload First Report
@@ -82,33 +85,42 @@ const PayrollPage: React.FC = () => {
                   </td>
                 </tr>
               ) : (
-                payrolls.map((payroll: any) => (
-                  <tr key={payroll.id} className="hover:bg-gray-50">
+                reports.map((report: any) => (
+                  <tr key={report.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {payroll.pay_date}
+                      {report.upload_date}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {payroll.employee?.name}
+                      {report.file_name}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {payroll.total_hours}
+                      {report.pay_period}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      ${payroll.total_current}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      ${payroll.total_deduction_current}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      ${payroll.net_pay}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                        report.status === 'processed' 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {report.status}
+                      </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      <button
-                        onClick={() => navigate(`/employees/payroll/${payroll.id}`)}
-                        className="text-blue-600 hover:text-blue-900 mr-3"
-                      >
-                        View
-                      </button>
+                      {report.status === 'pending' ? (
+                        <button
+                          onClick={() => navigate(`/employees/payroll/reports/${report.id}/process`)}
+                          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded text-sm font-medium transition-colors"
+                        >
+                          Process
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => navigate(`/employees/payroll/reports/${report.id}`)}
+                          className="text-blue-600 hover:text-blue-900"
+                        >
+                          View
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))
@@ -121,4 +133,4 @@ const PayrollPage: React.FC = () => {
   );
 };
 
-export default PayrollPage;
+export default PayrollReportsPage;
