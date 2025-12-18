@@ -46,7 +46,7 @@ const SmokesEditPage: React.FC = () => {
       const response = await smokesApi.getById(Number(id));
       const smoke: Smokes = response.data.data;
       setFormData({
-        date: smoke.date,
+        date: new Date(smoke.date).toISOString().split('T')[0],
         item: smoke.item,
         shift: smoke.shift,
         start: smoke.start.toString(),
