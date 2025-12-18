@@ -139,19 +139,11 @@ export function validateMappedData(mapping: SftToFormMapping): { valid: boolean;
 /**
  * Check if daily sales/fuels records already exist for the given date
  */
-export async function checkExistingRecords(date: string) {
-  try {
-    // This would need to be implemented with actual API calls
-    // For now, return false to let the API handle the duplicate check
-    return {
-      salesExists: false,
-      fuelsExists: false
-    };
-  } catch (error) {
-    console.error('Error checking existing records:', error);
-    return {
-      salesExists: false,
-      fuelsExists: false
-    };
-  }
+export function checkExistingRecords(date: string) {
+  // This would need to be implemented with actual API calls
+  // For now, return false to let the API handle the duplicate check
+  return {
+    salesExists: false,
+    fuelsExists: false
+  };
 }
