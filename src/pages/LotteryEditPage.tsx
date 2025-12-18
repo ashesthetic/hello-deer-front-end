@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 import { lotteryApi, Lottery, LotteryFormData } from '../services/api';
-import { canUpdate } from '../utils/permissions';
+import { canUpdate, isStaff } from '../utils/permissions';
 import { usePageTitle } from '../hooks/usePageTitle';
 
 const LOTTERY_ITEMS = ['$1.00', '$2.00', '$3.00', '$4.00', '$5.00', '$7.00', '$10.00', '$20.00', '$30.00', '$50.00', '$100.00'];
@@ -73,7 +73,7 @@ const LotteryEditPage: React.FC = () => {
   };
 
   // Check if user can edit
-  if (!canUpdate(currentUser)) {
+  if (!canUpdate(currentUser) && !isStaff(currentUser)) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">

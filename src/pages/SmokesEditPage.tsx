@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 import { smokesApi, smokesCategoryApi, Smokes, SmokesFormData, SmokesCategory } from '../services/api';
-import { canUpdate } from '../utils/permissions';
+import { canUpdate, isStaff } from '../utils/permissions';
 import { usePageTitle } from '../hooks/usePageTitle';
 
 const SmokesEditPage: React.FC = () => {
@@ -82,7 +82,7 @@ const SmokesEditPage: React.FC = () => {
   };
 
   // Check if user can edit
-  if (!canUpdate(currentUser)) {
+  if (!canUpdate(currentUser) && !isStaff(currentUser)) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">

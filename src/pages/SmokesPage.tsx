@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 import { smokesApi, Smokes } from '../services/api';
-import { canCreate, canDelete } from '../utils/permissions';
+import { canCreate, canDelete, isStaff } from '../utils/permissions';
 import { usePageTitle } from '../hooks/usePageTitle';
 
 const SmokesPage: React.FC = () => {
@@ -167,7 +167,7 @@ const SmokesPage: React.FC = () => {
       <div className="space-y-6">
         <div className="flex flex-wrap justify-between items-center gap-4">
           <h1 className="text-2xl font-bold text-gray-900">Smokes</h1>
-          {canCreate(currentUser) && (
+          {(canCreate(currentUser) || isStaff(currentUser)) && (
             <button
               onClick={handleAddSmoke}
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 whitespace-nowrap"
