@@ -7,11 +7,11 @@ import { DailySale } from '../types';
 import DailySalesList from '../components/DailySalesList';
 import { canCreate } from '../utils/permissions';
 import { usePageTitle } from '../hooks/usePageTitle';
+import { useUrlState } from '../hooks/useUrlState';
 
 type SortField = 'date' | 'fuel_sale' | 'store_sale' | 'gst' | 'card' | 'cash' | 'coupon' | 'delivery' | 'reported_total';
-type SortDirection = 'asc' | 'desc';
 
-const PER_PAGE_OPTIONS = [10, 25, 50, 100];
+const PER_PAGE_OPTIONS = [50, 100, 150, 200];
 
 const DailySalesPage: React.FC = () => {
   usePageTitle('Daily Sales');
@@ -20,16 +20,29 @@ const DailySalesPage: React.FC = () => {
   const [sales, setSales] = useState<DailySale[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
-  const [sortField, setSortField] = useState<SortField>('date');
-  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   
-  // New filter states
-  const [perPage, setPerPage] = useState(10);
-  const [startDate, setStartDate] = useState<string>('');
-  const [endDate, setEndDate] = useState<string>('');
+  // URL state management
+  const {
+    perPage,
+    currentPage,
+    sortField,
+    sortDirection,
+    startDate,
+    endDate,
+    setPerPage,
+    setCurrentPage,
+    setSortField,
+    setSortDirection,
+    setStartDate,
+    setEndDate,
+    clearFilters
+  } = useUrlState({
+    defaultPerPage: 50,
+    defaultSortField: 'date',
+    defaultSortDirection: 'desc'
+  });
 
   useEffect(() => {
     fetchSales(currentPage);
@@ -109,22 +122,14 @@ const DailySalesPage: React.FC = () => {
       setSortField(field);
       setSortDirection('asc');
     }
-    setCurrentPage(1); // Reset to first page when sorting
   };
 
   const handlePerPageChange = (newPerPage: number) => {
     setPerPage(newPerPage);
-    setCurrentPage(1); // Reset to first page when changing per page
   };
 
   const handleDateFilterChange = () => {
-    setCurrentPage(1); // Reset to first page when changing date filters
-  };
-
-  const clearFilters = () => {
-    setStartDate('');
-    setEndDate('');
-    setCurrentPage(1);
+    // This is handled automatically by the URL state hook
   };
 
     // Calculate totals for the current page
@@ -244,7 +249,7 @@ const DailySalesPage: React.FC = () => {
             onEdit={handleEdit}
             onDelete={handleDelete}
             loading={loading}
-            sortField={sortField}
+            sortField={sortField as SortField}
             sortDirection={sortDirection}
             onSort={handleSort}
             totals={totals}
