@@ -8,11 +8,10 @@ import { Pagination } from '../components/common/Pagination';
 interface IncomeItem {
   id: number;
   date: string;
-  type: 'Safedrops' | 'Vendor Invoice' | 'Cash on Hand';
+  type: 'Safedrops' | 'Vendor Invoice';
   description: string;
   number_of_safedrops?: number;
   safedrops_amount?: number;
-  cash_on_hand?: number;
   vendor?: string;
   invoice_number?: string;
   subtotal?: number;
@@ -117,16 +116,8 @@ const IncomePage: React.FC = () => {
         }));
 
       // Transform daily sales to cash on hand items
-      const cashOnHandItems: IncomeItem[] = dailySales
-        .filter(sale => sale.cash_on_hand && sale.cash_on_hand > 0)
-        .map(sale => ({
-          id: sale.id || 0,
-          date: sale.date,
-          type: 'Cash on Hand' as const,
-          description: `Cash on Hand for ${new Date(sale.date).toLocaleDateString('en-CA')}`,
-          cash_on_hand: typeof sale.cash_on_hand === 'string' ? parseFloat(sale.cash_on_hand) : (sale.cash_on_hand || 0),
-          user: sale.user?.name
-        }));
+      // Removed cash on hand from income calculation as it's not actual income
+      const cashOnHandItems: IncomeItem[] = [];
 
       // Transform vendor invoices to income items (paid and income type)
       const vendorInvoiceItems: IncomeItem[] = vendorInvoices
@@ -164,8 +155,6 @@ const IncomePage: React.FC = () => {
       const totalAmount = incomeItems.reduce((sum, item) => {
         if (item.type === 'Safedrops') {
           return sum + (item.safedrops_amount || 0);
-        } else if (item.type === 'Cash on Hand') {
-          return sum + (item.cash_on_hand || 0);
         } else {
           return sum + (item.total || 0);
         }
@@ -403,13 +392,13 @@ const IncomePage: React.FC = () => {
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <svg className="h-8 w-8 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+              <svg className="h-8 w-8 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Cash on Hand</p>
-              <p className="text-2xl font-semibold text-gray-900">{formatCurrency(incomeData.reduce((sum, item) => sum + (item.cash_on_hand || 0), 0))}</p>
+              <p className="text-sm font-medium text-gray-500">Vendor Invoices</p>
+              <p className="text-2xl font-semibold text-gray-900">{incomeData.filter(item => item.type === 'Vendor Invoice').length}</p>
             </div>
           </div>
         </div>
@@ -467,8 +456,6 @@ const IncomePage: React.FC = () => {
                         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                           item.type === 'Safedrops' 
                             ? 'bg-green-100 text-green-800' 
-                            : item.type === 'Cash on Hand'
-                            ? 'bg-yellow-100 text-yellow-800'
                             : 'bg-blue-100 text-blue-800'
                         }`}>
                           {item.type}
@@ -476,8 +463,6 @@ const IncomePage: React.FC = () => {
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-900">
                         {item.type === 'Safedrops' 
-                          ? item.description
-                          : item.type === 'Cash on Hand'
                           ? item.description
                           : `${item.description}${item.vendor ? ` - ${item.vendor}` : ''}`
                         }
@@ -488,8 +473,6 @@ const IncomePage: React.FC = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-right">
                         {item.type === 'Safedrops' 
                           ? formatCurrency(item.safedrops_amount || 0)
-                          : item.type === 'Cash on Hand'
-                          ? formatCurrency(item.cash_on_hand || 0)
                           : formatCurrency(item.total || 0)
                         }
                       </td>
