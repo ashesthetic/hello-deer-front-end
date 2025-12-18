@@ -3,6 +3,7 @@ import { usePageTitle } from '../hooks/usePageTitle';
 import { dailySalesApi, vendorInvoicesApi, providerBillsApi, VendorInvoice, ProviderBill } from '../services/api';
 import { DailySale } from '../types';
 import { formatCurrency } from '../utils/currencyUtils';
+import { Pagination } from '../components/common/Pagination';
 
 interface BalanceItem {
   id: number;
@@ -21,11 +22,75 @@ interface BalanceItem {
   user?: string;
 }
 
+interface Vendor {
+  id: number;
+  name: string;
+}
+
+interface Provider {
+  id: number;
+  name: string;
+  service: string;
+}
+
+interface FilterOption {
+  id: string;
+  name: string;
+  type: 'vendor' | 'provider';
+}
+
+// Utility function to get today's date in YYYY-MM-DD format using local timezone
+const getTodayDate = (): string => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+// Test function to verify date calculation
+const testDateCalculation = () => {
+  const today = getTodayDate();
+  const utcToday = new Date().toISOString().split('T')[0];
+  const localDate = new Date().toLocaleDateString('en-CA');
+  
+  console.log('=== Date Calculation Test ===');
+  console.log('Local Today (YYYY-MM-DD):', today);
+  console.log('UTC Today (YYYY-MM-DD):', utcToday);
+  console.log('Local Date (MM/DD/YYYY):', localDate);
+  console.log('Current Date Object:', new Date());
+  console.log('Timezone Offset (minutes):', new Date().getTimezoneOffset());
+  console.log('================================');
+  
+  return { today, utcToday, localDate };
+};
+
 const BalancePage: React.FC = () => {
   usePageTitle('Balance');
   const [balanceData, setBalanceData] = useState<BalanceItem[]>([]);
+  const [vendors, setVendors] = useState<Vendor[]>([]);
+  const [providers, setProviders] = useState<Provider[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [perPage, setPerPage] = useState(25);
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  
+  // Date range state - start with a wide range to show all data
+  const [dateRange, setDateRange] = useState({
+    startDate: '',
+    endDate: ''
+  });
+  
+  // Filter state
+  const [filters, setFilters] = useState({
+    selectedVendorsProviders: [] as string[],
+    search: ''
+  });
+
   const [totals, setTotals] = useState({
     totalIncome: 0,
     totalExpense: 0,
@@ -33,105 +98,274 @@ const BalancePage: React.FC = () => {
     totalItems: 0
   });
 
-  // Get current month's date range
-  const getCurrentMonthRange = () => {
+  // Initialize with a wide date range to show all data
+  useEffect(() => {
+    // Set to show last 2 years of data by default
     const now = new Date();
-    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    const twoYearsAgo = new Date(now.getFullYear() - 2, 0, 1);
+    const today = new Date();
     
-    return {
-      startDate: firstDay.toISOString().split('T')[0],
-      endDate: lastDay.toISOString().split('T')[0]
-    };
-  };
+    setDateRange({
+      startDate: twoYearsAgo.toISOString().split('T')[0],
+      endDate: today.toISOString().split('T')[0]
+    });
+  }, []);
+
+  // Fetch vendors and providers for filter dropdowns
+  const fetchVendors = useCallback(async () => {
+    try {
+      const response = await vendorInvoicesApi.getVendors();
+      setVendors(response.data || []);
+    } catch (err) {
+      console.error('Error fetching vendors:', err);
+    }
+  }, []);
+
+  const fetchProviders = useCallback(async () => {
+    try {
+      const response = await providerBillsApi.getProviders();
+      setProviders(response.data || []);
+    } catch (err) {
+      console.error('Error fetching providers:', err);
+    }
+  }, []);
 
   const fetchBalanceData = useCallback(async () => {
+    if (!dateRange.startDate || !dateRange.endDate) {
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
     
     try {
-      const { startDate, endDate } = getCurrentMonthRange();
+      // Test date calculation first
+      const dateTest = testDateCalculation();
       
-      // Fetch daily sales for this month (safedrops - income)
-      const dailySalesResponse = await dailySalesApi.getAll({
-        start_date: startDate,
-        end_date: endDate,
-        per_page: 1000
+      // Check if today is within the selected date range - use local timezone
+      const today = getTodayDate();
+      const includeToday = today >= dateRange.startDate && today <= dateRange.endDate;
+
+      console.log('Debug - Date Range:', { 
+        startDate: dateRange.startDate, 
+        endDate: dateRange.endDate, 
+        today, 
+        includeToday,
+        dateTest 
       });
 
-      // Fetch vendor invoices for this month (paid income and expense)
-      const vendorInvoicesResponse = await vendorInvoicesApi.getAll({
-        status: 'Paid',
-        start_date: startDate,
-        end_date: endDate,
-        per_page: 1000
-      });
+      // Build query parameters for daily sales (safedrops)
+      const dailySalesParams: any = {
+        page: currentPage,
+        per_page: perPage,
+        sort_by: 'date',
+        sort_direction: 'desc',
+        start_date: dateRange.startDate,
+        end_date: dateRange.endDate
+      };
 
-      // Fetch provider bills for this month (paid - expense)
-      const providerBillsResponse = await providerBillsApi.getAll({
-        status: 'Paid',
-        start_date: startDate,
-        end_date: endDate,
-        per_page: 1000
-      });
+      // Build query parameters for vendor invoices
+      const vendorInvoicesParams: any = {
+        page: currentPage,
+        per_page: perPage,
+        sort_by: 'date',
+        sort_direction: 'desc',
+        start_date: dateRange.startDate,
+        end_date: dateRange.endDate,
+        status: 'Paid'
+      };
 
-      const dailySales: DailySale[] = dailySalesResponse.data.data || [];
+      // Build query parameters for provider bills
+      const providerBillsParams: any = {
+        page: currentPage,
+        per_page: perPage,
+        sort_by: 'date',
+        sort_direction: 'desc',
+        start_date: dateRange.startDate,
+        end_date: dateRange.endDate,
+        status: 'Paid'
+      };
+
+      // Add search filter if provided
+      if (filters.search) {
+        dailySalesParams.search = filters.search;
+        vendorInvoicesParams.search = filters.search;
+        providerBillsParams.search = filters.search;
+      }
+
+      // Add vendor/provider filters
+      if (filters.selectedVendorsProviders.length > 0) {
+        const vendorIds = filters.selectedVendorsProviders
+          .filter(id => id.startsWith('vendor-'))
+          .map(id => id.replace('vendor-', ''));
+        
+        const providerIds = filters.selectedVendorsProviders
+          .filter(id => id.startsWith('provider-'))
+          .map(id => id.replace('provider-', ''));
+
+        if (vendorIds.length > 0) {
+          vendorInvoicesParams.vendor_id = vendorIds.join(',');
+        }
+        if (providerIds.length > 0) {
+          providerBillsParams.provider_id = providerIds.join(',');
+        }
+      }
+      
+      console.log('Debug - Daily Sales Params:', dailySalesParams);
+      
+      // Fetch daily sales for the date range (safedrops - income)
+      const dailySalesResponse = await dailySalesApi.getAll(dailySalesParams);
+
+      // Always fetch today's data if we're on page 1 and today is in range
+      let todaySafedrops: DailySale[] = [];
+      if (includeToday && currentPage === 1) {
+        try {
+          console.log('Debug - Fetching today\'s safedrops for date:', today);
+          const todayResponse = await dailySalesApi.getAll({
+            start_date: today,
+            end_date: today,
+            per_page: 1000, // Get all today's data
+            sort_by: 'date',
+            sort_direction: 'desc'
+          });
+          todaySafedrops = todayResponse.data.data || [];
+          console.log('Debug - Today\'s safedrops found:', todaySafedrops.length);
+          console.log('Debug - Today\'s safedrops data:', todaySafedrops);
+        } catch (err) {
+          console.error('Error fetching today\'s safedrops:', err);
+        }
+      }
+
+      // Fetch vendor invoices for the date range (paid income and expense)
+      const vendorInvoicesResponse = await vendorInvoicesApi.getAll(vendorInvoicesParams);
+
+      // Fetch provider bills for the date range (paid - expense)
+      const providerBillsResponse = await providerBillsApi.getAll(providerBillsParams);
+
+      let dailySales: DailySale[] = dailySalesResponse.data.data || [];
+      
+      console.log('Debug - Main daily sales found:', dailySales.length);
+      console.log('Debug - Today\'s safedrops found:', todaySafedrops.length);
+      
+      // Merge today's safedrops with the main daily sales data, avoiding duplicates
+      if (todaySafedrops.length > 0) {
+        const existingIds = new Set(dailySales.map(sale => sale.id));
+        const uniqueTodaySafedrops = todaySafedrops.filter(sale => !existingIds.has(sale.id));
+        dailySales = [...uniqueTodaySafedrops, ...dailySales];
+        console.log('Debug - After merge, total daily sales:', dailySales.length);
+      }
+
       const vendorInvoices: VendorInvoice[] = vendorInvoicesResponse.data.data || [];
       const providerBills: ProviderBill[] = providerBillsResponse.data.data || [];
+
+      // Helper function to extract date from datetime string
+      const extractDateFromDateTime = (dateTimeString: string): string => {
+        if (!dateTimeString) return '';
+        // Handle both date-only strings and datetime strings
+        if (dateTimeString.includes('T')) {
+          return dateTimeString.split('T')[0];
+        }
+        return dateTimeString;
+      };
 
       // Transform daily sales to balance items (safedrops - income)
       const safedropsItems: BalanceItem[] = dailySales
         .filter(sale => sale.safedrops_amount && sale.safedrops_amount > 0)
-        .map(sale => ({
-          id: sale.id || 0,
-          date: sale.date,
-          type: 'Safedrops' as const,
-          category: 'Income' as const,
-          description: `Safedrops for ${new Date(sale.date).toLocaleDateString('en-CA')}`,
-          number_of_safedrops: sale.number_of_safedrops || 0,
-          safedrops_amount: typeof sale.safedrops_amount === 'string' ? parseFloat(sale.safedrops_amount) : (sale.safedrops_amount || 0),
-          total: typeof sale.safedrops_amount === 'string' ? parseFloat(sale.safedrops_amount) : (sale.safedrops_amount || 0),
-          user: sale.user?.name
-        }));
+        .map(sale => {
+          const saleDate = extractDateFromDateTime(sale.date);
+          return {
+            id: sale.id || 0,
+            date: saleDate,
+            type: 'Safedrops' as const,
+            category: 'Income' as const,
+            description: `Safedrops for ${new Date(saleDate).toLocaleDateString('en-CA')}`,
+            number_of_safedrops: sale.number_of_safedrops || 0,
+            safedrops_amount: typeof sale.safedrops_amount === 'string' ? parseFloat(sale.safedrops_amount) : (sale.safedrops_amount || 0),
+            total: typeof sale.safedrops_amount === 'string' ? parseFloat(sale.safedrops_amount) : (sale.safedrops_amount || 0),
+            user: sale.user?.name
+          };
+        });
+
+      console.log('Debug - Safedrops items created:', safedropsItems.length);
+      console.log('Debug - Safedrops dates:', safedropsItems.map(item => item.date));
+      console.log('Debug - Safedrops dates (original):', dailySales.map(sale => sale.date));
 
       // Transform vendor invoices to balance items (paid income and expense)
+      // Filter by payment_date if available, otherwise use invoice_date
       const vendorInvoiceItems: BalanceItem[] = vendorInvoices
-        .filter(invoice => invoice.status === 'Paid')
-        .map(invoice => ({
-          id: invoice.id,
-          date: invoice.payment_date || invoice.invoice_date,
-          type: 'Vendor Invoice' as const,
-          category: invoice.type as 'Income' | 'Expense',
-          description: invoice.description || `Invoice ${invoice.invoice_number || invoice.id}`,
-          vendor: invoice.vendor?.name,
-          invoice_number: invoice.invoice_number,
-          subtotal: typeof invoice.subtotal === 'string' ? parseFloat(invoice.subtotal) : invoice.subtotal,
-          gst: typeof invoice.gst === 'string' ? parseFloat(invoice.gst) : invoice.gst,
-          total: typeof invoice.total === 'string' ? parseFloat(invoice.total) : invoice.total,
-          user: invoice.user?.name
-        }));
+        .filter(invoice => {
+          if (invoice.status !== 'Paid') return false;
+          
+          // Use payment_date if available, otherwise use invoice_date
+          const paymentDate = extractDateFromDateTime(invoice.payment_date || invoice.invoice_date);
+          return paymentDate >= dateRange.startDate && paymentDate <= dateRange.endDate;
+        })
+        .map(invoice => {
+          const paymentDate = extractDateFromDateTime(invoice.payment_date || invoice.invoice_date);
+          return {
+            id: invoice.id,
+            date: paymentDate,
+            type: 'Vendor Invoice' as const,
+            category: invoice.type as 'Income' | 'Expense',
+            description: invoice.description || `Invoice ${invoice.invoice_number || invoice.id}`,
+            vendor: invoice.vendor?.name,
+            invoice_number: invoice.invoice_number,
+            subtotal: typeof invoice.subtotal === 'string' ? parseFloat(invoice.subtotal) : invoice.subtotal,
+            gst: typeof invoice.gst === 'string' ? parseFloat(invoice.gst) : invoice.gst,
+            total: typeof invoice.total === 'string' ? parseFloat(invoice.total) : invoice.total,
+            user: invoice.user?.name
+          };
+        });
 
       // Transform provider bills to balance items (paid - expense)
+      // Filter by date_paid if available, otherwise use billing_date
       const providerBillItems: BalanceItem[] = providerBills
-        .filter(bill => bill.status === 'Paid')
-        .map(bill => ({
-          id: bill.id,
-          date: bill.date_paid || bill.billing_date,
-          type: 'Provider Bill' as const,
-          category: 'Expense' as const,
-          description: `${bill.provider?.service || 'Service'} - ${bill.provider?.name || 'Provider'}`,
-          provider: bill.provider?.name,
-          subtotal: typeof bill.subtotal === 'string' ? parseFloat(bill.subtotal) : bill.subtotal,
-          gst: typeof bill.gst === 'string' ? parseFloat(bill.gst) : bill.gst,
-          total: typeof bill.total === 'string' ? parseFloat(bill.total) : bill.total,
-          user: bill.user?.name
-        }));
+        .filter(bill => {
+          if (bill.status !== 'Paid') return false;
+          
+          // Use date_paid if available, otherwise use billing_date
+          const paymentDate = extractDateFromDateTime(bill.date_paid || bill.billing_date);
+          return paymentDate >= dateRange.startDate && paymentDate <= dateRange.endDate;
+        })
+        .map(bill => {
+          const paymentDate = extractDateFromDateTime(bill.date_paid || bill.billing_date);
+          return {
+            id: bill.id,
+            date: paymentDate,
+            type: 'Provider Bill' as const,
+            category: 'Expense' as const,
+            description: `${bill.provider?.service || 'Service'} - ${bill.provider?.name || 'Provider'}`,
+            provider: bill.provider?.name,
+            subtotal: typeof bill.subtotal === 'string' ? parseFloat(bill.subtotal) : bill.subtotal,
+            gst: typeof bill.gst === 'string' ? parseFloat(bill.gst) : bill.gst,
+            total: typeof bill.total === 'string' ? parseFloat(bill.total) : bill.total,
+            user: bill.user?.name
+          };
+        });
 
       // Combine and sort by date
       const allItems = [...safedropsItems, ...vendorInvoiceItems, ...providerBillItems]
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
+      console.log('Debug - Total items after combining:', allItems.length);
+      console.log('Debug - All item dates:', allItems.map(item => ({ date: item.date, type: item.type })));
+
       setBalanceData(allItems);
+
+      // Set pagination info - use the largest total from all three sources
+      const dailySalesTotal = dailySalesResponse.data.meta?.total || 0;
+      const vendorInvoicesTotal = vendorInvoicesResponse.data.meta?.total || 0;
+      const providerBillsTotal = providerBillsResponse.data.meta?.total || 0;
+      
+      const maxTotal = Math.max(dailySalesTotal, vendorInvoicesTotal, providerBillsTotal);
+      const maxPages = Math.max(
+        dailySalesResponse.data.meta?.last_page || 1,
+        vendorInvoicesResponse.data.meta?.last_page || 1,
+        providerBillsResponse.data.meta?.last_page || 1
+      );
+
+      setTotalItems(maxTotal || allItems.length);
+      setTotalPages(maxPages || 1);
 
       // Calculate totals
       const totalIncome = allItems
@@ -157,15 +391,108 @@ const BalancePage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [dateRange, currentPage, perPage, filters]);
+
+  useEffect(() => {
+    fetchVendors();
+    fetchProviders();
+  }, [fetchVendors, fetchProviders]);
 
   useEffect(() => {
     fetchBalanceData();
   }, [fetchBalanceData]);
 
+  const handleDateRangeChange = (field: 'startDate' | 'endDate', value: string) => {
+    setDateRange(prev => ({
+      ...prev,
+      [field]: value
+    }));
+    setCurrentPage(1); // Reset to first page when date range changes
+  };
+
+  const handleFilterChange = (field: keyof typeof filters, value: any) => {
+    setFilters(prev => ({
+      ...prev,
+      [field]: value
+    }));
+    setCurrentPage(1); // Reset to first page when filters change
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handlePerPageChange = (newPerPage: number) => {
+    setPerPage(newPerPage);
+    setCurrentPage(1); // Reset to first page when per page changes
+  };
+
+  const handleQuickDateSelect = (range: 'currentMonth' | 'lastMonth' | 'last3Months' | 'last6Months' | 'currentYear' | 'allTime') => {
+    const now = new Date();
+    let startDate: Date;
+    let endDate: Date;
+
+    switch (range) {
+      case 'currentMonth':
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        break;
+      case 'lastMonth':
+        startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        endDate = new Date(now.getFullYear(), now.getMonth(), 0);
+        break;
+      case 'last3Months':
+        startDate = new Date(now.getFullYear(), now.getMonth() - 3, 1);
+        endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        break;
+      case 'last6Months':
+        startDate = new Date(now.getFullYear(), now.getMonth() - 6, 1);
+        endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        break;
+      case 'currentYear':
+        startDate = new Date(now.getFullYear(), 0, 1);
+        endDate = new Date(now.getFullYear(), 11, 31);
+        break;
+      case 'allTime':
+        startDate = new Date(2020, 0, 1); // Start from 2020
+        endDate = now;
+        break;
+      default:
+        return;
+    }
+
+    setDateRange({
+      startDate: startDate.toISOString().split('T')[0],
+      endDate: endDate.toISOString().split('T')[0]
+    });
+    setCurrentPage(1);
+  };
+
+  const clearFilters = () => {
+    setFilters({
+      selectedVendorsProviders: [],
+      search: ''
+    });
+    setCurrentPage(1);
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-CA');
   };
+
+  // Create combined filter options
+  const filterOptions: FilterOption[] = [
+    ...vendors.map(vendor => ({
+      id: `vendor-${vendor.id}`,
+      name: `Vendor: ${vendor.name}`,
+      type: 'vendor' as const
+    })),
+    ...providers.map(provider => ({
+      id: `provider-${provider.id}`,
+      name: `Provider: ${provider.name} - ${provider.service}`,
+      type: 'provider' as const
+    }))
+  ];
 
   if (isLoading) {
     return (
@@ -203,7 +530,7 @@ const BalancePage: React.FC = () => {
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Balance Report</h1>
-            <p className="text-gray-600 mt-2">This month's income, expenses, and balance</p>
+            <p className="text-gray-600 mt-2">Income, expenses, and balance based on payment dates</p>
           </div>
           <button
             onClick={fetchBalanceData}
@@ -211,6 +538,150 @@ const BalancePage: React.FC = () => {
           >
             Refresh
           </button>
+        </div>
+      </div>
+
+      {/* Date Range Filter */}
+      <div className="bg-white rounded-lg shadow p-6 mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Date Range Filter</h3>
+            <p className="text-sm text-gray-600">Filter transactions by payment date</p>
+          </div>
+          
+          <div className="flex flex-col sm:flex-row gap-4">
+            {/* Quick Date Selectors */}
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => handleQuickDateSelect('allTime')}
+                className="px-3 py-1 text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-md transition-colors"
+              >
+                All Time
+              </button>
+              <button
+                onClick={() => handleQuickDateSelect('currentYear')}
+                className="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition-colors"
+              >
+                Current Year
+              </button>
+              <button
+                onClick={() => handleQuickDateSelect('currentMonth')}
+                className="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition-colors"
+              >
+                Current Month
+              </button>
+              <button
+                onClick={() => handleQuickDateSelect('lastMonth')}
+                className="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition-colors"
+              >
+                Last Month
+              </button>
+              <button
+                onClick={() => handleQuickDateSelect('last3Months')}
+                className="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition-colors"
+              >
+                Last 3 Months
+              </button>
+              <button
+                onClick={() => handleQuickDateSelect('last6Months')}
+                className="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition-colors"
+              >
+                Last 6 Months
+              </button>
+            </div>
+
+            {/* Custom Date Range */}
+            <div className="flex gap-2">
+              <div>
+                <label htmlFor="startDate" className="block text-xs font-medium text-gray-700 mb-1">
+                  Start Date
+                </label>
+                <input
+                  type="date"
+                  id="startDate"
+                  value={dateRange.startDate}
+                  onChange={(e) => handleDateRangeChange('startDate', e.target.value)}
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+                />
+              </div>
+              <div>
+                <label htmlFor="endDate" className="block text-xs font-medium text-gray-700 mb-1">
+                  End Date
+                </label>
+                <input
+                  type="date"
+                  id="endDate"
+                  value={dateRange.endDate}
+                  onChange={(e) => handleDateRangeChange('endDate', e.target.value)}
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Additional Filters */}
+      <div className="bg-white rounded-lg shadow p-6 mb-6">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Additional Filters</h3>
+            <p className="text-sm text-gray-600">Filter by vendors, providers, and search terms</p>
+          </div>
+          
+          <div className="flex flex-col sm:flex-row gap-4">
+            {/* Search */}
+            <div>
+              <label htmlFor="search" className="block text-xs font-medium text-gray-700 mb-1">
+                Search
+              </label>
+              <input
+                type="text"
+                id="search"
+                value={filters.search}
+                onChange={(e) => handleFilterChange('search', e.target.value)}
+                placeholder="Search descriptions..."
+                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+              />
+            </div>
+
+            {/* Combined Vendor/Provider Filter */}
+            <div>
+              <label htmlFor="vendorsProviders" className="block text-xs font-medium text-gray-700 mb-1">
+                Vendors & Providers
+              </label>
+              <select
+                id="vendorsProviders"
+                multiple
+                value={filters.selectedVendorsProviders}
+                onChange={(e) => {
+                  const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
+                  handleFilterChange('selectedVendorsProviders', selectedOptions);
+                }}
+                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm min-h-[80px]"
+              >
+                <option value="" disabled>Select vendors and/or providers</option>
+                {filterOptions.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {option.name}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-500 mt-1">
+                Hold Ctrl/Cmd to select multiple
+              </p>
+            </div>
+
+            {/* Clear Filters */}
+            <div className="flex items-end">
+              <button
+                onClick={clearFilters}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+              >
+                Clear
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -269,7 +740,7 @@ const BalancePage: React.FC = () => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Total Items</p>
-              <p className="text-2xl font-semibold text-gray-900">{totals.totalItems}</p>
+              <p className="text-2xl font-semibold text-gray-900">{totalItems}</p>
             </div>
           </div>
         </div>
@@ -280,7 +751,7 @@ const BalancePage: React.FC = () => {
         <div className="px-6 py-4 border-b border-gray-200">
           <h3 className="text-lg font-medium text-gray-900">Balance Details</h3>
           <p className="text-sm text-gray-500 mt-1">
-            {balanceData.length} transaction{balanceData.length !== 1 ? 's' : ''} found
+            {totalItems} transaction{totalItems !== 1 ? 's' : ''} found for {formatDate(dateRange.startDate)} to {formatDate(dateRange.endDate)}
           </p>
         </div>
 
@@ -291,98 +762,110 @@ const BalancePage: React.FC = () => {
             </svg>
             <h3 className="mt-2 text-sm font-medium text-gray-900">No transactions found</h3>
             <p className="mt-1 text-sm text-gray-500">
-              No income or expense transactions recorded for this month.
+              No income or expense transactions recorded for the selected filters.
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Type
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Category
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Description
-                  </th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Number of Safedrops
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Amount
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {balanceData.map((item) => (
-                  <tr key={`${item.type}-${item.id}`} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {formatDate(item.date)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        item.type === 'Safedrops' 
-                          ? 'bg-green-100 text-green-800'
-                          : item.type === 'Vendor Invoice'
-                          ? 'bg-blue-100 text-blue-800'
-                          : 'bg-purple-100 text-purple-800'
+          <>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Payment Date
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Type
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Category
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Description
+                    </th>
+                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Number of Safedrops
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Amount
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {balanceData.map((item) => (
+                    <tr key={`${item.type}-${item.id}`} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {formatDate(item.date)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                          item.type === 'Safedrops' 
+                            ? 'bg-green-100 text-green-800'
+                            : item.type === 'Vendor Invoice'
+                            ? 'bg-blue-100 text-blue-800'
+                            : 'bg-purple-100 text-purple-800'
+                        }`}>
+                          {item.type}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                          item.category === 'Income' 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {item.category}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-900">
+                        {item.type === 'Safedrops' 
+                          ? item.description
+                          : `${item.description}${item.vendor ? ` - ${item.vendor}` : ''}${item.provider ? ` - ${item.provider}` : ''}`
+                        }
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                        {item.type === 'Safedrops' ? item.number_of_safedrops : '-'}
+                      </td>
+                      <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium text-right ${
+                        item.category === 'Income' ? 'text-green-600' : 'text-red-600'
                       }`}>
-                        {item.type}
-                      </span>
+                        {item.category === 'Income' ? '+' : '-'}{formatCurrency(item.total || 0)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot className="bg-gray-50">
+                  <tr>
+                    <td colSpan={4} className="px-6 py-4 text-sm font-medium text-gray-900">
+                      Totals
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        item.category === 'Income' 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-red-100 text-red-800'
-                      }`}>
-                        {item.category}
-                      </span>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
+                      {balanceData.filter(item => item.type === 'Safedrops').reduce((sum, item) => sum + (item.number_of_safedrops || 0), 0)}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">
-                      {item.type === 'Safedrops' 
-                        ? item.description
-                        : `${item.description}${item.vendor ? ` - ${item.vendor}` : ''}${item.provider ? ` - ${item.provider}` : ''}`
-                      }
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                      {item.type === 'Safedrops' ? item.number_of_safedrops : '-'}
-                    </td>
-                    <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium text-right ${
-                      item.category === 'Income' ? 'text-green-600' : 'text-red-600'
-                    }`}>
-                      {item.category === 'Income' ? '+' : '-'}{formatCurrency(item.total || 0)}
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 text-right">
+                      <div className="space-y-1">
+                        <div className="text-green-600">+{formatCurrency(totals.totalIncome)}</div>
+                        <div className="text-red-600">-{formatCurrency(totals.totalExpense)}</div>
+                        <div className={`border-t pt-1 ${totals.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          = {formatCurrency(totals.balance)}
+                        </div>
+                      </div>
                     </td>
                   </tr>
-                ))}
-              </tbody>
-              <tfoot className="bg-gray-50">
-                <tr>
-                  <td colSpan={4} className="px-6 py-4 text-sm font-medium text-gray-900">
-                    Totals
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
-                    {balanceData.filter(item => item.type === 'Safedrops').reduce((sum, item) => sum + (item.number_of_safedrops || 0), 0)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 text-right">
-                    <div className="space-y-1">
-                      <div className="text-green-600">+{formatCurrency(totals.totalIncome)}</div>
-                      <div className="text-red-600">-{formatCurrency(totals.totalExpense)}</div>
-                      <div className={`border-t pt-1 ${totals.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        = {formatCurrency(totals.balance)}
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
+                </tfoot>
+              </table>
+            </div>
+            
+            {/* Pagination */}
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={totalItems}
+              perPage={perPage}
+              onPageChange={handlePageChange}
+              onPerPageChange={handlePerPageChange}
+            />
+          </>
         )}
       </div>
     </div>

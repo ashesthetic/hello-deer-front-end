@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { usePageTitle } from '../hooks/usePageTitle';
 import { providerBillsApi, vendorInvoicesApi, ProviderBill, VendorInvoice } from '../services/api';
 import { formatCurrency } from '../utils/currencyUtils';
+import { Pagination } from '../components/common/Pagination';
 
 interface ExpenseItem {
   id: number;
@@ -17,49 +18,106 @@ interface ExpenseItem {
   payment_date?: string;
 }
 
+interface Vendor {
+  id: number;
+  name: string;
+}
+
+interface Provider {
+  id: number;
+  name: string;
+  service: string;
+}
+
 const ExpensePage: React.FC = () => {
   usePageTitle('Expenses');
   const [expenses, setExpenses] = useState<ExpenseItem[]>([]);
+  const [vendors, setVendors] = useState<Vendor[]>([]);
+  const [providers, setProviders] = useState<Provider[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [perPage, setPerPage] = useState(25);
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  
+  // Filter state
+  const [filters, setFilters] = useState({
+    startDate: '',
+    endDate: '',
+    vendorId: '',
+    providerId: '',
+    search: ''
+  });
+
   const [totals, setTotals] = useState({
     subtotal: 0,
     gst: 0,
     total: 0
   });
 
-  // Get current month's date range
-  const getCurrentMonthRange = () => {
-    const now = new Date();
-    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-    
-    return {
-      startDate: firstDay.toISOString().split('T')[0],
-      endDate: lastDay.toISOString().split('T')[0]
-    };
-  };
+  // Fetch vendors and providers for filter dropdowns
+  const fetchVendors = useCallback(async () => {
+    try {
+      const response = await vendorInvoicesApi.getVendors();
+      setVendors(response.data || []);
+    } catch (err) {
+      console.error('Error fetching vendors:', err);
+    }
+  }, []);
+
+  const fetchProviders = useCallback(async () => {
+    try {
+      const response = await providerBillsApi.getProviders();
+      setProviders(response.data || []);
+    } catch (err) {
+      console.error('Error fetching providers:', err);
+    }
+  }, []);
 
   const fetchExpenses = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     
     try {
-      const { startDate, endDate } = getCurrentMonthRange();
+      // Build query parameters
+      const params: any = {
+        page: currentPage,
+        per_page: perPage,
+        sort_by: 'date',
+        sort_direction: 'desc'
+      };
+
+      // Add filters
+      if (filters.startDate) {
+        params.start_date = filters.startDate;
+      }
+      if (filters.endDate) {
+        params.end_date = filters.endDate;
+      }
+      if (filters.vendorId) {
+        params.vendor_id = filters.vendorId;
+      }
+      if (filters.providerId) {
+        params.provider_id = filters.providerId;
+      }
+      if (filters.search) {
+        params.search = filters.search;
+      }
       
-      // Fetch paid provider bills for this month
+      // Fetch paid provider bills
       const providerBillsResponse = await providerBillsApi.getAll({
-        status: 'Paid',
-        start_date: startDate,
-        end_date: endDate
+        ...params,
+        status: 'Paid'
       });
       
-      // Fetch paid vendor invoices (expense type) for this month
+      // Fetch paid vendor invoices (expense type)
       const vendorInvoicesResponse = await vendorInvoicesApi.getAll({
+        ...params,
         status: 'Paid',
-        type: 'Expense',
-        start_date: startDate,
-        end_date: endDate
+        type: 'Expense'
       });
 
       const providerBills: ProviderBill[] = providerBillsResponse.data.data || [];
@@ -67,7 +125,7 @@ const ExpensePage: React.FC = () => {
 
       // Transform provider bills to expense items (only paid ones)
       const providerBillExpenses: ExpenseItem[] = providerBills
-        .filter(bill => bill.status === 'Paid') // Additional safety filter
+        .filter(bill => bill.status === 'Paid')
         .map(bill => ({
           id: bill.id,
           date: bill.date_paid || bill.billing_date,
@@ -83,7 +141,7 @@ const ExpensePage: React.FC = () => {
 
       // Transform vendor invoices to expense items (only paid ones)
       const vendorInvoiceExpenses: ExpenseItem[] = vendorInvoices
-        .filter(invoice => invoice.status === 'Paid' && invoice.type === 'Expense') // Additional safety filter
+        .filter(invoice => invoice.status === 'Paid' && invoice.type === 'Expense')
         .map(invoice => ({
           id: invoice.id,
           date: invoice.payment_date || invoice.invoice_date,
@@ -103,6 +161,15 @@ const ExpensePage: React.FC = () => {
 
       setExpenses(allExpenses);
 
+      // Set pagination info from provider bills response (assuming it has pagination)
+      if (providerBillsResponse.data.meta) {
+        setTotalItems(providerBillsResponse.data.meta.total || allExpenses.length);
+        setTotalPages(providerBillsResponse.data.meta.last_page || 1);
+      } else {
+        setTotalItems(allExpenses.length);
+        setTotalPages(1);
+      }
+
       // Calculate totals
       const totalSubtotal = allExpenses.reduce((sum, expense) => sum + expense.subtotal, 0);
       const totalGst = allExpenses.reduce((sum, expense) => sum + expense.gst, 0);
@@ -120,11 +187,44 @@ const ExpensePage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [currentPage, perPage, filters]);
+
+  useEffect(() => {
+    fetchVendors();
+    fetchProviders();
+  }, [fetchVendors, fetchProviders]);
 
   useEffect(() => {
     fetchExpenses();
   }, [fetchExpenses]);
+
+  const handleFilterChange = (field: keyof typeof filters, value: string) => {
+    setFilters(prev => ({
+      ...prev,
+      [field]: value
+    }));
+    setCurrentPage(1); // Reset to first page when filters change
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handlePerPageChange = (newPerPage: number) => {
+    setPerPage(newPerPage);
+    setCurrentPage(1); // Reset to first page when per page changes
+  };
+
+  const clearFilters = () => {
+    setFilters({
+      startDate: '',
+      endDate: '',
+      vendorId: '',
+      providerId: '',
+      search: ''
+    });
+    setCurrentPage(1);
+  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-CA');
@@ -166,7 +266,7 @@ const ExpensePage: React.FC = () => {
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Expenses</h1>
-            <p className="text-gray-600 mt-2">This month's expenses from paid provider bills and vendor invoices</p>
+            <p className="text-gray-600 mt-2">All expenses from paid provider bills and vendor invoices</p>
           </div>
           <button
             onClick={fetchExpenses}
@@ -174,6 +274,110 @@ const ExpensePage: React.FC = () => {
           >
             Refresh
           </button>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="bg-white rounded-lg shadow p-6 mb-6">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Filters</h3>
+            <p className="text-sm text-gray-600">Filter expense data by date range, vendor, and provider</p>
+          </div>
+          
+          <div className="flex flex-col sm:flex-row gap-4">
+            {/* Search */}
+            <div>
+              <label htmlFor="search" className="block text-xs font-medium text-gray-700 mb-1">
+                Search
+              </label>
+              <input
+                type="text"
+                id="search"
+                value={filters.search}
+                onChange={(e) => handleFilterChange('search', e.target.value)}
+                placeholder="Search descriptions..."
+                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+              />
+            </div>
+
+            {/* Vendor Filter */}
+            <div>
+              <label htmlFor="vendor" className="block text-xs font-medium text-gray-700 mb-1">
+                Vendor
+              </label>
+              <select
+                id="vendor"
+                value={filters.vendorId}
+                onChange={(e) => handleFilterChange('vendorId', e.target.value)}
+                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+              >
+                <option value="">All Vendors</option>
+                {vendors.map((vendor) => (
+                  <option key={vendor.id} value={vendor.id}>
+                    {vendor.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Provider Filter */}
+            <div>
+              <label htmlFor="provider" className="block text-xs font-medium text-gray-700 mb-1">
+                Provider
+              </label>
+              <select
+                id="provider"
+                value={filters.providerId}
+                onChange={(e) => handleFilterChange('providerId', e.target.value)}
+                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+              >
+                <option value="">All Providers</option>
+                {providers.map((provider) => (
+                  <option key={provider.id} value={provider.id}>
+                    {provider.name} - {provider.service}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Date Range */}
+            <div>
+              <label htmlFor="startDate" className="block text-xs font-medium text-gray-700 mb-1">
+                Start Date
+              </label>
+              <input
+                type="date"
+                id="startDate"
+                value={filters.startDate}
+                onChange={(e) => handleFilterChange('startDate', e.target.value)}
+                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="endDate" className="block text-xs font-medium text-gray-700 mb-1">
+                End Date
+              </label>
+              <input
+                type="date"
+                id="endDate"
+                value={filters.endDate}
+                onChange={(e) => handleFilterChange('endDate', e.target.value)}
+                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+              />
+            </div>
+
+            {/* Clear Filters */}
+            <div className="flex items-end">
+              <button
+                onClick={clearFilters}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+              >
+                Clear
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -227,7 +431,7 @@ const ExpensePage: React.FC = () => {
         <div className="px-6 py-4 border-b border-gray-200">
           <h3 className="text-lg font-medium text-gray-900">Expense Details</h3>
           <p className="text-sm text-gray-500 mt-1">
-            {expenses.length} expense{expenses.length !== 1 ? 's' : ''} found
+            {totalItems} expense{totalItems !== 1 ? 's' : ''} found
           </p>
         </div>
 
@@ -238,88 +442,100 @@ const ExpensePage: React.FC = () => {
             </svg>
             <h3 className="mt-2 text-sm font-medium text-gray-900">No expenses found</h3>
             <p className="mt-1 text-sm text-gray-500">
-              No paid expenses found for this month.
+              No paid expenses found for the selected filters.
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Type
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Description
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Provider/Vendor
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Subtotal
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    GST
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Total
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {expenses.map((expense) => (
-                  <tr key={`${expense.type}-${expense.id}`} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {formatDate(expense.date)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        expense.type === 'Provider Bill' 
-                          ? 'bg-blue-100 text-blue-800' 
-                          : 'bg-green-100 text-green-800'
-                      }`}>
-                        {expense.type}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">
-                      {expense.description}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">
-                      {expense.provider || expense.vendor || '-'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
-                      {formatCurrency(expense.subtotal)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
-                      {formatCurrency(expense.gst)}
+          <>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Date
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Type
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Description
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Provider/Vendor
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Subtotal
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      GST
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Total
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {expenses.map((expense) => (
+                    <tr key={`${expense.type}-${expense.id}`} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {formatDate(expense.date)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                          expense.type === 'Provider Bill' 
+                            ? 'bg-blue-100 text-blue-800' 
+                            : 'bg-green-100 text-green-800'
+                        }`}>
+                          {expense.type}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-900">
+                        {expense.description}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-900">
+                        {expense.provider || expense.vendor || '-'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                        {formatCurrency(expense.subtotal)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                        {formatCurrency(expense.gst)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-right">
+                        {formatCurrency(expense.total)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot className="bg-gray-50">
+                  <tr>
+                    <td colSpan={4} className="px-6 py-4 text-sm font-medium text-gray-900">
+                      Totals
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-right">
-                      {formatCurrency(expense.total)}
+                      {formatCurrency(totals.subtotal)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-right">
+                      {formatCurrency(totals.gst)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 text-right">
+                      {formatCurrency(totals.total)}
                     </td>
                   </tr>
-                ))}
-              </tbody>
-              <tfoot className="bg-gray-50">
-                <tr>
-                  <td colSpan={4} className="px-6 py-4 text-sm font-medium text-gray-900">
-                    Totals
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-right">
-                    {formatCurrency(totals.subtotal)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-right">
-                    {formatCurrency(totals.gst)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 text-right">
-                    {formatCurrency(totals.total)}
-                  </td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
+                </tfoot>
+              </table>
+            </div>
+            
+            {/* Pagination */}
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={totalItems}
+              perPage={perPage}
+              onPageChange={handlePageChange}
+              onPerPageChange={handlePerPageChange}
+            />
+          </>
         )}
       </div>
     </div>

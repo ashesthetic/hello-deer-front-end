@@ -24,25 +24,56 @@ ChartJS.register(
   ChartDataLabels
 );
 
+type ReportMode = 'current-month' | 'previous-month' | 'last-2-months' | 'last-3-months' | 'last-4-months' | 'last-5-months' | 'last-6-months' | 'last-7-months' | 'last-8-months' | 'last-9-months' | 'last-10-months' | 'last-11-months' | 'last-12-months';
+
 const FuelsReportPage: React.FC = () => {
   usePageTitle('Fuels Report');
   const [fuels, setFuels] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
+  const [reportMode, setReportMode] = useState<ReportMode>('current-month');
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth() + 1);
   const reportRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    fetchFuels();
-  }, [currentYear, currentMonth]);
+    fetchFuelsData();
+  }, [reportMode, currentYear, currentMonth]);
 
-  const fetchFuels = async () => {
+  const fetchFuelsData = async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await dailyFuelsApi.getByMonth(currentYear, currentMonth);
+      let response;
+      
+      if (reportMode.startsWith('last-')) {
+        // Handle last N months
+        const monthsCount = parseInt(reportMode.split('-')[1]);
+        const endDate = new Date(currentYear, currentMonth - 1, 0); // Last day of current month
+        const startDate = new Date(currentYear, currentMonth - monthsCount, 1); // First day of N months ago
+        
+        response = await dailyFuelsApi.getAll({
+          start_date: startDate.toISOString().split('T')[0],
+          end_date: endDate.toISOString().split('T')[0]
+        });
+      } else {
+        // For current-month and previous-month modes
+        let year = currentYear;
+        let month = currentMonth;
+        
+        if (reportMode === 'previous-month') {
+          if (month === 1) {
+            month = 12;
+            year = year - 1;
+          } else {
+            month = month - 1;
+          }
+        }
+        
+        response = await dailyFuelsApi.getByMonth(year, month);
+      }
+      
       setFuels(response.data.data || []);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to fetch fuel data');
@@ -104,6 +135,22 @@ const FuelsReportPage: React.FC = () => {
     setCurrentMonth(now.getMonth() + 1);
   };
 
+  const getReportTitle = () => {
+    if (reportMode === 'current-month') {
+      const currentDate = new Date();
+      return currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    } else if (reportMode === 'previous-month') {
+      const date = new Date(currentYear, currentMonth - 1, 1);
+      return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    } else if (reportMode.startsWith('last-')) {
+      const monthsCount = parseInt(reportMode.split('-')[1]);
+      const endDate = new Date(currentYear, currentMonth - 1, 0);
+      const startDate = new Date(currentYear, currentMonth - monthsCount, 1);
+      return `Last ${monthsCount} Months (${startDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })} - ${endDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })})`;
+    }
+    return 'Fuels Report';
+  };
+
   const handleExportPDF = async () => {
     if (!reportRef.current) {
       alert('Report content not found');
@@ -112,8 +159,18 @@ const FuelsReportPage: React.FC = () => {
 
     setExporting(true);
     try {
-      const monthName = `${getMonthName(currentMonth)} ${currentYear}`;
-      await exportSalesReportToPDF(reportRef.current, `fuels-report-${monthName.toLowerCase().replace(' ', '-')}`);
+      let reportTitle = '';
+      if (reportMode === 'current-month') {
+        const currentDate = new Date();
+        reportTitle = currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      } else if (reportMode === 'previous-month') {
+        const date = new Date(currentYear, currentMonth - 1, 1);
+        reportTitle = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      } else {
+        reportTitle = `${reportMode.replace('last-', '')} Months`;
+      }
+      
+      await exportSalesReportToPDF(reportRef.current, `fuels-report-${reportTitle.toLowerCase().replace(/[^a-z0-9]/g, '-')}`);
     } catch (error) {
       console.error('Export failed:', error);
       alert('Failed to export PDF. Please try again.');
@@ -343,58 +400,227 @@ const FuelsReportPage: React.FC = () => {
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Fuels Report</h1>
-            <p className="text-gray-600">Comprehensive analysis of daily fuel sales and quantities</p>
+            <p className="text-gray-600">Comprehensive analysis of daily fuel sales and quantities - {getReportTitle()}</p>
           </div>
           
-            {/* Export PDF Button */}
-            <button
-              onClick={handleExportPDF}
-              disabled={exporting || loading || fuels.length === 0}
-              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-            >
-              {exporting ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  <span>Exporting...</span>
-                </>
-              ) : (
-                <>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                  <span>Export PDF</span>
-                </>
-              )}
-            </button>
-            
-            {/* Month Navigation */}
-            <div className="flex items-center space-x-4">
-            <button
-              onClick={handlePreviousMonth}
-              className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              Previous
-            </button>
-            
-            <div className="text-center">
-              <div className="text-lg font-semibold text-gray-900">
-                {getMonthName(currentMonth)} {currentYear}
+          <button
+            onClick={handleExportPDF}
+            disabled={exporting || loading || fuels.length === 0}
+            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+          >
+            {exporting ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                <span>Exporting...</span>
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <span>Export PDF</span>
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* Report Mode Selection */}
+        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Report Period</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Report Type</label>
+              <div className="grid grid-cols-1 gap-2">
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="reportMode"
+                    value="current-month"
+                    checked={reportMode === 'current-month'}
+                    onChange={(e) => setReportMode(e.target.value as ReportMode)}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Current Month</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="reportMode"
+                    value="previous-month"
+                    checked={reportMode === 'previous-month'}
+                    onChange={(e) => setReportMode(e.target.value as ReportMode)}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Previous Month</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="reportMode"
+                    value="last-2-months"
+                    checked={reportMode === 'last-2-months'}
+                    onChange={(e) => setReportMode(e.target.value as ReportMode)}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Last 2 Months</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="reportMode"
+                    value="last-3-months"
+                    checked={reportMode === 'last-3-months'}
+                    onChange={(e) => setReportMode(e.target.value as ReportMode)}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Last 3 Months</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="reportMode"
+                    value="last-4-months"
+                    checked={reportMode === 'last-4-months'}
+                    onChange={(e) => setReportMode(e.target.value as ReportMode)}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Last 4 Months</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="reportMode"
+                    value="last-5-months"
+                    checked={reportMode === 'last-5-months'}
+                    onChange={(e) => setReportMode(e.target.value as ReportMode)}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Last 5 Months</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="reportMode"
+                    value="last-6-months"
+                    checked={reportMode === 'last-6-months'}
+                    onChange={(e) => setReportMode(e.target.value as ReportMode)}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Last 6 Months</span>
+                </label>
               </div>
             </div>
-            
-            <button
-              onClick={handleNextMonth}
-              className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              Next
-            </button>
-            
-            <button
-              onClick={handleCurrentMonth}
-              className="px-3 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              Current
-            </button>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Extended Periods</label>
+              <div className="grid grid-cols-1 gap-2">
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="reportMode"
+                    value="last-7-months"
+                    checked={reportMode === 'last-7-months'}
+                    onChange={(e) => setReportMode(e.target.value as ReportMode)}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Last 7 Months</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="reportMode"
+                    value="last-8-months"
+                    checked={reportMode === 'last-8-months'}
+                    onChange={(e) => setReportMode(e.target.value as ReportMode)}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Last 8 Months</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="reportMode"
+                    value="last-9-months"
+                    checked={reportMode === 'last-9-months'}
+                    onChange={(e) => setReportMode(e.target.value as ReportMode)}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Last 9 Months</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="reportMode"
+                    value="last-10-months"
+                    checked={reportMode === 'last-10-months'}
+                    onChange={(e) => setReportMode(e.target.value as ReportMode)}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Last 10 Months</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="reportMode"
+                    value="last-11-months"
+                    checked={reportMode === 'last-11-months'}
+                    onChange={(e) => setReportMode(e.target.value as ReportMode)}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Last 11 Months</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="reportMode"
+                    value="last-12-months"
+                    checked={reportMode === 'last-12-months'}
+                    onChange={(e) => setReportMode(e.target.value as ReportMode)}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Last 12 Months</span>
+                </label>
+              </div>
+            </div>
+
+            {/* Month Navigation (only show for current/previous month modes) */}
+            {!reportMode.startsWith('last-') && (
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Select Month</label>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={handlePreviousMonth}
+                    disabled={loading}
+                    className="px-3 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                  <span className="text-sm font-medium text-gray-900 min-w-[120px] text-center">
+                    {getMonthName(currentMonth)} {currentYear}
+                  </span>
+                  <button
+                    onClick={handleNextMonth}
+                    disabled={loading}
+                    className="px-3 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                </div>
+                <div className="mt-2">
+                  <button
+                    onClick={handleCurrentMonth}
+                    disabled={loading}
+                    className="px-3 py-1 text-xs font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Current Month
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
