@@ -333,10 +333,11 @@ const BalancePage: React.FC = () => {
       // Transform vendor invoices to balance items (paid income and expense)
       // Backend now filters by payment_date, so we just need to map the data
       const vendorInvoiceItems: BalanceItem[] = vendorInvoices
+        .filter(invoice => invoice.id !== undefined) // Filter out items without ID
         .map(invoice => {
           const paymentDate = extractDateFromDateTime(invoice.payment_date || invoice.invoice_date);
           return {
-            id: invoice.id,
+            id: invoice.id!,
             date: paymentDate,
             type: 'Vendor Invoice' as const,
             category: invoice.type as 'Income' | 'Expense',
@@ -363,10 +364,11 @@ const BalancePage: React.FC = () => {
       // Transform provider bills to balance items (paid - expense)
       // Backend now filters by date_paid, so we just need to map the data
       const providerBillItems: BalanceItem[] = providerBills
+        .filter(bill => bill.id !== undefined) // Filter out items without ID
         .map(bill => {
           const paymentDate = extractDateFromDateTime(bill.date_paid || bill.billing_date);
           return {
-            id: bill.id,
+            id: bill.id!,
             date: paymentDate,
             type: 'Provider Bill' as const,
             category: 'Expense' as const,

@@ -141,7 +141,7 @@ const VendorInvoicesPage: React.FC = () => {
   };
 
   const confirmDelete = async () => {
-    if (!invoiceToDelete) return;
+    if (!invoiceToDelete || !invoiceToDelete.id) return;
 
     setLoading(true);
     try {

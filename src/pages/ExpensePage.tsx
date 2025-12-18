@@ -141,9 +141,9 @@ const ExpensePage: React.FC = () => {
 
       // Transform vendor invoices to expense items (only paid ones)
       const vendorInvoiceExpenses: ExpenseItem[] = vendorInvoices
-        .filter(invoice => invoice.status === 'Paid' && invoice.type === 'Expense')
+        .filter(invoice => invoice.status === 'Paid' && invoice.type === 'Expense' && invoice.id !== undefined)
         .map(invoice => ({
-          id: invoice.id,
+          id: invoice.id!,
           date: invoice.payment_date || invoice.invoice_date,
           type: 'Vendor Invoice',
           description: invoice.description || `Invoice ${invoice.invoice_number || invoice.id}`,

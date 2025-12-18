@@ -49,7 +49,7 @@ const VendorInvoiceViewPage: React.FC = () => {
   };
 
   const confirmDelete = async () => {
-    if (!invoice) return;
+    if (!invoice || !invoice.id) return;
     
     try {
       await vendorInvoicesApi.delete(invoice.id);
@@ -64,7 +64,7 @@ const VendorInvoiceViewPage: React.FC = () => {
   };
 
   const handleDownloadFile = async () => {
-    if (!invoice) return;
+    if (!invoice || !invoice.id) return;
     
     try {
       const response = await vendorInvoicesApi.downloadFile(invoice.id);
@@ -90,8 +90,13 @@ const VendorInvoiceViewPage: React.FC = () => {
     if (!invoice) return;
     
     try {
-      const response = await vendorInvoicesApi.getFileViewLink(invoice.id);
-      window.open(response.data.view_link, '_blank');
+      // Use stored web view link if available, otherwise fetch from API
+      if (invoice.google_drive_web_view_link) {
+        window.open(invoice.google_drive_web_view_link, '_blank');
+      } else {
+        const response = await vendorInvoicesApi.getFileViewLink(invoice.id!);
+        window.open(response.data.view_link, '_blank');
+      }
     } catch (err: any) {
       setError('Failed to get Google Drive view link');
     }
@@ -332,14 +337,14 @@ const VendorInvoiceViewPage: React.FC = () => {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Recorded On</label>
                   <p className="text-gray-900">
-                    {formatDateTimeForDisplay(invoice.created_at)}
+                    {invoice.created_at ? formatDateTimeForDisplay(invoice.created_at) : 'N/A'}
                   </p>
                 </div>
                 {invoice.updated_at !== invoice.created_at && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Last Updated</label>
                     <p className="text-gray-900">
-                      {formatDateTimeForDisplay(invoice.updated_at)}
+                      {invoice.updated_at ? formatDateTimeForDisplay(invoice.updated_at) : 'N/A'}
                     </p>
                   </div>
                 )}

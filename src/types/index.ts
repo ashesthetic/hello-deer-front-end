@@ -595,12 +595,15 @@ export interface VendorInvoice {
   vendor_id: number;
   invoice_number: string;
   invoice_date: string;
-  status: 'pending' | 'paid' | 'overdue' | 'cancelled';
-  type: 'invoice' | 'credit_note' | 'receipt';
+  status: 'Paid' | 'Unpaid';
+  type: 'Income' | 'Expense';
   reference?: string;
   payment_date?: string;
   payment_method?: string;
   invoice_file_path?: string;
+  google_drive_file_id?: string;
+  google_drive_file_name?: string;
+  google_drive_web_view_link?: string;
   subtotal: number | string;
   gst: number | string;
   total: number | string;
