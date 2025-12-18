@@ -477,4 +477,146 @@ export interface CreateResolutionData {
   daily_sale_id: number;
   type: 'safedrops' | 'cash_in_hand';
   resolutions: ResolutionData[];
+}
+
+// Transaction types
+export interface Transaction {
+  id?: number;
+  type: 'income' | 'expense' | 'transfer';
+  amount: number | string;
+  description: string;
+  bank_account_id: number;
+  to_bank_account_id?: number;
+  reference_number?: string;
+  vendor_invoice_id?: number;
+  transfer_transaction_id?: number;
+  user_id?: number;
+  bank_account?: BankAccount;
+  to_bank_account?: BankAccount;
+  vendor_invoice?: VendorInvoice;
+  transfer_transaction?: Transaction;
+  user?: User;
+  created_at?: string;
+  updated_at?: string;
+  formatted_amount?: string;
+  formatted_created_at?: string;
+  transaction_type_display?: string;
+  is_credit?: boolean;
+  is_debit?: boolean;
+  canBeViewedBy?: (user: User) => boolean;
+  canBeUpdatedBy?: (user: User) => boolean;
+  canBeDeletedBy?: (user: User) => boolean;
+}
+
+export interface CreateTransactionData {
+  type: 'income' | 'expense' | 'transfer';
+  amount: number;
+  description: string;
+  bank_account_id: number;
+  to_bank_account_id?: number;
+  reference_number?: string;
+  vendor_invoice_id?: number;
+}
+
+export interface UpdateTransactionData {
+  description?: string;
+  reference_number?: string;
+}
+
+export interface TransactionFilters {
+  type?: 'all' | 'income' | 'expense' | 'transfer';
+  bank_account_id?: number | 'all';
+  date_from?: string;
+  date_to?: string;
+  amount_min?: number;
+  amount_max?: number;
+  search?: string;
+  sort_by?: 'created_at' | 'amount' | 'type' | 'description';
+  sort_order?: 'asc' | 'desc';
+  per_page?: number;
+}
+
+export interface TransactionSummary {
+  total_income: number | string;
+  total_expenses: number | string;
+  total_transfers: number | string;
+  net_amount: number | string;
+  transaction_count: number;
+}
+
+// Bank Transfer types
+export interface BankTransfer {
+  id?: number;
+  from_bank_account_id: number;
+  to_bank_account_id: number;
+  amount: number | string;
+  description: string;
+  reference_number?: string;
+  from_bank_account?: BankAccount;
+  to_bank_account?: BankAccount;
+  user?: User;
+  created_at?: string;
+  updated_at?: string;
+  formatted_amount?: string;
+  formatted_created_at?: string;
+}
+
+export interface CreateBankTransferData {
+  from_bank_account_id: number;
+  to_bank_account_id: number;
+  amount: number;
+  description: string;
+  reference_number?: string;
+}
+
+export interface BankTransferFilters {
+  bank_account_id?: number | 'all';
+  date_from?: string;
+  date_to?: string;
+  amount_min?: number;
+  amount_max?: number;
+  search?: string;
+  sort_by?: 'created_at' | 'amount' | 'description';
+  sort_order?: 'asc' | 'desc';
+  per_page?: number;
+}
+
+export interface BankTransferSummary {
+  total_transfers: number;
+  total_amount: number | string;
+  avg_amount: number | string;
+  largest_transfer: number | string;
+  smallest_transfer: number | string;
+}
+
+// Vendor Invoice types (adding to existing types)
+export interface VendorInvoice {
+  id?: number;
+  vendor_id: number;
+  invoice_number: string;
+  invoice_date: string;
+  status: 'pending' | 'paid' | 'overdue' | 'cancelled';
+  type: 'invoice' | 'credit_note' | 'receipt';
+  reference?: string;
+  payment_date?: string;
+  payment_method?: string;
+  invoice_file_path?: string;
+  subtotal: number | string;
+  gst: number | string;
+  total: number | string;
+  notes?: string;
+  description?: string;
+  bank_account_id?: number;
+  user_id?: number;
+  vendor?: Vendor;
+  bank_account?: BankAccount;
+  user?: User;
+  transactions?: Transaction[];
+  created_at?: string;
+  updated_at?: string;
+  formatted_total?: string;
+  formatted_invoice_date?: string;
+  formatted_payment_date?: string;
+  canBeUpdatedBy?: (user: User) => boolean;
+  canBeDeletedBy?: (user: User) => boolean;
 } 
