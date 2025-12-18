@@ -15,6 +15,7 @@ const ResolvePendingPage: React.FC = () => {
   const [selectedItem, setSelectedItem] = useState<PendingItem | null>(null);
   const [selectedType, setSelectedType] = useState<'safedrops' | 'cash_in_hand' | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [showBatchModal, setShowBatchModal] = useState(false);
   const [activeTab, setActiveTab] = useState<'pending' | 'history'>('pending');
 
   // Only admins can access this page
@@ -73,6 +74,24 @@ const ResolvePendingPage: React.FC = () => {
     fetchData(); // Refresh the data
     handleModalClose();
   };
+
+  const handleBatchResolveAll = () => {
+    setShowBatchModal(true);
+  };
+
+  const handleBatchModalClose = () => {
+    setShowBatchModal(false);
+  };
+
+  const handleBatchResolutionSuccess = () => {
+    fetchData(); // Refresh the data
+    handleBatchModalClose();
+  };
+
+  const pendingSafedrops = pendingItems.filter(item => parseFloat(item.safedrops.pending_amount.toString()) > 0);
+  const totalPendingSafedrops = pendingSafedrops.reduce((sum, item) => 
+    sum + parseFloat(item.safedrops.pending_amount.toString()), 0
+  );
 
   if (!canResolve) {
     return (
@@ -163,7 +182,23 @@ const ResolvePendingPage: React.FC = () => {
               <p className="text-gray-600">There are no pending safedrops or cash in hand amounts to resolve.</p>
             </div>
           ) : (
-            <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+            <>
+              {/* Resolve All Safedrops Button */}
+              {pendingSafedrops.length > 0 && (
+                <div className="mb-4 flex justify-end">
+                  <button
+                    onClick={handleBatchResolveAll}
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                  >
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                    </svg>
+                    Resolve All Safedrops ({pendingSafedrops.length})
+                  </button>
+                </div>
+              )}
+
+              <div className="bg-white rounded-lg shadow-sm overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
@@ -250,6 +285,7 @@ const ResolvePendingPage: React.FC = () => {
                 </table>
               </div>
             </div>
+            </>
           )
         ) : (
           // Resolution History Content
@@ -328,6 +364,212 @@ const ResolvePendingPage: React.FC = () => {
             onSuccess={handleResolutionSuccess}
           />
         )}
+
+        {/* Batch Resolution Modal */}
+        {showBatchModal && (
+          <BatchSafedropResolutionModal
+            items={pendingSafedrops}
+            bankAccounts={bankAccounts}
+            totalAmount={totalPendingSafedrops}
+            onClose={handleBatchModalClose}
+            onSuccess={handleBatchResolutionSuccess}
+          />
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Batch Safedrop Resolution Modal Component
+interface BatchSafedropResolutionModalProps {
+  items: PendingItem[];
+  bankAccounts: BankAccount[];
+  totalAmount: number;
+  onClose: () => void;
+  onSuccess: () => void;
+}
+
+const BatchSafedropResolutionModal: React.FC<BatchSafedropResolutionModalProps> = ({
+  items,
+  bankAccounts,
+  totalAmount,
+  onClose,
+  onSuccess
+}) => {
+  const [selectedBankAccount, setSelectedBankAccount] = useState<number>(0);
+  const [notes, setNotes] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const formatCurrency = (amount: number): string => {
+    return new Intl.NumberFormat('en-CA', {
+      style: 'currency',
+      currency: 'CAD'
+    }).format(amount);
+  };
+
+  const formatDate = (date: string): string => {
+    return new Date(date).toLocaleDateString('en-CA');
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (selectedBankAccount === 0) return;
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Resolve each pending safedrop individually
+      for (const item of items) {
+        const pendingAmount = parseFloat(item.safedrops.pending_amount.toString());
+        
+        if (pendingAmount > 0) {
+          await safedropResolutionApi.resolve({
+            daily_sale_id: item.id,
+            type: 'safedrops',
+            resolutions: [{
+              bank_account_id: selectedBankAccount,
+              amount: pendingAmount,
+              notes: notes || undefined
+            }]
+          });
+        }
+      }
+
+      onSuccess();
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'An error occurred while processing the resolutions');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+      <div className="relative top-20 mx-auto p-5 border w-11/12 max-w-4xl shadow-lg rounded-md bg-white">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-lg font-bold text-gray-900">
+            Resolve All Pending Safedrops
+          </h3>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Summary */}
+        <div className="bg-purple-50 rounded-lg p-4 mb-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+            <div>
+              <span className="text-gray-600">Total Transactions:</span>
+              <div className="font-bold text-purple-900">{items.length}</div>
+            </div>
+            <div>
+              <span className="text-gray-600">Total Amount:</span>
+              <div className="font-bold text-purple-900">{formatCurrency(totalAmount)}</div>
+            </div>
+            <div className="col-span-2 md:col-span-1">
+              <span className="text-gray-600">Date Range:</span>
+              <div className="font-medium text-purple-900">
+                {items.length > 0 && `${formatDate(items[items.length - 1].date)} - ${formatDate(items[0].date)}`}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Items List */}
+        <div className="mb-6 max-h-60 overflow-y-auto border border-gray-200 rounded-lg">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50 sticky top-0">
+              <tr>
+                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">User</th>
+                <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Pending Amount</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {items.map((item) => (
+                <tr key={item.id}>
+                  <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{formatDate(item.date)}</td>
+                  <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{item.user?.name || 'N/A'}</td>
+                  <td className="px-4 py-2 whitespace-nowrap text-sm text-right font-medium text-orange-600">
+                    {formatCurrency(parseFloat(item.safedrops.pending_amount.toString()))}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
+            <div className="text-sm text-red-700">{error}</div>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit}>
+          {/* Bank Account Selection */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Select Bank Account * <span className="text-gray-500">(All safedrops will be allocated to this account)</span>
+            </label>
+            <select
+              required
+              value={selectedBankAccount}
+              onChange={(e) => setSelectedBankAccount(parseInt(e.target.value))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+            >
+              <option value={0}>Select bank account...</option>
+              {bankAccounts
+                .filter(account => account.is_active)
+                .map((account) => (
+                  <option key={account.id} value={account.id}>
+                    {account.account_name} ({account.account_type}) - {formatCurrency(parseFloat(account.balance.toString()))}
+                  </option>
+                ))}
+            </select>
+          </div>
+
+          {/* Notes */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Notes (Optional) <span className="text-gray-500">(Will be applied to all resolutions)</span>
+            </label>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+              rows={3}
+              placeholder="Add any notes about these resolutions..."
+            />
+          </div>
+
+          {/* Actions */}
+          <div className="flex justify-end space-x-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+              disabled={loading}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={selectedBankAccount === 0 || loading}
+              className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? `Resolving ${items.length} Transaction(s)...` : `Resolve All (${items.length})`}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );
