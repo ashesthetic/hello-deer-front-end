@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 import { usePageTitle } from '../hooks/usePageTitle';
+import CurrentWeekSchedule from './CurrentWeekSchedule';
 
 const StaffDashboard: React.FC = () => {
   usePageTitle('Dashboard');
@@ -30,6 +31,11 @@ const StaffDashboard: React.FC = () => {
               If you need additional permissions, please contact your administrator.
             </p>
           </div>
+        </div>
+
+        {/* Current Week Schedule */}
+        <div className="mb-8">
+          <CurrentWeekSchedule />
         </div>
 
         {/* Quick Actions for Staff */}
