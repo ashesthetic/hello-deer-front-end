@@ -76,6 +76,8 @@ import TransactionsPage from './pages/TransactionsPage';
 import ProfilePage from './pages/ProfilePage';
 import ProtectedRoute from './components/ProtectedRoute';
 import LoansPage from './components/LoansPage';
+import AddLoanPage from './components/AddLoanPage';
+import LoanDetailsPage from './components/LoanDetailsPage';
 
 const App: React.FC = () => {
   const dispatch = useDispatch();
@@ -319,6 +321,18 @@ const App: React.FC = () => {
           <Route 
             path="/accounting/loan-accounts" 
             element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="admin"><LoansPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/accounting/loan-accounts/new" 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="admin"><AddLoanPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/accounting/loan-accounts/:id/view" 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="admin"><LoanDetailsPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/accounting/loan-accounts/:id/edit" 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="admin"><LoanDetailsPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           
           {/* Transactions Routes */}

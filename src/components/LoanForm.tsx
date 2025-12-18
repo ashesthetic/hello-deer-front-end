@@ -166,8 +166,7 @@ const LoanForm: React.FC<LoanFormProps> = ({ loan, onClose, onSubmit }) => {
                 >
                   <option value="CAD">CAD</option>
                   <option value="USD">USD</option>
-                  <option value="EUR">EUR</option>
-                  <option value="GBP">GBP</option>
+                  <option value="BDT">BDT</option>
                 </select>
                 {errors.currency && (
                   <p className="mt-1 text-sm text-red-600">{errors.currency}</p>

@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { loanApi, Loan, LoanFormData } from '../services/api';
-import LoanForm from './LoanForm';
+import { useNavigate } from 'react-router-dom';
+import { loanApi, Loan } from '../services/api';
 import Modal from './Modal';
 
 const LoansPage: React.FC = () => {
+  const navigate = useNavigate();
   const [loans, setLoans] = useState<Loan[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingLoan, setEditingLoan] = useState<Loan | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [loanToDelete, setLoanToDelete] = useState<Loan | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -41,33 +40,15 @@ const LoansPage: React.FC = () => {
   };
 
   const handleAddNew = () => {
-    setEditingLoan(null);
-    setIsFormOpen(true);
+    navigate('/accounting/loan-accounts/new');
+  };
+
+  const handleView = (loan: Loan) => {
+    navigate(`/accounting/loan-accounts/${loan.id}/view`);
   };
 
   const handleEdit = (loan: Loan) => {
-    setEditingLoan(loan);
-    setIsFormOpen(true);
-  };
-
-  const handleFormClose = () => {
-    setIsFormOpen(false);
-    setEditingLoan(null);
-  };
-
-  const handleFormSubmit = async (data: LoanFormData) => {
-    try {
-      if (editingLoan) {
-        await loanApi.update(editingLoan.id, data);
-      } else {
-        await loanApi.create(data);
-      }
-      fetchLoans();
-      handleFormClose();
-    } catch (error) {
-      console.error('Error saving loan:', error);
-      throw error;
-    }
+    navigate(`/accounting/loan-accounts/${loan.id}/edit`);
   };
 
   const handleDeleteClick = (loan: Loan) => {
@@ -255,6 +236,12 @@ const LoansPage: React.FC = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex justify-end space-x-2">
                           <button
+                            onClick={() => handleView(loan)}
+                            className="text-gray-600 hover:text-gray-900"
+                          >
+                            View
+                          </button>
+                          <button
                             onClick={() => handleEdit(loan)}
                             className="text-blue-600 hover:text-blue-900"
                           >
@@ -303,15 +290,6 @@ const LoansPage: React.FC = () => {
           )}
         </div>
       </div>
-
-      {/* Form Modal */}
-      {isFormOpen && (
-        <LoanForm
-          loan={editingLoan}
-          onClose={handleFormClose}
-          onSubmit={handleFormSubmit}
-        />
-      )}
 
       {/* Delete Confirmation Modal */}
       <Modal
