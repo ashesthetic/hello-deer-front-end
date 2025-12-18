@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
@@ -53,6 +53,18 @@ const VendorInvoiceAddPage: React.FC = () => {
     description: '',
   });
 
+  const fetchVendors = useCallback(async () => {
+    try {
+      // Use staff endpoint if user is staff, otherwise use regular endpoint
+      const response = isStaff(currentUser) 
+        ? await vendorInvoicesApi.getVendorsForStaff()
+        : await vendorInvoicesApi.getVendors();
+      setVendors(response.data);
+    } catch (err: any) {
+      setError(`Failed to fetch vendors: ${err.response?.data?.message || err.message || 'Unknown error'}`);
+    }
+  }, [currentUser]);
+
   useEffect(() => {
     // Only run when currentUser is available
     if (!currentUser) return;
@@ -62,7 +74,7 @@ const VendorInvoiceAddPage: React.FC = () => {
     if (!isStaff(currentUser)) {
       fetchBankAccounts();
     }
-  }, [currentUser]);
+  }, [currentUser, fetchVendors]);
 
   // Set up date input enhancements
   useEffect(() => {
@@ -73,18 +85,6 @@ const VendorInvoiceAddPage: React.FC = () => {
       setupDateInput(paymentDateRef.current);
     }
   }, [formData.status]); // Re-run when status changes to handle payment date visibility
-
-  const fetchVendors = async () => {
-    try {
-      // Use staff endpoint if user is staff, otherwise use regular endpoint
-      const response = isStaff(currentUser) 
-        ? await vendorInvoicesApi.getVendorsForStaff()
-        : await vendorInvoicesApi.getVendors();
-      setVendors(response.data);
-    } catch (err: any) {
-      setError(`Failed to fetch vendors: ${err.response?.data?.message || err.message || 'Unknown error'}`);
-    }
-  };
 
   const fetchBankAccounts = async () => {
     try {

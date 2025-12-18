@@ -63,6 +63,9 @@ const VendorInvoicesPage: React.FC = () => {
   // Fetch vendors for filter dropdown
   useEffect(() => {
     const fetchVendors = async () => {
+      // Don't fetch vendors until currentUser is loaded
+      if (!currentUser) return;
+      
       try {
         const response = isStaff(currentUser) 
           ? await vendorInvoicesApi.getVendorsForStaff()
@@ -76,11 +79,17 @@ const VendorInvoicesPage: React.FC = () => {
   }, [currentUser]);
 
   useEffect(() => {
+    // Don't fetch invoices until currentUser is loaded
+    if (!currentUser) return;
+    
     fetchInvoices(currentPage);
     // eslint-disable-next-line
-  }, [currentPage, sortField, sortDirection, perPage, searchTerm, statusFilter, typeFilter, referenceFilter, vendorFilter, startDateFilter, endDateFilter]);
+  }, [currentUser, currentPage, sortField, sortDirection, perPage, searchTerm, statusFilter, typeFilter, referenceFilter, vendorFilter, startDateFilter, endDateFilter]);
 
   const fetchInvoices = async (page: number) => {
+    // Guard against calling API without current user
+    if (!currentUser) return;
+    
     setLoading(true);
     setError(null);
     try {
