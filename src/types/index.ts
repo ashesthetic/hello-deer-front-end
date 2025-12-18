@@ -147,6 +147,32 @@ export interface DailyFuel {
   diesel_price_per_liter?: number;
 }
 
+export interface FuelVolume {
+  id?: number;
+  date: string;
+  shift: 'morning' | 'evening';
+  regular_tc_volume: number | null;
+  regular_product_height: number | null;
+  premium_tc_volume: number | null;
+  premium_product_height: number | null;
+  diesel_tc_volume: number | null;
+  diesel_product_height: number | null;
+  added_regular: number | null;
+  added_premium: number | null;
+  added_diesel: number | null;
+  user_id?: number;
+  user?: User;
+  created_at?: string;
+  updated_at?: string;
+  volume_end_of_day?: {
+    regular: number | null;
+    premium: number | null;
+    diesel: number | null;
+  };
+  evening_shift?: FuelVolume;
+  morning_shift?: FuelVolume;
+}
+
 // Vendor types
 export interface Vendor {
   id?: number;
