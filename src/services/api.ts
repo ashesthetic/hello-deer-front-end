@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { DailySale, DailyFuel, FuelVolume, LoginCredentials, CreateUserData, UpdateUserData, CreateVendorData, UpdateVendorData, CreateOwnerData, UpdateOwnerData, CreateOwnerEquityData, UpdateOwnerEquityData } from '../types';
+import { DailySale, DailyFuel, FuelVolume, LoginCredentials, CreateUserData, UpdateUserData, CreateVendorData, UpdateVendorData, CreateOwnerData, UpdateOwnerData, CreateOwnerEquityData, UpdateOwnerEquityData, CreateBankAccountData, UpdateBankAccountData } from '../types';
 
 // Employee interfaces
 export interface Employee {
@@ -390,6 +390,16 @@ export const vendorsApi = {
     });
   },
   delete: (id: number) => api.delete(`/vendors/${id}`),
+};
+
+// Bank Account API
+export const bankAccountsApi = {
+  getAll: (params?: any) => api.get('/bank-accounts', { params }),
+  getById: (id: number) => api.get(`/bank-accounts/${id}`),
+  create: (data: CreateBankAccountData) => api.post('/bank-accounts', data),
+  update: (id: number, data: UpdateBankAccountData) => api.put(`/bank-accounts/${id}`, data),
+  delete: (id: number) => api.delete(`/bank-accounts/${id}`),
+  getSummary: () => api.get('/bank-accounts/summary'),
 };
 
 // Employee API

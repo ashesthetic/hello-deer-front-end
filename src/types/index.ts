@@ -377,4 +377,66 @@ export interface OwnerSummary {
   total_withdrawals: number;
   total_distributions: number;
   recent_transactions: OwnerEquity[];
+}
+
+// Bank Account types
+export interface BankAccount {
+  id?: number;
+  bank_name: string;
+  account_name: string;
+  account_number: string;
+  account_type: 'Checking' | 'Savings' | 'Business' | 'Credit' | 'Investment';
+  routing_number?: string;
+  swift_code?: string;
+  currency: string;
+  balance: number | string;
+  is_active: boolean;
+  notes?: string;
+  user_id?: number;
+  user?: User;
+  created_at?: string;
+  updated_at?: string;
+  formatted_balance?: string;
+  masked_account_number?: string;
+  canBeUpdatedBy?: (user: User) => boolean;
+  canBeDeletedBy?: (user: User) => boolean;
+}
+
+export interface CreateBankAccountData {
+  bank_name: string;
+  account_name: string;
+  account_number: string;
+  account_type: 'Checking' | 'Savings' | 'Business' | 'Credit' | 'Investment';
+  routing_number?: string;
+  swift_code?: string;
+  currency?: string;
+  balance?: number;
+  is_active?: boolean;
+  notes?: string;
+}
+
+export interface UpdateBankAccountData {
+  bank_name: string;
+  account_name: string;
+  account_number: string;
+  account_type: 'Checking' | 'Savings' | 'Business' | 'Credit' | 'Investment';
+  routing_number?: string;
+  swift_code?: string;
+  currency?: string;
+  balance?: number;
+  is_active?: boolean;
+  notes?: string;
+}
+
+export interface BankAccountSummary {
+  total_accounts: number;
+  active_accounts: number;
+  inactive_accounts: number;
+  total_balance: number;
+  formatted_total_balance: string;
+  accounts_by_type: Array<{
+    account_type: string;
+    count: number;
+    total_balance: number;
+  }>;
 } 
