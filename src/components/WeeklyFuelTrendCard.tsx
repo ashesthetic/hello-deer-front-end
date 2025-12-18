@@ -40,6 +40,8 @@ const WeeklyFuelTrendCard: React.FC<WeeklyFuelTrendCardProps> = ({ title, dataFi
   const [loading, setLoading] = useState(true);
   const [percentageChange, setPercentageChange] = useState<number>(0);
 
+
+
   const fetchWeeklyTrendData = useCallback(async () => {
     setLoading(true);
     try {
@@ -240,11 +242,13 @@ const WeeklyFuelTrendCard: React.FC<WeeklyFuelTrendCardProps> = ({ title, dataFi
         },
       },
       y: {
+        beginAtZero: true,
         grid: {
           color: '#E5E7EB',
         },
         ticks: {
           color: '#6B7280',
+          stepSize: isQuantityField ? undefined : 500,
           callback: function(value: any) {
             const numValue = parseFloat(value) || 0;
             return isQuantityField ? formatQuantity(numValue) : formatCurrency(numValue);

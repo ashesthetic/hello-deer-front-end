@@ -204,11 +204,13 @@ const MonthlySalesTrendCard: React.FC<MonthlySalesTrendCardProps> = ({ title, da
         },
       },
       y: {
+        beginAtZero: true,
         grid: {
           color: '#E5E7EB',
         },
         ticks: {
           color: '#6B7280',
+          stepSize: 500,
           callback: function(value: any) {
             const numValue = parseFloat(value) || 0;
             return formatCurrency(numValue);

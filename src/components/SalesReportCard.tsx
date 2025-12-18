@@ -12,6 +12,7 @@ import {
 } from 'chart.js';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { dailySalesApi } from '../services/api';
+import { formatDateForDisplay } from '../utils/dateUtils';
 
 ChartJS.register(
   CategoryScale,
@@ -128,13 +129,7 @@ const SalesReportCard: React.FC<SalesReportCardProps> = ({ title, dataField, col
   };
 
   const formatDate = (dateString: string) => {
-    // Parse the date string directly without timezone conversion
-    const [year, month, day] = dateString.split('T')[0].split('-');
-    const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric'
-    });
+    return formatDateForDisplay(dateString);
   };
 
   const chartData = {
@@ -162,8 +157,8 @@ const SalesReportCard: React.FC<SalesReportCardProps> = ({ title, dataField, col
     maintainAspectRatio: false,
     layout: {
       padding: {
-        top: 30,
-        bottom: 35,
+        top: 40,
+        bottom: 40,
         left: 15,
         right: 15
       }
@@ -193,7 +188,7 @@ const SalesReportCard: React.FC<SalesReportCardProps> = ({ title, dataField, col
         },
         anchor: 'end' as const,
         align: 'top' as const,
-        offset: 8,
+        offset: 12,
         backgroundColor: 'rgba(255, 255, 255, 0.8)',
         borderRadius: 4,
         padding: {
@@ -214,12 +209,14 @@ const SalesReportCard: React.FC<SalesReportCardProps> = ({ title, dataField, col
         },
       },
       y: {
+        beginAtZero: true,
         grid: {
           color: '#E5E7EB',
         },
         ticks: {
           color: '#6B7280',
-          callback: function(value: any) {
+          stepSize: 300,
+          callback: function(value: any, index: any, values: any) {
             const numValue = parseFloat(value) || 0;
             return formatCurrency(numValue);
           }
@@ -251,7 +248,7 @@ const SalesReportCard: React.FC<SalesReportCardProps> = ({ title, dataField, col
         </div>
       </div>
       
-      <div className="h-40 mb-4 relative">
+      <div className="h-56 mb-4 relative">
         <Line data={chartData} options={chartOptions} />
       </div>
       

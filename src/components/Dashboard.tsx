@@ -6,6 +6,7 @@ import WeeklyTrendCard from './WeeklyTrendCard';
 import WeeklyFuelTrendCard from './WeeklyFuelTrendCard';
 import MonthlySalesTrendCard from './MonthlySalesTrendCard';
 import MonthlyFuelTrendCard from './MonthlyFuelTrendCard';
+import FuelTrendCard from './FuelTrendCard';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -31,9 +32,14 @@ const Dashboard: React.FC = () => {
               color="#3B82F6" 
             />
             <SalesReportCard 
-              title="Fuel Sales Trend" 
+              title="Fuel Sales Trend ($$$)" 
               dataField="fuel_sale" 
               color="#10B981" 
+            />
+            <FuelTrendCard 
+              title="Fuel Sales Trend (Litre)" 
+              dataField="total_quantity" 
+              color="#EF4444" 
             />
             <WeeklyTrendCard 
               title="Weekly Total Sales" 

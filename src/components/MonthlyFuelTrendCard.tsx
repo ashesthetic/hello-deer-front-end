@@ -12,6 +12,7 @@ import {
 } from 'chart.js';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { dailyFuelsApi } from '../services/api';
+import { formatDateForDisplay } from '../utils/dateUtils';
 
 ChartJS.register(
   CategoryScale,
@@ -191,12 +192,7 @@ const MonthlyFuelTrendCard: React.FC<MonthlyFuelTrendCardProps> = ({ title, data
   };
 
   const formatDate = (dateString: string) => {
-    const [year, month, day] = dateString.split('T')[0].split('-');
-    const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric'
-    });
+    return formatDateForDisplay(dateString);
   };
 
   const isQuantityField = dataField === 'total_quantity';
@@ -268,6 +264,7 @@ const MonthlyFuelTrendCard: React.FC<MonthlyFuelTrendCardProps> = ({ title, data
         },
       },
       y: {
+        beginAtZero: true,
         grid: {
           color: '#E5E7EB',
         },
