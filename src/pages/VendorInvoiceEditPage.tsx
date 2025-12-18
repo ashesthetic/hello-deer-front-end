@@ -12,6 +12,14 @@ interface Vendor {
   name: string;
 }
 
+interface BankAccount {
+  id: number;
+  bank_name: string;
+  account_name: string;
+  account_number: string;
+  display_name: string;
+}
+
 const VendorInvoiceEditPage: React.FC = () => {
   usePageTitle('Edit Vendor Invoice');
   const navigate = useNavigate();
@@ -21,6 +29,7 @@ const VendorInvoiceEditPage: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [vendors, setVendors] = useState<Vendor[]>([]);
+  const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [invoice, setInvoice] = useState<VendorInvoice | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
@@ -33,6 +42,7 @@ const VendorInvoiceEditPage: React.FC = () => {
     reference: 'Vendor',
     payment_date: '',
     payment_method: undefined,
+    bank_account_id: undefined,
     gst: '',
     total: '',
     notes: '',
@@ -59,6 +69,7 @@ const VendorInvoiceEditPage: React.FC = () => {
         reference: invoiceData.reference,
         payment_date: invoiceData.payment_date ? formatDateForAPI(parseDateSafely(invoiceData.payment_date)) : '',
         payment_method: invoiceData.payment_method,
+        bank_account_id: invoiceData.bank_account_id,
         gst: invoiceData.gst.toString(),
         total: invoiceData.total.toString(),
         notes: invoiceData.notes || '',
@@ -83,12 +94,23 @@ const VendorInvoiceEditPage: React.FC = () => {
     }
   }, []);
 
+  const fetchBankAccounts = useCallback(async () => {
+    try {
+      const response = await vendorInvoicesApi.getBankAccounts();
+      setBankAccounts(response.data);
+    } catch (err: any) {
+      console.error('Bank accounts fetch error:', err);
+      setError(`Failed to fetch bank accounts: ${err.response?.data?.message || err.message || 'Unknown error'}`);
+    }
+  }, []);
+
   useEffect(() => {
     if (id) {
       fetchInvoice();
       fetchVendors();
+      fetchBankAccounts();
     }
-  }, [id, fetchInvoice, fetchVendors]);
+  }, [id, fetchInvoice, fetchVendors, fetchBankAccounts]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -102,7 +124,8 @@ const VendorInvoiceEditPage: React.FC = () => {
       setFormData(prev => ({
         ...prev,
         payment_date: '',
-        payment_method: undefined
+        payment_method: undefined,
+        bank_account_id: undefined
       }));
     }
   };
@@ -142,6 +165,11 @@ const VendorInvoiceEditPage: React.FC = () => {
 
     if (formData.status === 'Paid' && !formData.payment_method) {
       setError('Payment method is required for paid invoices');
+      return;
+    }
+
+    if (formData.status === 'Paid' && !formData.bank_account_id) {
+      setError('Bank account is required for paid invoices');
       return;
     }
 
@@ -431,6 +459,29 @@ const VendorInvoiceEditPage: React.FC = () => {
                   <option value="Card">Card</option>
                   <option value="Cash">Cash</option>
                   <option value="Bank">Bank</option>
+                </select>
+              </div>
+            )}
+
+            {/* Bank Account - Only show if status is Paid */}
+            {formData.status === 'Paid' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Bank Account <span className="text-red-500">*</span>
+                </label>
+                <select
+                  name="bank_account_id"
+                  value={formData.bank_account_id || ''}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Select bank account</option>
+                  {bankAccounts.map((account) => (
+                    <option key={account.id} value={account.id}>
+                      {account.display_name}
+                    </option>
+                  ))}
                 </select>
               </div>
             )}
