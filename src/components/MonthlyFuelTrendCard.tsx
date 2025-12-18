@@ -45,13 +45,32 @@ const MonthlyFuelTrendCard: React.FC<MonthlyFuelTrendCardProps> = ({ title, data
   const fetchCurrentMonthData = useCallback(async () => {
     setLoading(true);
     try {
-      // Get current month's start and end dates
-      // For now, use July 2025 since that's where the data is
-      const currentYear = 2025;
-      const currentMonth = 6; // July (0-indexed)
+      // Get all fuel data to find the last entry date
+      const response = await dailyFuelsApi.getAll({
+        per_page: 1000,
+        sort_by: 'date',
+        sort_direction: 'desc'
+      });
+
+      const fuelData = response.data.data || [];
       
-      const startOfMonth = new Date(currentYear, currentMonth, 1);
-      const endOfMonth = new Date(currentYear, currentMonth + 1, 0); // Last day of current month
+      if (fuelData.length === 0) {
+        setData([]);
+        setTotalValue(0);
+        setPercentageChange(0);
+        setLoading(false);
+        return;
+      }
+
+      // Find the last entry date
+      const lastEntryDate = new Date(fuelData[0].date);
+      
+      // Get the month of the last entry
+      const lastEntryYear = lastEntryDate.getFullYear();
+      const lastEntryMonth = lastEntryDate.getMonth();
+      
+      const startOfMonth = new Date(lastEntryYear, lastEntryMonth, 1);
+      const endOfMonth = new Date(lastEntryYear, lastEntryMonth + 1, 0); // Last day of the month
       
       // Format dates for API
       const startDateStr = startOfMonth.toISOString().split('T')[0];
@@ -60,17 +79,17 @@ const MonthlyFuelTrendCard: React.FC<MonthlyFuelTrendCardProps> = ({ title, data
       console.log('MonthlyFuelTrendCard - Fetching data for:', { startDateStr, endDateStr, dataField });
 
       // Get data for the current month
-      const response = await dailyFuelsApi.getAll({
+      const rangeResponse = await dailyFuelsApi.getAll({
         start_date: startDateStr,
         end_date: endDateStr,
         per_page: 1000
       });
 
-      console.log('MonthlyFuelTrendCard - API Response:', response);
-      console.log('MonthlyFuelTrendCard - Response data:', response.data);
+      console.log('MonthlyFuelTrendCard - API Response:', rangeResponse);
+      console.log('MonthlyFuelTrendCard - Response data:', rangeResponse.data);
 
-      const fuelData = response.data.data || [];
-      console.log('MonthlyFuelTrendCard - Fuel data received:', fuelData);
+      const rangeData = rangeResponse.data.data || [];
+      console.log('MonthlyFuelTrendCard - Fuel data received:', rangeData);
       
       // Create a map of dates to values
       const dateMap = new Map<string, number>();
@@ -78,7 +97,7 @@ const MonthlyFuelTrendCard: React.FC<MonthlyFuelTrendCardProps> = ({ title, data
       console.log('MonthlyFuelTrendCard - Processing fuel data for field:', dataField);
       
       // Fill in actual data
-      fuelData.forEach((fuel: any) => {
+      rangeData.forEach((fuel: any) => {
         const fuelDate = fuel.date.split('T')[0];
         const currentValue = dateMap.get(fuelDate) || 0;
         let newValue = 0;
@@ -114,7 +133,13 @@ const MonthlyFuelTrendCard: React.FC<MonthlyFuelTrendCardProps> = ({ title, data
       const currentDate = new Date(startOfMonth);
       
       while (currentDate <= endOfMonth) {
-        const dateStr = currentDate.toISOString().split('T')[0];
+        // Use timezone-aware date formatting
+        const dateStr = currentDate.toLocaleDateString('en-CA', {
+          timeZone: 'America/Edmonton',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        }).replace(/\//g, '-');
         const value = dateMap.get(dateStr) || 0;
         allDays.push({ date: dateStr, value });
         currentDate.setDate(currentDate.getDate() + 1);
@@ -135,7 +160,12 @@ const MonthlyFuelTrendCard: React.FC<MonthlyFuelTrendCardProps> = ({ title, data
         try {
           // Find the last entry date from the original fuel data
           const lastEntryDate = new Date(fuelData[0].date);
-          const lastEntryDateStr = lastEntryDate.toISOString().split('T')[0];
+          const lastEntryDateStr = lastEntryDate.toLocaleDateString('en-CA', {
+            timeZone: 'America/Edmonton',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+          }).replace(/\//g, '-');
           
           // Find the last entry in our allDays array
           const lastEntry = allDays.find(day => day.date === lastEntryDateStr);

@@ -9,37 +9,37 @@ export const formatCurrency = (amount: number) => {
 
 export const formatDate = (dateString: string) => {
   const [year, month, day] = dateString.split('T')[0].split('-');
-  const date = new Date(Date.UTC(parseInt(year), parseInt(month) - 1, parseInt(day)));
+  const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
   return date.toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
-    timeZone: 'UTC'
+    timeZone: 'America/Edmonton'
   });
 };
 
 export const formatShortDate = (dateString: string) => {
   const [year, month, day] = dateString.split('T')[0].split('-');
-  const date = new Date(Date.UTC(parseInt(year), parseInt(month) - 1, parseInt(day)));
+  const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
   const dateStr = date.toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
-    timeZone: 'UTC'
+    timeZone: 'America/Edmonton'
   });
   const dayStr = date.toLocaleDateString('en-US', {
     weekday: 'short',
-    timeZone: 'UTC'
+    timeZone: 'America/Edmonton'
   });
   return `${dateStr}\n${dayStr}`;
 };
 
 export const formatWeek = (dateString: string) => {
   const [year, month, day] = dateString.split('T')[0].split('-');
-  const date = new Date(Date.UTC(parseInt(year), parseInt(month) - 1, parseInt(day)));
+  const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
   return date.toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
-    timeZone: 'UTC'
+    timeZone: 'America/Edmonton'
   });
 };
 

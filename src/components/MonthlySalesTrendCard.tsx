@@ -44,32 +44,51 @@ const MonthlySalesTrendCard: React.FC<MonthlySalesTrendCardProps> = ({ title, da
   const fetchCurrentMonthData = useCallback(async () => {
     setLoading(true);
     try {
-      // Get current month's start and end dates
-      // For now, use July 2025 since that's where the data is
-      const currentYear = 2025;
-      const currentMonth = 6; // July (0-indexed)
+      // Get all sales data to find the last entry date
+      const response = await dailySalesApi.getAll({
+        per_page: 1000,
+        sort_by: 'date',
+        sort_direction: 'desc'
+      });
+
+      const salesData = response.data.data || [];
       
-      const startOfMonth = new Date(currentYear, currentMonth, 1);
-      const endOfMonth = new Date(currentYear, currentMonth + 1, 0); // Last day of current month
+      if (salesData.length === 0) {
+        setData([]);
+        setTotalValue(0);
+        setPercentageChange(0);
+        setLoading(false);
+        return;
+      }
+
+      // Find the last entry date
+      const lastEntryDate = new Date(salesData[0].date);
+      
+      // Get the month of the last entry
+      const lastEntryYear = lastEntryDate.getFullYear();
+      const lastEntryMonth = lastEntryDate.getMonth();
+      
+      const startOfMonth = new Date(lastEntryYear, lastEntryMonth, 1);
+      const endOfMonth = new Date(lastEntryYear, lastEntryMonth + 1, 0); // Last day of the month
       
       // Format dates for API
       const startDateStr = startOfMonth.toISOString().split('T')[0];
       const endDateStr = endOfMonth.toISOString().split('T')[0];
 
       // Get data for the current month
-      const response = await dailySalesApi.getAll({
+      const rangeResponse = await dailySalesApi.getAll({
         start_date: startDateStr,
         end_date: endDateStr,
         per_page: 1000
       });
 
-      const salesData = response.data.data || [];
+      const rangeData = rangeResponse.data.data || [];
       
       // Create a map of dates to values
       const dateMap = new Map<string, number>();
       
       // Fill in actual data
-      salesData.forEach((sale: any) => {
+      rangeData.forEach((sale: any) => {
         const saleDate = sale.date.split('T')[0];
         const currentValue = dateMap.get(saleDate) || 0;
         const newValue = dataField === 'reported_total' ? 
@@ -83,7 +102,13 @@ const MonthlySalesTrendCard: React.FC<MonthlySalesTrendCardProps> = ({ title, da
       const currentDate = new Date(startOfMonth);
       
       while (currentDate <= endOfMonth) {
-        const dateStr = currentDate.toISOString().split('T')[0];
+        // Use timezone-aware date formatting
+        const dateStr = currentDate.toLocaleDateString('en-CA', {
+          timeZone: 'America/Edmonton',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        }).replace(/\//g, '-');
         const value = dateMap.get(dateStr) || 0;
         allDays.push({ date: dateStr, value });
         currentDate.setDate(currentDate.getDate() + 1);
@@ -99,7 +124,12 @@ const MonthlySalesTrendCard: React.FC<MonthlySalesTrendCardProps> = ({ title, da
       if (allDays.length >= 2) {
         // Find the last entry date from the original sales data
         const lastEntryDate = new Date(salesData[0].date);
-        const lastEntryDateStr = lastEntryDate.toISOString().split('T')[0];
+        const lastEntryDateStr = lastEntryDate.toLocaleDateString('en-CA', {
+          timeZone: 'America/Edmonton',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        }).replace(/\//g, '-');
         
         // Find the last entry in our allDays array
         const lastEntry = allDays.find(day => day.date === lastEntryDateStr);
@@ -141,7 +171,8 @@ const MonthlySalesTrendCard: React.FC<MonthlySalesTrendCardProps> = ({ title, da
     const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
     return date.toLocaleDateString('en-US', {
       month: 'short',
-      day: 'numeric'
+      day: 'numeric',
+      timeZone: 'America/Edmonton'
     });
   };
 
