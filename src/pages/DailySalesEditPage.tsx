@@ -9,8 +9,9 @@ import { usePageTitle } from '../hooks/usePageTitle';
 import DailySalesForm from '../components/DailySalesForm';
 
 const DailySalesEditPage: React.FC = () => {
-  usePageTitle('Edit Daily Sale');
   const { id } = useParams<{ id: string }>();
+  const isNewSale = !id || id === 'new';
+  usePageTitle(isNewSale ? 'Add Daily Sale' : 'Edit Daily Sale');
   const navigate = useNavigate();
   const [sale, setSale] = useState<DailySale | null>(null);
   const [loading, setLoading] = useState(false);

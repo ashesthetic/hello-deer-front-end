@@ -37,12 +37,12 @@ const DailySalesViewPage: React.FC = () => {
   };
 
   const handleBack = () => {
-    navigate('/daily-sales');
+    navigate('/sales');
   };
 
   const handleEdit = () => {
     if (sale?.id) {
-      navigate(`/daily-sales/${sale.id}/edit`);
+      navigate(`/sales/${sale.id}/edit`);
     }
   };
 
