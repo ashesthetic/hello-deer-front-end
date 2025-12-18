@@ -11,9 +11,11 @@ import {
 import { Bar } from 'react-chartjs-2';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { dailySalesApi } from '../services/api';
-import { DailySale } from '../types';
+import { dailyFuelsApi } from '../services/api';
+import { DailySale, DailyFuel } from '../types';
 import { usePageTitle } from '../hooks/usePageTitle';
 import { exportSalesReportToPDF } from '../utils/pdfExport';
+import { useSearchParams } from 'react-router-dom';
 
 ChartJS.register(
   CategoryScale,
@@ -25,83 +27,193 @@ ChartJS.register(
   ChartDataLabels
 );
 
-type ReportMode = 'current-month' | 'previous-month' | 'last-2-months' | 'last-3-months' | 'last-4-months' | 'last-5-months' | 'last-6-months' | 'last-7-months' | 'last-8-months' | 'last-9-months' | 'last-10-months' | 'last-11-months' | 'last-12-months';
+type ReportMode = 'current-month' | 'previous-month' | 'custom-date' | 'month-dropdown';
 
 const SalesReportPage: React.FC = () => {
   usePageTitle('Sales Report');
+  const [searchParams, setSearchParams] = useSearchParams();
+  
   const [sales, setSales] = useState<DailySale[]>([]);
+  const [fuels, setFuels] = useState<DailyFuel[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
   const [reportMode, setReportMode] = useState<ReportMode>('current-month');
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+  const [customStartDate, setCustomStartDate] = useState('');
+  const [customEndDate, setCustomEndDate] = useState('');
   const reportRef = useRef<HTMLDivElement>(null);
 
+  // Initialize from URL parameters and fetch data
   useEffect(() => {
-    fetchSalesData();
-  }, [reportMode, currentYear, currentMonth]);
+    const mode = searchParams.get('mode') as ReportMode || 'current-month';
+    const year = parseInt(searchParams.get('year') || new Date().getFullYear().toString());
+    const month = parseInt(searchParams.get('month') || (new Date().getMonth() + 1).toString());
+    const startDate = searchParams.get('startDate') || '';
+    const endDate = searchParams.get('endDate') || '';
 
-  const fetchSalesData = async () => {
+    setReportMode(mode);
+    setCurrentYear(year);
+    setCurrentMonth(month);
+    setSelectedYear(year);
+    setSelectedMonth(month);
+    setCustomStartDate(startDate);
+    setCustomEndDate(endDate);
+
+    // Fetch data immediately with the URL parameters
+    fetchDataWithParams(mode, year, month, startDate, endDate);
+  }, [searchParams]);
+
+  // Handle state changes for interactive features
+  useEffect(() => {
+    // Only fetch data if this is not the initial load (when searchParams change)
+    if (reportMode && currentYear && currentMonth) {
+      fetchData();
+    }
+  }, [reportMode, currentYear, currentMonth, selectedYear, selectedMonth]);
+
+  const updateURL = (mode: ReportMode, year?: number, month?: number, startDate?: string, endDate?: string) => {
+    const params = new URLSearchParams();
+    params.set('mode', mode);
+    
+    if (year && month) {
+      params.set('year', year.toString());
+      params.set('month', month.toString());
+    }
+    
+    if (startDate) params.set('startDate', startDate);
+    if (endDate) params.set('endDate', endDate);
+    
+    setSearchParams(params);
+  };
+
+  const fetchDataWithParams = async (mode: ReportMode, year: number, month: number, startDate: string, endDate: string) => {
     setLoading(true);
     setError(null);
     try {
-      let response;
+      let salesResponse;
+      let fuelsResponse;
       
-      if (reportMode.startsWith('last-')) {
-        // Handle last N months
-        const monthsCount = parseInt(reportMode.split('-')[1]);
-        const endDate = new Date(currentYear, currentMonth - 1, 0); // Last day of current month
-        const startDate = new Date(currentYear, currentMonth - monthsCount, 1); // First day of N months ago
-        
-        response = await dailySalesApi.getAll({
-          start_date: startDate.toISOString().split('T')[0],
-          end_date: endDate.toISOString().split('T')[0]
-        });
+      let finalStartDate: string;
+      let finalEndDate: string;
+      
+      if (mode === 'custom-date') {
+        if (!startDate || !endDate) {
+          setError('Please select both start and end dates');
+          setLoading(false);
+          return;
+        }
+        finalStartDate = startDate;
+        finalEndDate = endDate;
+      } else if (mode === 'month-dropdown') {
+        const firstDay = new Date(year, month - 1, 1);
+        const lastDay = new Date(year, month, 0);
+        finalStartDate = firstDay.toISOString().split('T')[0];
+        finalEndDate = lastDay.toISOString().split('T')[0];
       } else {
-        // For current-month and previous-month modes
-        let year = currentYear;
-        let month = currentMonth;
+        // current-month or previous-month
+        let finalYear = year;
+        let finalMonth = month;
         
-        if (reportMode === 'previous-month') {
-          if (month === 1) {
-            month = 12;
-            year = year - 1;
+        if (mode === 'previous-month') {
+          if (finalMonth === 1) {
+            finalMonth = 12;
+            finalYear = finalYear - 1;
           } else {
-            month = month - 1;
+            finalMonth = finalMonth - 1;
           }
         }
         
-        response = await dailySalesApi.getByMonth(year, month);
+        const firstDay = new Date(finalYear, finalMonth - 1, 1);
+        const lastDay = new Date(finalYear, finalMonth, 0);
+        finalStartDate = firstDay.toISOString().split('T')[0];
+        finalEndDate = lastDay.toISOString().split('T')[0];
       }
       
-      setSales(response.data.data || []);
+      // Fetch sales data
+      salesResponse = await dailySalesApi.getAll({
+        start_date: finalStartDate,
+        end_date: finalEndDate,
+        per_page: 1000 // Request a large number to get all data
+      });
+      
+      // Fetch fuels data
+      fuelsResponse = await dailyFuelsApi.getAll({
+        start_date: finalStartDate,
+        end_date: finalEndDate,
+        per_page: 1000 // Request a large number to get all data
+      });
+      
+      setSales(salesResponse.data.data || []);
+      setFuels(fuelsResponse.data.data || []);
     } catch (err: any) {
       if (err.response?.status === 401) {
         setError('Authentication required. Please log in again.');
       } else {
-        setError(err.response?.data?.message || 'Failed to fetch sales data');
+        setError(err.response?.data?.message || 'Failed to fetch data');
       }
     } finally {
       setLoading(false);
     }
   };
 
-  const handlePreviousMonth = () => {
-    if (currentMonth === 1) {
-      setCurrentMonth(12);
-      setCurrentYear(currentYear - 1);
-    } else {
-      setCurrentMonth(currentMonth - 1);
-    }
+  const fetchData = async () => {
+    await fetchDataWithParams(reportMode, currentYear, currentMonth, customStartDate, customEndDate);
   };
 
-  const handleNextMonth = () => {
-    if (currentMonth === 12) {
-      setCurrentMonth(1);
-      setCurrentYear(currentYear + 1);
+  const handlePreviousMonth = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+    }
+    
+    let newYear = currentYear;
+    let newMonth = currentMonth;
+    
+    if (currentMonth === 1) {
+      newMonth = 12;
+      newYear = currentYear - 1;
     } else {
-      setCurrentMonth(currentMonth + 1);
+      newMonth = currentMonth - 1;
+    }
+    
+    setCurrentMonth(newMonth);
+    setCurrentYear(newYear);
+    updateURL('current-month', newYear, newMonth);
+  };
+
+  const handleNextMonth = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+    }
+    
+    let newYear = currentYear;
+    let newMonth = currentMonth;
+    
+    if (currentMonth === 12) {
+      newMonth = 1;
+      newYear = currentYear + 1;
+    } else {
+      newMonth = currentMonth + 1;
+    }
+    
+    setCurrentMonth(newMonth);
+    setCurrentYear(newYear);
+    updateURL('current-month', newYear, newMonth);
+  };
+
+  const handleMonthDropdownChange = (year: number, month: number) => {
+    setSelectedYear(year);
+    setSelectedMonth(month);
+    updateURL('month-dropdown', year, month);
+  };
+
+  const handleCustomDateChange = () => {
+    if (customStartDate && customEndDate) {
+      setReportMode('custom-date');
+      updateURL('custom-date', undefined, undefined, customStartDate, customEndDate);
     }
   };
 
@@ -135,19 +247,19 @@ const SalesReportPage: React.FC = () => {
     } else if (reportMode === 'previous-month') {
       const date = new Date(currentYear, currentMonth - 1, 1);
       return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-    } else if (reportMode.startsWith('last-')) {
-      const monthsCount = parseInt(reportMode.split('-')[1]);
-      const endDate = new Date(currentYear, currentMonth - 1, 0);
-      const startDate = new Date(currentYear, currentMonth - monthsCount, 1);
-      return `Last ${monthsCount} Months (${startDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })} - ${endDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })})`;
+    } else if (reportMode === 'month-dropdown') {
+      const date = new Date(selectedYear, selectedMonth - 1, 1);
+      return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    } else if (reportMode === 'custom-date') {
+      const startDate = new Date(customStartDate);
+      const endDate = new Date(customEndDate);
+      return `${startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} - ${endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
     }
     return 'Sales Report';
   };
 
   const formatDate = (dateString: string) => {
-    // Split the date string and format it directly to avoid timezone issues
     const [year, month, day] = dateString.split('T')[0].split('-');
-    // Use UTC to avoid timezone issues
     const date = new Date(Date.UTC(parseInt(year), parseInt(month) - 1, parseInt(day)));
     const dateStr = date.toLocaleDateString('en-US', {
       month: 'short',
@@ -168,23 +280,28 @@ const SalesReportPage: React.FC = () => {
     }).format(amount);
   };
 
+  const formatLiters = (amount: number) => {
+    return new Intl.NumberFormat('en-CA', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(amount) + ' L';
+  };
+
   const createChartData = (metric: keyof DailySale, label: string, color: string) => {
     const sortedSales = [...sales].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     const data = sortedSales.map(sale => Number(sale[metric]) || 0);
     
-    // Find the top 3 values and their indices
     const dataWithIndices = data.map((value, index) => ({ value, index }));
     const sortedByValue = [...dataWithIndices].sort((a, b) => b.value - a.value);
     const top3Indices = sortedByValue.slice(0, 3).map(item => item.index);
     
-    // Create background colors array
     const backgroundColors = data.map((_, index) => {
       if (top3Indices.includes(index)) {
         const top3Rank = top3Indices.indexOf(index);
-        const top3Colors = ['#FF6B6B', '#4ECDC4', '#45B7D1']; // Red, Teal, Blue for top 3
+        const top3Colors = ['#FF6B6B', '#4ECDC4', '#45B7D1'];
         return top3Colors[top3Rank];
       }
-      return color; // Original color for other bars
+      return color;
     });
     
     return {
@@ -201,8 +318,38 @@ const SalesReportPage: React.FC = () => {
     };
   };
 
+  const createFuelChartData = (metric: keyof DailyFuel, label: string, color: string, isLiters: boolean = false) => {
+    const sortedFuels = [...fuels].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    const data = sortedFuels.map(fuel => Number(fuel[metric]) || 0);
+    
+    const dataWithIndices = data.map((value, index) => ({ value, index }));
+    const sortedByValue = [...dataWithIndices].sort((a, b) => b.value - a.value);
+    const top3Indices = sortedByValue.slice(0, 3).map(item => item.index);
+    
+    const backgroundColors = data.map((_, index) => {
+      if (top3Indices.includes(index)) {
+        const top3Rank = top3Indices.indexOf(index);
+        const top3Colors = ['#FF6B6B', '#4ECDC4', '#45B7D1'];
+        return top3Colors[top3Rank];
+      }
+      return color;
+    });
+    
+    return {
+      labels: sortedFuels.map(fuel => formatDate(fuel.date)),
+      datasets: [{
+        label,
+        data,
+        backgroundColor: backgroundColors,
+        borderColor: backgroundColors,
+        borderWidth: 1,
+        borderRadius: 4,
+        borderSkipped: false,
+      }]
+    };
+  };
+
   const createDayOfWeekChartData = (metric: keyof DailySale, label: string, color: string) => {
-    // Group sales by day of week
     const dayOfWeekData: { [key: string]: number[] } = {
       'Mon': [], 'Tue': [], 'Wed': [], 'Thu': [], 'Fri': [], 'Sat': [], 'Sun': []
     };
@@ -214,25 +361,56 @@ const SalesReportPage: React.FC = () => {
       dayOfWeekData[dayName].push(Number(sale[metric]) || 0);
     });
     
-    // Calculate average for each day of week
     const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     const data = dayLabels.map(day => {
       const values = dayOfWeekData[day];
       return values.length > 0 ? values.reduce((sum, val) => sum + val, 0) / values.length : 0;
     });
     
-    // Define consistent colors for each day of the week
     const dayColors = {
-      'Mon': '#3B82F6', // Blue
-      'Tue': '#10B981', // Green
-      'Wed': '#F59E0B', // Orange
-      'Thu': '#8B5CF6', // Purple
-      'Fri': '#EF4444', // Red
-      'Sat': '#06B6D4', // Cyan
-      'Sun': '#84CC16'  // Lime
+      'Mon': '#3B82F6', 'Tue': '#10B981', 'Wed': '#F59E0B', 'Thu': '#8B5CF6',
+      'Fri': '#EF4444', 'Sat': '#06B6D4', 'Sun': '#84CC16'
     };
     
-    // Create background colors array using consistent day colors
+    const backgroundColors = dayLabels.map(day => dayColors[day as keyof typeof dayColors]);
+    
+    return {
+      labels: dayLabels,
+      datasets: [{
+        label,
+        data,
+        backgroundColor: backgroundColors,
+        borderColor: backgroundColors,
+        borderWidth: 1,
+        borderRadius: 4,
+        borderSkipped: false,
+      }]
+    };
+  };
+
+  const createFuelDayOfWeekChartData = (metric: keyof DailyFuel, label: string, color: string) => {
+    const dayOfWeekData: { [key: string]: number[] } = {
+      'Mon': [], 'Tue': [], 'Wed': [], 'Thu': [], 'Fri': [], 'Sat': [], 'Sun': []
+    };
+    
+    fuels.forEach(fuel => {
+      const [year, month, day] = fuel.date.split('T')[0].split('-');
+      const date = new Date(Date.UTC(parseInt(year), parseInt(month) - 1, parseInt(day)));
+      const dayName = date.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' });
+      dayOfWeekData[dayName].push(Number(fuel[metric]) || 0);
+    });
+    
+    const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const data = dayLabels.map(day => {
+      const values = dayOfWeekData[day];
+      return values.length > 0 ? values.reduce((sum, val) => sum + val, 0) / values.length : 0;
+    });
+    
+    const dayColors = {
+      'Mon': '#3B82F6', 'Tue': '#10B981', 'Wed': '#F59E0B', 'Thu': '#8B5CF6',
+      'Fri': '#EF4444', 'Sat': '#06B6D4', 'Sun': '#84CC16'
+    };
+    
     const backgroundColors = dayLabels.map(day => dayColors[day as keyof typeof dayColors]);
     
     return {
@@ -250,7 +428,6 @@ const SalesReportPage: React.FC = () => {
   };
 
   const createWeeklyGroupChartData = (metric: keyof DailySale, label: string, color: string) => {
-    // Group sales by day of month (1st, 8th, 15th, 22nd, 29th, 2nd, 9th, 16th, 23rd, 30th, etc.)
     const weeklyGroupData: { [key: number]: number[] } = {};
     
     sales.forEach(sale => {
@@ -262,29 +439,19 @@ const SalesReportPage: React.FC = () => {
       weeklyGroupData[dayOfMonth].push(Number(sale[metric]) || 0);
     });
     
-    // Create labels in the order: 1, 8, 15, 22, 29, 2, 9, 16, 23, 30, 3, 10, 17, 24, 31, 4, 11, 18, 25, 5, 12, 19, 26, 6, 13, 20, 27, 7, 14, 21, 28
     const weeklyOrder = [
-      1, 8, 15, 22, 29,
-      2, 9, 16, 23, 30,
-      3, 10, 17, 24, 31,
-      4, 11, 18, 25,
-      5, 12, 19, 26,
-      6, 13, 20, 27,
-      7, 14, 21, 28
+      1, 8, 15, 22, 29, 2, 9, 16, 23, 30, 3, 10, 17, 24, 31,
+      4, 11, 18, 25, 5, 12, 19, 26, 6, 13, 20, 27, 7, 14, 21, 28
     ];
     
-    // Filter only days that exist in our data
     const availableDays = weeklyOrder.filter(day => weeklyGroupData[day] && weeklyGroupData[day].length > 0);
     
-    // Calculate average for each day group
     const data = availableDays.map(day => {
       const values = weeklyGroupData[day];
       return values.reduce((sum, val) => sum + val, 0) / values.length;
     });
     
-    // Create labels with "Jul 1 Tue" format
     const labels = availableDays.map(day => {
-      // Use the first occurrence of this day to get the month and day name
       const firstSaleWithThisDay = sales.find(sale => {
         const [year, month, dayStr] = sale.date.split('T')[0].split('-');
         return parseInt(dayStr) === day;
@@ -301,26 +468,18 @@ const SalesReportPage: React.FC = () => {
       return `${day}`;
     });
     
-    // Define consistent colors for each day of the week
     const dayColors = {
-      'Mon': '#3B82F6', // Blue
-      'Tue': '#10B981', // Green
-      'Wed': '#F59E0B', // Orange
-      'Thu': '#8B5CF6', // Purple
-      'Fri': '#EF4444', // Red
-      'Sat': '#06B6D4', // Cyan
-      'Sun': '#84CC16'  // Lime
+      'Mon': '#3B82F6', 'Tue': '#10B981', 'Wed': '#F59E0B', 'Thu': '#8B5CF6',
+      'Fri': '#EF4444', 'Sat': '#06B6D4', 'Sun': '#84CC16'
     };
     
-    // Create background colors array based on day of week
     const backgroundColors = labels.map(label => {
-      // Extract day of week from label (e.g., "Jul 1\nTue" -> "Tue")
       const dayMatch = label.match(/\n([A-Za-z]{3})$/);
       if (dayMatch) {
         const dayOfWeek = dayMatch[1];
         return dayColors[dayOfWeek as keyof typeof dayColors] || color;
       }
-      return color; // Fallback to original color
+      return color;
     });
     
     return {
@@ -410,26 +569,42 @@ const SalesReportPage: React.FC = () => {
     },
   };
 
-  // Day of week legend component
+  const fuelChartOptions = {
+    ...chartOptions,
+    plugins: {
+      ...chartOptions.plugins,
+      datalabels: {
+        ...chartOptions.plugins.datalabels,
+        formatter: function(value: any) {
+          const numValue = parseFloat(value) || 0;
+          return formatLiters(numValue);
+        }
+      }
+    },
+    scales: {
+      ...chartOptions.scales,
+      y: {
+        ...chartOptions.scales.y,
+        ticks: {
+          ...chartOptions.scales.y.ticks,
+          callback: function(value: any) {
+            const numValue = parseFloat(value) || 0;
+            return formatLiters(numValue);
+          }
+        }
+      }
+    }
+  };
+
   const DayOfWeekLegend = () => {
     const dayColors = {
-      'Mon': '#3B82F6',
-      'Tue': '#10B981', 
-      'Wed': '#F59E0B',
-      'Thu': '#8B5CF6',
-      'Fri': '#EF4444',
-      'Sat': '#06B6D4',
-      'Sun': '#84CC16'
+      'Mon': '#3B82F6', 'Tue': '#10B981', 'Wed': '#F59E0B', 'Thu': '#8B5CF6',
+      'Fri': '#EF4444', 'Sat': '#06B6D4', 'Sun': '#84CC16'
     };
 
     const dayNames = {
-      'Mon': 'Monday',
-      'Tue': 'Tuesday',
-      'Wed': 'Wednesday', 
-      'Thu': 'Thursday',
-      'Fri': 'Friday',
-      'Sat': 'Saturday',
-      'Sun': 'Sunday'
+      'Mon': 'Monday', 'Tue': 'Tuesday', 'Wed': 'Wednesday', 'Thu': 'Thursday',
+      'Fri': 'Friday', 'Sat': 'Saturday', 'Sun': 'Sunday'
     };
 
     return (
@@ -445,6 +620,29 @@ const SalesReportPage: React.FC = () => {
         ))}
       </div>
     );
+  };
+
+  // Generate month options for dropdown
+  const generateMonthOptions = () => {
+    const options = [];
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    
+    // Generate options for current year and previous 2 years
+    for (let year = currentYear - 2; year <= currentYear; year++) {
+      for (let month = 1; month <= 12; month++) {
+        const date = new Date(year, month - 1, 1);
+        const monthName = date.toLocaleDateString('en-US', { month: 'long' });
+        options.push({
+          value: `${year}-${month}`,
+          label: `${monthName} ${year}`,
+          year,
+          month
+        });
+      }
+    }
+    
+    return options.reverse(); // Most recent first
   };
 
   if (loading) {
@@ -492,32 +690,12 @@ const SalesReportPage: React.FC = () => {
             <h1 className="text-2xl font-bold text-gray-900">Sales Report</h1>
             <p className="text-gray-600">Comprehensive analysis of daily sales performance - {getReportTitle()}</p>
           </div>
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={handlePreviousMonth}
-              disabled={loading || reportMode.startsWith('last-')}
-              className="px-3 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            <span className="text-lg font-semibold text-gray-900">{getMonthName(currentMonth)} {currentYear}</span>
-            <button
-              onClick={handleNextMonth}
-              disabled={loading || reportMode.startsWith('last-')}
-              className="px-3 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-          </div>
-          <button
-            onClick={handleExportPDF}
-            disabled={exporting || loading || sales.length === 0}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-          >
+                        <button
+                type="button"
+                onClick={handleExportPDF}
+                disabled={exporting || loading || sales.length === 0}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+              >
             {exporting ? (
               <>
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
@@ -534,213 +712,165 @@ const SalesReportPage: React.FC = () => {
           </button>
         </div>
 
-        {/* Report Mode Selection */}
+        {/* Report Period Selection */}
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Report Period</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Current Month Navigation */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Report Type</label>
-              <div className="grid grid-cols-1 gap-2">
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    name="reportMode"
-                    value="current-month"
-                    checked={reportMode === 'current-month'}
-                    onChange={(e) => setReportMode(e.target.value as ReportMode)}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">Current Month</span>
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    name="reportMode"
-                    value="previous-month"
-                    checked={reportMode === 'previous-month'}
-                    onChange={(e) => setReportMode(e.target.value as ReportMode)}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">Previous Month</span>
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    name="reportMode"
-                    value="last-2-months"
-                    checked={reportMode === 'last-2-months'}
-                    onChange={(e) => setReportMode(e.target.value as ReportMode)}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">Last 2 Months</span>
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    name="reportMode"
-                    value="last-3-months"
-                    checked={reportMode === 'last-3-months'}
-                    onChange={(e) => setReportMode(e.target.value as ReportMode)}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">Last 3 Months</span>
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    name="reportMode"
-                    value="last-4-months"
-                    checked={reportMode === 'last-4-months'}
-                    onChange={(e) => setReportMode(e.target.value as ReportMode)}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">Last 4 Months</span>
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    name="reportMode"
-                    value="last-5-months"
-                    checked={reportMode === 'last-5-months'}
-                    onChange={(e) => setReportMode(e.target.value as ReportMode)}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">Last 5 Months</span>
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    name="reportMode"
-                    value="last-6-months"
-                    checked={reportMode === 'last-6-months'}
-                    onChange={(e) => setReportMode(e.target.value as ReportMode)}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">Last 6 Months</span>
-                </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Current Month Navigation</label>
+              <div className="flex items-center space-x-2 mb-4">
+                <button
+                  type="button"
+                  onClick={handlePreviousMonth}
+                  disabled={loading || reportMode !== 'current-month'}
+                  className="px-3 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <span className="text-sm font-medium text-gray-900 min-w-[120px] text-center">
+                  {getMonthName(currentMonth)} {currentYear}
+                </span>
+                <button
+                  type="button"
+                  onClick={handleNextMonth}
+                  disabled={loading || reportMode !== 'current-month'}
+                  className="px-3 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+              <div className="flex space-x-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setReportMode('current-month');
+                    updateURL('current-month', currentYear, currentMonth);
+                  }}
+                  className={`px-3 py-2 text-sm rounded-md ${
+                    reportMode === 'current-month' 
+                      ? 'bg-blue-600 text-white' 
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  Current Month
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setReportMode('previous-month');
+                    updateURL('previous-month', currentYear, currentMonth);
+                  }}
+                  className={`px-3 py-2 text-sm rounded-md ${
+                    reportMode === 'previous-month' 
+                      ? 'bg-blue-600 text-white' 
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  Previous Month
+                </button>
               </div>
             </div>
 
+            {/* Month Dropdown */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Extended Periods</label>
-              <div className="grid grid-cols-1 gap-2">
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    name="reportMode"
-                    value="last-7-months"
-                    checked={reportMode === 'last-7-months'}
-                    onChange={(e) => setReportMode(e.target.value as ReportMode)}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">Last 7 Months</span>
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    name="reportMode"
-                    value="last-8-months"
-                    checked={reportMode === 'last-8-months'}
-                    onChange={(e) => setReportMode(e.target.value as ReportMode)}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">Last 8 Months</span>
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    name="reportMode"
-                    value="last-9-months"
-                    checked={reportMode === 'last-9-months'}
-                    onChange={(e) => setReportMode(e.target.value as ReportMode)}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">Last 9 Months</span>
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    name="reportMode"
-                    value="last-10-months"
-                    checked={reportMode === 'last-10-months'}
-                    onChange={(e) => setReportMode(e.target.value as ReportMode)}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">Last 10 Months</span>
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    name="reportMode"
-                    value="last-11-months"
-                    checked={reportMode === 'last-11-months'}
-                    onChange={(e) => setReportMode(e.target.value as ReportMode)}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">Last 11 Months</span>
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    name="reportMode"
-                    value="last-12-months"
-                    checked={reportMode === 'last-12-months'}
-                    onChange={(e) => setReportMode(e.target.value as ReportMode)}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">Last 12 Months</span>
-                </label>
-              </div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Select Month</label>
+              <select
+                value={`${selectedYear}-${selectedMonth}`}
+                onChange={(e) => {
+                  const [year, month] = e.target.value.split('-').map(Number);
+                  handleMonthDropdownChange(year, month);
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {generateMonthOptions().map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+                             <button
+                 type="button"
+                 onClick={() => {
+                   setReportMode('month-dropdown');
+                   updateURL('month-dropdown', selectedYear, selectedMonth);
+                 }}
+                 className={`mt-2 px-3 py-2 text-sm rounded-md ${
+                   reportMode === 'month-dropdown' 
+                     ? 'bg-blue-600 text-white' 
+                     : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                 }`}
+               >
+                 Use Selected Month
+               </button>
             </div>
 
-            {/* Month Navigation (only show for current/previous month modes) */}
-            {!reportMode.startsWith('last-') && (
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Select Month</label>
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={handlePreviousMonth}
-                    disabled={loading}
-                    className="px-3 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
-                  </button>
-                  <span className="text-sm font-medium text-gray-900 min-w-[120px] text-center">
-                    {getMonthName(currentMonth)} {currentYear}
-                  </span>
-                  <button
-                    onClick={handleNextMonth}
-                    disabled={loading}
-                    className="px-3 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            )}
+                         {/* Custom Date Range */}
+             <div className="md:col-span-2">
+               <label className="block text-sm font-medium text-gray-700 mb-2">Custom Date Range</label>
+               <div className="flex space-x-4">
+                 <div>
+                   <label className="block text-xs text-gray-600 mb-1">Start Date</label>
+                   <input
+                     type="date"
+                     value={customStartDate}
+                     onChange={(e) => setCustomStartDate(e.target.value)}
+                     onKeyDown={(e) => {
+                       if (e.key === 'Enter') {
+                         e.preventDefault();
+                       }
+                     }}
+                     className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                     style={{ minWidth: '140px' }}
+                   />
+                 </div>
+                 <div>
+                   <label className="block text-xs text-gray-600 mb-1">End Date</label>
+                   <input
+                     type="date"
+                     value={customEndDate}
+                     onChange={(e) => setCustomEndDate(e.target.value)}
+                     onKeyDown={(e) => {
+                       if (e.key === 'Enter') {
+                         e.preventDefault();
+                       }
+                     }}
+                     className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                     style={{ minWidth: '140px' }}
+                   />
+                 </div>
+                 <div className="flex items-end">
+                   <button
+                     type="button"
+                     onClick={handleCustomDateChange}
+                     disabled={!customStartDate || !customEndDate}
+                     className={`px-3 py-2 text-sm rounded-md ${
+                       reportMode === 'custom-date' 
+                         ? 'bg-blue-600 text-white' 
+                         : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                     } disabled:opacity-50 disabled:cursor-not-allowed`}
+                   >
+                     Use Custom Range
+                   </button>
+                 </div>
+               </div>
+               <div className="mt-2 text-xs text-gray-500">
+                 Click on the date fields to open the calendar picker
+               </div>
+             </div>
           </div>
         </div>
 
         {sales.length === 0 ? (
           <div className="bg-white rounded-lg shadow-lg p-6">
-            <p className="text-gray-500 text-center">No sales data available for the current month.</p>
+            <p className="text-gray-500 text-center">No sales data available for the selected period.</p>
           </div>
         ) : (
           <div ref={reportRef} className="space-y-6">
-            {/* Weekly Groups vs Reported Total */}
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Weekly Groups vs Reported Total (Average)</h3>
-              <p className="text-sm text-gray-600 mb-4">Grouped by: 1,8,15,22,29 | 2,9,16,23,30 | 3,10,17,24,31 | etc.</p>
-              <div className="h-80">
-                <Bar data={createWeeklyGroupChartData('reported_total', 'Reported Total', '#3B82F6')} options={chartOptions} />
-              </div>
-              <DayOfWeekLegend />
-            </div>
-
             {/* Date vs Reported Total */}
             <div className="bg-white rounded-lg shadow-lg p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Date vs Reported Total</h3>
@@ -749,13 +879,35 @@ const SalesReportPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Date vs Fuel Sale */}
+            {/* Weekly Groups vs Reported Total */}
             <div className="bg-white rounded-lg shadow-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Date vs Fuel Sale</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Weekly Groups vs Reported Total</h3>
+              <p className="text-sm text-gray-600 mb-4">Grouped by: 1,8,15,22,29 | 2,9,16,23,30 | 3,10,17,24,31 | etc.</p>
               <div className="h-80">
-                <Bar data={createChartData('fuel_sale', 'Fuel Sale', '#10B981')} options={chartOptions} />
+                <Bar data={createWeeklyGroupChartData('reported_total', 'Reported Total', '#3B82F6')} options={chartOptions} />
               </div>
+              <DayOfWeekLegend />
             </div>
+
+            {/* Date vs Fuel ($$$) */}
+            {fuels.length > 0 && (
+              <div className="bg-white rounded-lg shadow-lg p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Date vs Fuel ($$$)</h3>
+                <div className="h-80">
+                  <Bar data={createFuelChartData('total_amount', 'Fuel Total', '#10B981')} options={chartOptions} />
+                </div>
+              </div>
+            )}
+
+            {/* Date vs Fuel (Ltr) */}
+            {fuels.length > 0 && (
+              <div className="bg-white rounded-lg shadow-lg p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Date vs Fuel (Ltr)</h3>
+                <div className="h-80">
+                  <Bar data={createFuelChartData('total_quantity', 'Fuel Quantity', '#10B981')} options={fuelChartOptions} />
+                </div>
+              </div>
+            )}
 
             {/* Date vs Store Sale */}
             <div className="bg-white rounded-lg shadow-lg p-6">
@@ -781,7 +933,7 @@ const SalesReportPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Day of Week vs Reported Total */}
+            {/* Day of Week vs Reported Total (Average) */}
             <div className="bg-white rounded-lg shadow-lg p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Day of Week vs Reported Total (Average)</h3>
               <div className="h-80">
@@ -790,16 +942,7 @@ const SalesReportPage: React.FC = () => {
               <DayOfWeekLegend />
             </div>
 
-            {/* Day of Week vs Fuel Sale */}
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Day of Week vs Fuel Sale (Average)</h3>
-              <div className="h-80">
-                <Bar data={createDayOfWeekChartData('fuel_sale', 'Fuel Sale', '#10B981')} options={chartOptions} />
-              </div>
-              <DayOfWeekLegend />
-            </div>
-
-            {/* Day of Week vs Store Sale */}
+            {/* Day of Week vs Store Sale (Average) */}
             <div className="bg-white rounded-lg shadow-lg p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Day of Week vs Store Sale (Average)</h3>
               <div className="h-80">
@@ -808,23 +951,16 @@ const SalesReportPage: React.FC = () => {
               <DayOfWeekLegend />
             </div>
 
-            {/* Day of Week vs Card */}
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Day of Week vs Card (Average)</h3>
-              <div className="h-80">
-                <Bar data={createDayOfWeekChartData('card', 'Card', '#8B5CF6')} options={chartOptions} />
-              </div>
-              <DayOfWeekLegend />
-            </div>
-
-            {/* Day of Week vs Cash */}
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Day of Week vs Cash (Average)</h3>
-              <div className="h-80">
-                <Bar data={createDayOfWeekChartData('cash', 'Cash', '#EF4444')} options={chartOptions} />
-              </div>
-              <DayOfWeekLegend />
-            </div>
+                         {/* Day of Week vs Fuel Sale (Ltr) (Average) */}
+             {fuels.length > 0 && (
+               <div className="bg-white rounded-lg shadow-lg p-6">
+                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Day of Week vs Fuel Sale (Ltr) (Average)</h3>
+                 <div className="h-80">
+                   <Bar data={createFuelDayOfWeekChartData('total_quantity', 'Fuel Quantity', '#10B981')} options={fuelChartOptions} />
+                 </div>
+                 <DayOfWeekLegend />
+               </div>
+             )}
 
             {/* Data Table View */}
             <div className="bg-white rounded-lg shadow-lg p-6">
