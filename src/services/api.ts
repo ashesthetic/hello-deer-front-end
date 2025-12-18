@@ -943,6 +943,8 @@ export const loanApi = {
   withTrashed: (params?: any) => api.get('/loans/with-trashed', { params }),
   restore: (id: number) => api.post(`/loans/${id}/restore`),
   forceDelete: (id: number) => api.delete(`/loans/${id}/force-delete`),
+  processPayment: (id: number, data: { date: string; amount: number; type: 'deposit' | 'withdrawal'; notes?: string }) => 
+    api.post(`/loans/${id}/payment`, data),
 };
 
 export default api;
