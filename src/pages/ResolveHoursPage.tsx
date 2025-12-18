@@ -94,9 +94,6 @@ const ResolveHoursPage: React.FC = () => {
           aValue = a.unpaid_hours;
           bValue = b.unpaid_hours;
           break;
-          aValue = a.total_due;
-          bValue = b.total_due;
-          break;
         default:
           return 0;
       }
@@ -110,12 +107,10 @@ const ResolveHoursPage: React.FC = () => {
 
   // Calculate statistics
   const totalEmployees = employees.length;
-  const activeEmployees = employees.filter(emp => emp.status === 'active').length;
   const totalHours = employees.reduce((sum, emp) => sum + emp.total_hours, 0);
   const totalEarnings = employees.reduce((sum, emp) => sum + emp.total_earnings, 0);
   const totalPaid = employees.reduce((sum, emp) => sum + emp.total_paid, 0);
   const totalDue = employees.reduce((sum, emp) => sum + emp.total_due, 0);
-  const avgHoursPerEmployee = totalEmployees > 0 ? totalHours / totalEmployees : 0;
 
   // Get unique departments for filter
   const uniqueDepartments = Array.from(new Set(employees.map(emp => emp.department))).sort();

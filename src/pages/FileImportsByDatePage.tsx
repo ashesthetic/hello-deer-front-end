@@ -11,7 +11,7 @@ const FileImportsByDatePage: React.FC = () => {
   const [fileImports, setFileImports] = useState<FileImport[]>([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
-  const [processResult, setProcessResult] = useState<SaleDataProcessResult | null>(null);
+  const [processResult] = useState<SaleDataProcessResult | null>(null); // eslint-disable-line @typescript-eslint/no-unused-vars
   const [sftProcessResult, setSftProcessResult] = useState<SftProcessResult | null>(null);
   const [mappedData, setMappedData] = useState<SftToFormMapping | null>(null);
   const [savingData, setSavingData] = useState(false);
