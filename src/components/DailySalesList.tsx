@@ -2,8 +2,9 @@ import React from 'react';
 import { DailySale, User } from '../types';
 import { canUpdateDailySale, canDelete, getRoleDisplayName } from '../utils/permissions';
 import Tooltip from './Tooltip';
+import Modal from './Modal';
 
-type SortField = 'date' | 'total_product_sale' | 'total_counter_sale' | 'reported_total';
+type SortField = 'date' | 'fuel_sale' | 'store_sale' | 'reported_total';
 type SortDirection = 'asc' | 'desc';
 
 interface DailySalesListProps {
@@ -17,8 +18,8 @@ interface DailySalesListProps {
   sortDirection?: SortDirection;
   onSort?: (field: SortField) => void;
   totals?: {
-    total_product_sale: number;
-    total_counter_sale: number;
+    fuel_sale: number;
+    store_sale: number;
     reported_total: number;
   };
 }
@@ -77,6 +78,27 @@ const DailySalesList: React.FC<DailySalesListProps> = ({
     );
   };
 
+  const [deleteModalOpen, setDeleteModalOpen] = React.useState(false);
+  const [saleToDelete, setSaleToDelete] = React.useState<DailySale | null>(null);
+  const [deleting, setDeleting] = React.useState(false);
+
+  const handleDeleteClick = (sale: DailySale) => {
+    setSaleToDelete(sale);
+    setDeleteModalOpen(true);
+  };
+  const handleConfirmDelete = async () => {
+    if (!saleToDelete) return;
+    setDeleting(true);
+    await onDelete(saleToDelete.id!);
+    setDeleting(false);
+    setDeleteModalOpen(false);
+    setSaleToDelete(null);
+  };
+  const handleCancelDelete = () => {
+    setDeleteModalOpen(false);
+    setSaleToDelete(null);
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center py-8">
@@ -88,7 +110,7 @@ const DailySalesList: React.FC<DailySalesListProps> = ({
   if (sales.length === 0) {
     return (
       <div className="text-center py-8">
-        <p className="text-gray-500">No daily sales found.</p>
+        <p className="text-gray-500">No sales found.</p>
       </div>
     );
   }
@@ -102,10 +124,10 @@ const DailySalesList: React.FC<DailySalesListProps> = ({
               {renderSortableHeader('date', 'Date')}
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              {renderSortableHeader('total_product_sale', 'Product Sale')}
+              {renderSortableHeader('fuel_sale', 'Fuel Sale')}
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              {renderSortableHeader('total_counter_sale', 'Counter Sale')}
+              {renderSortableHeader('store_sale', 'Store Sale')}
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               {renderSortableHeader('reported_total', 'Grand Total')}
@@ -127,13 +149,13 @@ const DailySalesList: React.FC<DailySalesListProps> = ({
                 {formatDate(sale.date)}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {formatCurrency(sale.total_product_sale || 0)}
+                {formatCurrency(sale.fuel_sale ?? 0)}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {formatCurrency(sale.total_counter_sale || 0)}
+                {formatCurrency(sale.store_sale ?? 0)}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                {formatCurrency(sale.reported_total || 0)}
+                {formatCurrency(sale.reported_total ?? 0)}
               </td>
               {currentUser && (currentUser.role === 'admin' || currentUser.role === 'editor') && (
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -166,7 +188,7 @@ const DailySalesList: React.FC<DailySalesListProps> = ({
                   )}
                   {canDelete(currentUser) && (
                     <button
-                      onClick={() => onDelete(sale.id!)}
+                      onClick={() => handleDeleteClick(sale)}
                       className="text-red-600 hover:text-red-900 px-2 py-1 rounded text-xs"
                     >
                       Delete
@@ -184,13 +206,13 @@ const DailySalesList: React.FC<DailySalesListProps> = ({
                 Total
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">
-                {formatCurrency(totals.total_product_sale)}
+                {formatCurrency(totals.fuel_sale ?? 0)}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">
-                {formatCurrency(totals.total_counter_sale)}
+                {formatCurrency(totals.store_sale ?? 0)}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">
-                {formatCurrency(totals.reported_total)}
+                {formatCurrency(totals.reported_total ?? 0)}
               </td>
               {currentUser && (currentUser.role === 'admin' || currentUser.role === 'editor') && (
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -204,6 +226,19 @@ const DailySalesList: React.FC<DailySalesListProps> = ({
           )}
         </tbody>
       </table>
+
+      {/* Modal for delete confirmation */}
+      <Modal
+        isOpen={deleteModalOpen}
+        title="Delete Sale"
+        onClose={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+        confirmText="Delete"
+        cancelText="Cancel"
+        loading={deleting}
+      >
+        Are you sure you want to delete this sale record?
+      </Modal>
     </div>
   );
 };

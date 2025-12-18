@@ -11,8 +11,17 @@ import DailySalesPage from './pages/DailySalesPage';
 import DailySalesViewPage from './pages/DailySalesViewPage';
 import DailySalesEditPage from './pages/DailySalesEditPage';
 import DailyFuelsPage from './pages/DailyFuelsPage';
-import ReportGraphPage from './pages/ReportGraphPage';
-import DailySalesGraphPage from './pages/DailySalesGraphPage';
+import DailyFuelViewPage from './pages/DailyFuelViewPage';
+import DailyFuelEditPage from './pages/DailyFuelEditPage';
+import SalesReportPage from './pages/SalesReportPage';
+import FuelsReportPage from './pages/FuelsReportPage';
+import VendorsPage from './pages/VendorsPage';
+import VendorAddPage from './pages/VendorAddPage';
+import VendorEditPage from './pages/VendorEditPage';
+import VendorViewPage from './pages/VendorViewPage';
+import IncomePage from './pages/IncomePage';
+import ExpensePage from './pages/ExpensePage';
+import SettingsPage from './pages/SettingsPage';
 import UserManagementPage from './pages/UserManagementPage';
 
 const App: React.FC = () => {
@@ -49,38 +58,137 @@ const App: React.FC = () => {
             path="/dashboard" 
             element={isAuthenticated ? <Layout><Dashboard /></Layout> : <Navigate to="/login" />} 
           />
+          
+          {/* Sales Routes */}
           <Route 
-            path="/daily-sales" 
+            path="/sales" 
             element={isAuthenticated ? <Layout><DailySalesPage /></Layout> : <Navigate to="/login" />} 
           />
           <Route 
-            path="/daily-sales/:id" 
+            path="/sales/:id" 
             element={isAuthenticated ? <Layout><DailySalesViewPage /></Layout> : <Navigate to="/login" />} 
           />
           <Route 
-            path="/daily-sales/:id/edit" 
+            path="/sales/:id/edit" 
             element={isAuthenticated ? <Layout><DailySalesEditPage /></Layout> : <Navigate to="/login" />} 
           />
           <Route 
-            path="/daily-sales/new" 
+            path="/sales/new" 
             element={isAuthenticated ? <Layout><DailySalesEditPage /></Layout> : <Navigate to="/login" />} 
           />
+          
+          {/* Fuels Routes */}
           <Route 
-            path="/daily-fuels" 
+            path="/fuels" 
             element={isAuthenticated ? <Layout><DailyFuelsPage /></Layout> : <Navigate to="/login" />} 
           />
           <Route 
-            path="/report-graph" 
-            element={isAuthenticated ? <Layout><ReportGraphPage /></Layout> : <Navigate to="/login" />} 
+            path="/fuels/:id" 
+            element={isAuthenticated ? <Layout><DailyFuelViewPage /></Layout> : <Navigate to="/login" />} 
           />
           <Route 
-            path="/daily-sales-graph" 
-            element={isAuthenticated ? <Layout><DailySalesGraphPage /></Layout> : <Navigate to="/login" />} 
+            path="/fuels/:id/edit" 
+            element={isAuthenticated ? <Layout><DailyFuelEditPage /></Layout> : <Navigate to="/login" />} 
           />
+          <Route 
+            path="/fuels/new" 
+            element={isAuthenticated ? <Layout><DailyFuelEditPage /></Layout> : <Navigate to="/login" />} 
+          />
+          
+          {/* Reports Routes */}
+          <Route 
+            path="/reports/sales" 
+            element={isAuthenticated ? <Layout><SalesReportPage /></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/reports/fuels" 
+            element={isAuthenticated ? <Layout><FuelsReportPage /></Layout> : <Navigate to="/login" />} 
+          />
+          
+          {/* Accounting Routes */}
+          <Route 
+            path="/accounting/vendors" 
+            element={isAuthenticated ? <Layout><VendorsPage /></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/accounting/vendors/add" 
+            element={isAuthenticated ? <Layout><VendorAddPage /></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/accounting/vendors/:id" 
+            element={isAuthenticated ? <Layout><VendorViewPage /></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/accounting/vendors/:id/edit" 
+            element={isAuthenticated ? <Layout><VendorEditPage /></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/accounting/income" 
+            element={isAuthenticated ? <Layout><IncomePage /></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/accounting/expense" 
+            element={isAuthenticated ? <Layout><ExpensePage /></Layout> : <Navigate to="/login" />} 
+          />
+          
+          {/* Users Route */}
           <Route 
             path="/users" 
             element={isAuthenticated ? <Layout><UserManagementPage /></Layout> : <Navigate to="/login" />} 
           />
+          
+          {/* Settings Route */}
+          <Route 
+            path="/settings" 
+            element={isAuthenticated ? <Layout><SettingsPage /></Layout> : <Navigate to="/login" />} 
+          />
+          
+          {/* Legacy Routes - Redirect to new structure */}
+          <Route 
+            path="/daily-sales" 
+            element={<Navigate to="/sales" />} 
+          />
+          <Route 
+            path="/daily-sales/:id" 
+            element={<Navigate to="/sales/:id" />} 
+          />
+          <Route 
+            path="/daily-sales/:id/edit" 
+            element={<Navigate to="/sales/:id/edit" />} 
+          />
+          <Route 
+            path="/daily-sales/new" 
+            element={<Navigate to="/sales/new" />} 
+          />
+          <Route 
+            path="/daily-fuels" 
+            element={<Navigate to="/fuels" />} 
+          />
+          <Route 
+            path="/daily-fuels/:id" 
+            element={<Navigate to="/fuels/:id" />} 
+          />
+          <Route 
+            path="/daily-fuels/:id/edit" 
+            element={<Navigate to="/fuels/:id/edit" />} 
+          />
+          <Route 
+            path="/daily-fuels/new" 
+            element={<Navigate to="/fuels/new" />} 
+          />
+          <Route 
+            path="/report-graph" 
+            element={<Navigate to="/reports/sales" />} 
+          />
+          <Route 
+            path="/daily-sales-graph" 
+            element={<Navigate to="/reports/sales" />} 
+          />
+          <Route 
+            path="/daily-fuels-graph" 
+            element={<Navigate to="/reports/fuels" />} 
+          />
+          
           <Route 
             path="/" 
             element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} />} 
@@ -92,3 +200,4 @@ const App: React.FC = () => {
 };
 
 export default App;
+

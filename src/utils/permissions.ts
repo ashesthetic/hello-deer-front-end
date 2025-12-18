@@ -40,6 +40,26 @@ export const canUpdateDailySale = (user: User | null, dailySale: any): boolean =
   return false;
 };
 
+export const canUpdateDailyFuel = (user: User | null, dailyFuel: any): boolean => {
+  if (isAdmin(user)) {
+    return true;
+  }
+  
+  if (isEditor(user)) {
+    return dailyFuel.user_id === user?.id;
+  }
+  
+  return false;
+};
+
+export const canDeleteDailyFuel = (user: User | null, dailyFuel: any): boolean => {
+  if (isAdmin(user)) {
+    return true;
+  }
+  
+  return false; // Only admins can delete
+};
+
 export const canViewDailySale = (user: User | null, dailySale: any): boolean => {
   if (isAdmin(user)) {
     return true;
@@ -47,6 +67,18 @@ export const canViewDailySale = (user: User | null, dailySale: any): boolean => 
   
   if (isEditor(user)) {
     return dailySale.user_id === user?.id;
+  }
+  
+  return true; // Viewers can view all
+};
+
+export const canViewDailyFuel = (user: User | null, dailyFuel: any): boolean => {
+  if (isAdmin(user)) {
+    return true;
+  }
+  
+  if (isEditor(user)) {
+    return dailyFuel.user_id === user?.id;
   }
   
   return true; // Viewers can view all
