@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { DailySale } from '../types';
 import { formatCurrency } from '../utils/currencyUtils';
+import { profitApi, ProfitPercentages } from '../services/api';
 
 interface DailySalesDetailProps {
   sale: DailySale;
@@ -13,6 +14,32 @@ const DailySalesDetail: React.FC<DailySalesDetailProps> = ({
   onBack,
   onEdit
 }) => {
+  const [profitPercentages, setProfitPercentages] = useState<ProfitPercentages | null>(null);
+  const [loadingPercentages, setLoadingPercentages] = useState(true);
+
+  useEffect(() => {
+    const fetchProfitPercentages = async () => {
+      try {
+        const response = await profitApi.getPercentages();
+        setProfitPercentages(response.data);
+      } catch (error) {
+        console.error('Failed to fetch profit percentages:', error);
+        // Use default values if API fails
+        setProfitPercentages({
+          fuel_percentage: 4,
+          tobacco_25_percentage: 8,
+          tobacco_20_percentage: 8,
+          lottery_percentage: 2,
+          prepay_percentage: 1,
+          store_sale_percentage: 50,
+        });
+      } finally {
+        setLoadingPercentages(false);
+      }
+    };
+
+    fetchProfitPercentages();
+  }, []);
   // Format currency values for display (values are already in decimal format from backend)
   const formatCurrencyValue = (value: number | undefined): string => {
     if (value === undefined || value === null) return '$0.00';
@@ -47,6 +74,9 @@ const DailySalesDetail: React.FC<DailySalesDetailProps> = ({
                                safeNumber(sale.afd_interac_debit);
   
   const totalLoyaltyDiscounts = safeNumber(sale.journey_discount) + safeNumber(sale.aeroplan_discount);
+  
+  const totalLowMarginItems = safeNumber(sale.tobacco_25) + safeNumber(sale.tobacco_20) + 
+                              safeNumber(sale.lottery) + safeNumber(sale.prepay);
 
   return (
     <div className="max-w-6xl mx-auto p-6 bg-white rounded-lg shadow-lg">
@@ -72,6 +102,60 @@ const DailySalesDetail: React.FC<DailySalesDetailProps> = ({
       <div className="mb-6">
         <h3 className="text-lg font-semibold text-gray-800 mb-2">Date</h3>
         <p className="text-gray-600">{new Date(sale.date).toLocaleDateString()}</p>
+      </div>
+
+      {/* Approximate Profit Section */}
+      <div className="bg-green-50 p-4 rounded-lg mb-6">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold text-gray-800">Approximate Profit</h3>
+          <div className="text-right">
+            <div className="text-sm text-gray-600">Total Profit</div>
+            <div className="text-xl font-bold text-green-600">{formatCurrency(sale.approximate_profit ?? 0)}</div>
+          </div>
+        </div>
+        {loadingPercentages ? (
+          <div className="text-center py-4">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600 mx-auto"></div>
+            <p className="text-sm text-gray-600 mt-2">Loading profit percentages...</p>
+          </div>
+        ) : profitPercentages ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Fuel Profit ({profitPercentages.fuel_percentage}%)</label>
+              <p className="text-sm text-gray-600">Amount: {formatCurrency(safeNumber(sale.fuel_sale))}</p>
+              <p className="text-lg font-semibold text-green-600">Profit: {formatCurrency((safeNumber(sale.fuel_sale) * profitPercentages.fuel_percentage) / 100)}</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Tobacco 25 Profit ({profitPercentages.tobacco_25_percentage}%)</label>
+              <p className="text-sm text-gray-600">Amount: {formatCurrency(safeNumber(sale.tobacco_25))}</p>
+              <p className="text-lg font-semibold text-green-600">Profit: {formatCurrency((safeNumber(sale.tobacco_25) * profitPercentages.tobacco_25_percentage) / 100)}</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Tobacco 20 Profit ({profitPercentages.tobacco_20_percentage}%)</label>
+              <p className="text-sm text-gray-600">Amount: {formatCurrency(safeNumber(sale.tobacco_20))}</p>
+              <p className="text-lg font-semibold text-green-600">Profit: {formatCurrency((safeNumber(sale.tobacco_20) * profitPercentages.tobacco_20_percentage) / 100)}</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Lottery Profit ({profitPercentages.lottery_percentage}%)</label>
+              <p className="text-sm text-gray-600">Amount: {formatCurrency(safeNumber(sale.lottery))}</p>
+              <p className="text-lg font-semibold text-green-600">Profit: {formatCurrency((safeNumber(sale.lottery) * profitPercentages.lottery_percentage) / 100)}</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Prepay Profit ({profitPercentages.prepay_percentage}%)</label>
+              <p className="text-sm text-gray-600">Amount: {formatCurrency(safeNumber(sale.prepay))}</p>
+              <p className="text-lg font-semibold text-green-600">Profit: {formatCurrency((safeNumber(sale.prepay) * profitPercentages.prepay_percentage) / 100)}</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Store Sale Profit ({profitPercentages.store_sale_percentage}%)</label>
+              <p className="text-sm text-gray-600">Amount: {formatCurrency(safeNumber(sale.store_sale_calculated))}</p>
+              <p className="text-lg font-semibold text-green-600">Profit: {formatCurrency((safeNumber(sale.store_sale_calculated) * profitPercentages.store_sale_percentage) / 100)}</p>
+            </div>
+          </div>
+        ) : (
+          <div className="text-center py-4">
+            <p className="text-sm text-gray-600">Failed to load profit percentages</p>
+          </div>
+        )}
       </div>
 
       {/* General Section */}
@@ -269,6 +353,35 @@ const DailySalesDetail: React.FC<DailySalesDetailProps> = ({
           <div>
             <label className="block text-sm font-medium text-gray-700">Aeroplan Discount</label>
             <p className="text-lg font-semibold text-indigo-600">{formatCurrencyValue(sale.aeroplan_discount)}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Low Margin Items Section */}
+      <div className="bg-orange-50 p-4 rounded-lg mb-6">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold text-gray-800">Low Margin Items</h3>
+          <div className="text-right">
+            <div className="text-sm text-gray-600">Total</div>
+            <div className="text-xl font-bold text-orange-600">{formatCurrency(totalLowMarginItems)}</div>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Tobacco 25</label>
+            <p className="text-lg font-semibold text-orange-600">{formatCurrencyValue(sale.tobacco_25)}</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Tobacco 20</label>
+            <p className="text-lg font-semibold text-orange-600">{formatCurrencyValue(sale.tobacco_20)}</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Lottery</label>
+            <p className="text-lg font-semibold text-orange-600">{formatCurrencyValue(sale.lottery)}</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Prepay</label>
+            <p className="text-lg font-semibold text-orange-600">{formatCurrencyValue(sale.prepay)}</p>
           </div>
         </div>
       </div>

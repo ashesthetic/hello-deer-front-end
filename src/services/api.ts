@@ -741,4 +741,18 @@ export const usersApi = {
   profile: () => api.get('/user/profile'),
 };
 
+// Profit API
+export interface ProfitPercentages {
+  fuel_percentage: number;
+  tobacco_25_percentage: number;
+  tobacco_20_percentage: number;
+  lottery_percentage: number;
+  prepay_percentage: number;
+  store_sale_percentage: number;
+}
+
+export const profitApi = {
+  getPercentages: () => api.get<ProfitPercentages>('/profit/percentages'),
+};
+
 export default api; 

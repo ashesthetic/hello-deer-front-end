@@ -49,6 +49,10 @@ const DailySalesForm: React.FC<DailySalesFormProps> = ({
     afd_debit_transaction_count: undefined,
     journey_discount: undefined,
     aeroplan_discount: undefined,
+    tobacco_25: undefined,
+    tobacco_20: undefined,
+    lottery: undefined,
+    prepay: undefined,
     notes: ''
   });
 
@@ -89,6 +93,10 @@ const DailySalesForm: React.FC<DailySalesFormProps> = ({
         afd_debit_transaction_count: initialData.afd_debit_transaction_count,
         journey_discount: initialData.journey_discount,
         aeroplan_discount: initialData.aeroplan_discount,
+        tobacco_25: initialData.tobacco_25,
+        tobacco_20: initialData.tobacco_20,
+        lottery: initialData.lottery,
+        prepay: initialData.prepay,
       });
     }
   }, [initialData]);
@@ -157,6 +165,10 @@ const DailySalesForm: React.FC<DailySalesFormProps> = ({
       afd_debit_transaction_count: formData.afd_debit_transaction_count || 0,
       journey_discount: formData.journey_discount || 0,
       aeroplan_discount: formData.aeroplan_discount || 0,
+      tobacco_25: formData.tobacco_25 || 0,
+      tobacco_20: formData.tobacco_20 || 0,
+      lottery: formData.lottery || 0,
+      prepay: formData.prepay || 0,
     };
     
     await onSubmit(submitData);
@@ -186,6 +198,9 @@ const DailySalesForm: React.FC<DailySalesFormProps> = ({
                                (Number(formData.afd_interac_debit) || 0);
   
   const totalLoyaltyDiscounts = (Number(formData.journey_discount) || 0) + (Number(formData.aeroplan_discount) || 0);
+  
+  const totalLowMarginItems = (Number(formData.tobacco_25) || 0) + (Number(formData.tobacco_20) || 0) + 
+                              (Number(formData.lottery) || 0) + (Number(formData.prepay) || 0);
 
   return (
     <div className="max-w-6xl mx-auto p-6 bg-white rounded-lg shadow-lg">
@@ -672,6 +687,73 @@ const DailySalesForm: React.FC<DailySalesFormProps> = ({
                 required
                 value={formData.aeroplan_discount !== undefined ? Number(formData.aeroplan_discount).toFixed(2) : ''}
                 onChange={(e) => handleCurrencyInputChange('aeroplan_discount', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="0.00"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Low Margin Items Section */}
+        <div className="bg-orange-50 p-4 rounded-lg">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold text-gray-800">Low Margin Items</h3>
+            <div className="text-right">
+              <div className="text-sm text-gray-600">Total</div>
+              <div className="text-xl font-bold text-orange-600">
+                {formatCurrency(totalLowMarginItems)}
+              </div>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Tobacco 25 (CAD) *
+              </label>
+              <input
+                type="text"
+                required
+                value={formData.tobacco_25 !== undefined ? Number(formData.tobacco_25).toFixed(2) : ''}
+                onChange={(e) => handleCurrencyInputChange('tobacco_25', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="0.00"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Tobacco 20 (CAD) *
+              </label>
+              <input
+                type="text"
+                required
+                value={formData.tobacco_20 !== undefined ? Number(formData.tobacco_20).toFixed(2) : ''}
+                onChange={(e) => handleCurrencyInputChange('tobacco_20', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="0.00"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Lottery (CAD) *
+              </label>
+              <input
+                type="text"
+                required
+                value={formData.lottery !== undefined ? Number(formData.lottery).toFixed(2) : ''}
+                onChange={(e) => handleCurrencyInputChange('lottery', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="0.00"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Prepay (CAD) *
+              </label>
+              <input
+                type="text"
+                required
+                value={formData.prepay !== undefined ? Number(formData.prepay).toFixed(2) : ''}
+                onChange={(e) => handleCurrencyInputChange('prepay', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="0.00"
               />

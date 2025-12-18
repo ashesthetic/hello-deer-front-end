@@ -5,7 +5,7 @@ import Modal from './Modal';
 import { DataTable, TableColumn, ActionButtons, ActionButton } from './common/DataTable';
 import { formatCurrency, formatDate } from '../utils/chartConfigs';
 
-type SortField = 'date' | 'fuel_sale' | 'store_sale' | 'gst' | 'card' | 'cash' | 'coupon' | 'delivery' | 'reported_total';
+type SortField = 'date' | 'fuel_sale' | 'store_sale' | 'gst' | 'card' | 'cash' | 'reported_total' | 'approximate_profit';
 type SortDirection = 'asc' | 'desc';
 
 interface DailySalesListProps {
@@ -24,9 +24,8 @@ interface DailySalesListProps {
     gst: number;
     card: number;
     cash: number;
-    coupon: number;
-    delivery: number;
     reported_total: number;
+    approximate_profit: number;
   };
 }
 
@@ -108,24 +107,20 @@ const DailySalesList: React.FC<DailySalesListProps> = ({
       sortable: !!onSort,
       render: (sale: DailySale) => formatCurrency(sale.cash ?? 0)
     },
-    {
-      key: 'coupon',
-      header: 'Coupon',
-      sortable: !!onSort,
-      render: (sale: DailySale) => formatCurrency(sale.coupon ?? 0)
-    },
-    {
-      key: 'delivery',
-      header: 'Delivery',
-      sortable: !!onSort,
-      render: (sale: DailySale) => formatCurrency(sale.delivery ?? 0)
-    },
+
     {
       key: 'reported_total',
       header: 'Grand Total',
       sortable: !!onSort,
       className: 'table-cell-bold',
       render: (sale: DailySale) => formatCurrency(sale.reported_total ?? 0)
+    },
+    {
+      key: 'approximate_profit',
+      header: 'Approximate Profit',
+      sortable: !!onSort,
+      className: 'table-cell-bold text-green-600',
+      render: (sale: DailySale) => formatCurrency(sale.approximate_profit ?? 0)
     },
     {
       key: 'actions',
@@ -181,9 +176,9 @@ const DailySalesList: React.FC<DailySalesListProps> = ({
             <td className="table-cell">{formatCurrency(totals.gst ?? 0)}</td>
             <td className="table-cell">{formatCurrency(totals.card ?? 0)}</td>
             <td className="table-cell">{formatCurrency(totals.cash ?? 0)}</td>
-            <td className="table-cell">{formatCurrency(totals.coupon ?? 0)}</td>
-            <td className="table-cell">{formatCurrency(totals.delivery ?? 0)}</td>
+
             <td className="table-cell">{formatCurrency(totals.reported_total ?? 0)}</td>
+            <td className="table-cell text-green-600 font-bold">{formatCurrency(totals.approximate_profit ?? 0)}</td>
             <td className="table-cell"></td>
           </tr>
         )}
