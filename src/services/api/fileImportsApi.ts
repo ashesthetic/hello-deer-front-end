@@ -37,6 +37,30 @@ export interface FileImportStats {
   recent_import_dates: string[];
 }
 
+export interface SaleDataProcessResult {
+  success: boolean;
+  message: string;
+  date: string;
+  total_files: number;
+  processed_files: number;
+  failed_files: number;
+  files: Array<{
+    id: number;
+    original_name: string;
+    file_name: string;
+    file_size: number;
+    mime_type: string;
+    status: string;
+    processed_at: string;
+  }>;
+  errors: Array<{
+    file_id: number;
+    file_name: string;
+    error: string;
+  }>;
+  processed_at: string;
+}
+
 class FileImportsApi {
   /**
    * Upload multiple files for import
@@ -105,6 +129,14 @@ class FileImportsApi {
    */
   async getStats(): Promise<FileImportStats> {
     const response = await api.get('/file-imports/stats');
+    return response.data;
+  }
+
+  /**
+   * Process sale data for a specific date
+   */
+  async processSaleData(date: string): Promise<SaleDataProcessResult> {
+    const response = await api.post('/file-imports/sale-data', { date });
     return response.data;
   }
 }

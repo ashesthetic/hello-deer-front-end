@@ -16,6 +16,7 @@ import DailyFuelEditPage from './pages/DailyFuelEditPage';
 import FuelVolumesPage from './pages/FuelVolumesPage';
 import ImportDataPage from './pages/ImportDataPage';
 import FileImportsListPage from './pages/FileImportsListPage';
+import FileImportsByDatePage from './pages/FileImportsByDatePage';
 import FuelVolumeViewPage from './pages/FuelVolumeViewPage';
 import FuelVolumeEditPage from './pages/FuelVolumeEditPage';
 import SalesReportPage from './pages/SalesReportPage';
@@ -182,6 +183,12 @@ const App: React.FC = () => {
           <Route 
             path="/file-imports" 
             element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="admin"><FileImportsListPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
+          />
+          
+          {/* File Imports by Date Route */}
+          <Route 
+            path="/file-imports/:date" 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="admin"><FileImportsByDatePage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           
           {/* Employees Routes */}

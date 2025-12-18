@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { fileImportsApi, FileImport } from '../services/api/fileImportsApi';
 
 interface GroupedFileImports {
@@ -6,10 +7,10 @@ interface GroupedFileImports {
 }
 
 const FileImportsListPage: React.FC = () => {
+  const navigate = useNavigate();
   const [fileImports, setFileImports] = useState<FileImport[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<any>(null);
-  const [expandedDates, setExpandedDates] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetchFileImports();
@@ -49,29 +50,9 @@ const FileImportsListPage: React.FC = () => {
     return new Date(dateString).toLocaleDateString();
   };
 
-  const getStatusBadge = (processed: number) => {
-    if (processed === 1) {
-      return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-          Processed
-        </span>
-      );
-    }
-    return (
-      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-        Pending
-      </span>
-    );
-  };
-
   const toggleDateExpansion = (date: string) => {
-    const newExpanded = new Set(expandedDates);
-    if (newExpanded.has(date)) {
-      newExpanded.delete(date);
-    } else {
-      newExpanded.add(date);
-    }
-    setExpandedDates(newExpanded);
+    // Navigate to the specific date page instead of expanding inline
+    navigate(`/file-imports/${date}`);
   };
 
   const groupFilesByDate = (files: FileImport[]): GroupedFileImports => {
@@ -186,118 +167,54 @@ const FileImportsListPage: React.FC = () => {
                   {sortedDates.map((date) => {
                     const files = groupedFiles[date];
                     const dateStats = getDateStats(files);
-                    const isExpanded = expandedDates.has(date);
                     
                     return (
-                      <React.Fragment key={date}>
-                        {/* Date Row */}
-                        <tr className="hover:bg-gray-50">
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm font-medium text-gray-900">
-                              {formatDate(date)}
-                            </div>
-                            <div className="text-sm text-gray-500">
-                              {new Date(date).toLocaleDateString('en-US', { 
-                                weekday: 'long', 
-                                year: 'numeric', 
-                                month: 'long', 
-                                day: 'numeric' 
-                              })}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            <div className="font-medium">{dateStats.totalFiles} files</div>
-                            <div className="text-gray-500">
-                              {dateStats.processedFiles} processed, {dateStats.pendingFiles} pending
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {formatFileSize(dateStats.totalSize)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="space-y-1">
-                              {dateStats.processedFiles > 0 && (
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                  {dateStats.processedFiles} Processed
-                                </span>
-                              )}
-                              {dateStats.pendingFiles > 0 && (
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                  {dateStats.pendingFiles} Pending
-                                </span>
-                              )}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            <button
-                              onClick={() => toggleDateExpansion(date)}
-                              className="text-blue-600 hover:text-blue-800 font-medium"
-                            >
-                              {isExpanded ? 'Hide Files' : 'Show Files'}
-                            </button>
-                          </td>
-                        </tr>
-                        
-                        {/* Expanded Files Row */}
-                        {isExpanded && (
-                          <tr>
-                            <td colSpan={5} className="px-6 py-4 bg-gray-50">
-                              <div className="space-y-3">
-                                <h4 className="font-medium text-gray-900">Files for {formatDate(date)}</h4>
-                                <div className="overflow-x-auto">
-                                  <table className="min-w-full divide-y divide-gray-200">
-                                    <thead className="bg-white">
-                                      <tr>
-                                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                          File Name
-                                        </th>
-                                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                          Size
-                                        </th>
-                                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                          Status
-                                        </th>
-                                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                          Uploaded
-                                        </th>
-                                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                          Notes
-                                        </th>
-                                      </tr>
-                                    </thead>
-                                    <tbody className="bg-white divide-y divide-gray-200">
-                                      {files.map((file) => (
-                                        <tr key={file.id} className="hover:bg-gray-50">
-                                          <td className="px-3 py-2 whitespace-nowrap">
-                                            <div className="text-sm font-medium text-gray-900">
-                                              {file.original_name}
-                                            </div>
-                                            <div className="text-sm text-gray-500">
-                                              {file.mime_type}
-                                            </div>
-                                          </td>
-                                          <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
-                                            {formatFileSize(file.file_size)}
-                                          </td>
-                                          <td className="px-3 py-2 whitespace-nowrap">
-                                            {getStatusBadge(file.processed)}
-                                          </td>
-                                          <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
-                                            {formatDate(file.created_at)}
-                                          </td>
-                                          <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-500">
-                                            {file.notes || '-'}
-                                          </td>
-                                        </tr>
-                                      ))}
-                                    </tbody>
-                                  </table>
-                                </div>
-                              </div>
-                            </td>
-                          </tr>
-                        )}
-                      </React.Fragment>
+                      <tr key={date} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900">
+                            {formatDate(date)}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {new Date(date).toLocaleDateString('en-US', { 
+                              weekday: 'long', 
+                              year: 'numeric', 
+                              month: 'long', 
+                              day: 'numeric' 
+                            })}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <div className="font-medium">{dateStats.totalFiles} files</div>
+                          <div className="text-gray-500">
+                            {dateStats.processedFiles} processed, {dateStats.pendingFiles} pending
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {formatFileSize(dateStats.totalSize)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="space-y-1">
+                            {dateStats.processedFiles > 0 && (
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                {dateStats.processedFiles} Processed
+                              </span>
+                            )}
+                            {dateStats.pendingFiles > 0 && (
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                {dateStats.pendingFiles} Pending
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <button
+                            onClick={() => toggleDateExpansion(date)}
+                            className="text-blue-600 hover:text-blue-800 font-medium"
+                          >
+                            View
+                          </button>
+                        </td>
+                      </tr>
                     );
                   })}
                 </tbody>

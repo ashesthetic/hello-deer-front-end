@@ -1,0 +1,355 @@
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { fileImportsApi, FileImport, SaleDataProcessResult } from '../services/api/fileImportsApi';
+
+const FileImportsByDatePage: React.FC = () => {
+  const { date } = useParams<{ date: string }>();
+  const navigate = useNavigate();
+  const [fileImports, setFileImports] = useState<FileImport[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [processing, setProcessing] = useState(false);
+  const [processResult, setProcessResult] = useState<SaleDataProcessResult | null>(null);
+
+  useEffect(() => {
+    if (date) {
+      fetchFileImportsByDate(date);
+    }
+  }, [date]);
+
+  const fetchFileImportsByDate = async (importDate: string) => {
+    try {
+      setLoading(true);
+      const response = await fileImportsApi.getAll();
+      // Filter files by the specific date
+      const filteredFiles = response.data.filter((file: FileImport) => file.import_date === importDate);
+      setFileImports(filteredFiles || []);
+    } catch (error) {
+      console.error('Error fetching file imports for date:', error);
+      setFileImports([]); // Set empty array on error
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const formatDate = (dateString: string): string => {
+    return new Date(dateString).toLocaleDateString();
+  };
+
+  const formatDateTime = (dateString: string): string => {
+    return new Date(dateString).toLocaleString();
+  };
+
+  const getStatusBadge = (processed: number) => {
+    if (processed === 1) {
+      return (
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+          Processed
+        </span>
+      );
+    }
+    return (
+      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+        Pending
+      </span>
+    );
+  };
+
+  const getDateStats = (files: FileImport[]) => {
+    const totalFiles = files.length;
+    const processedFiles = files.filter(f => f.processed === 1).length;
+    const pendingFiles = totalFiles - processedFiles;
+    const totalSize = files.reduce((sum, f) => sum + f.file_size, 0);
+    
+    return { totalFiles, processedFiles, pendingFiles, totalSize };
+  };
+
+  const handleProcessSaleData = async () => {
+    if (!date) return;
+
+    setProcessing(true);
+    try {
+      const result = await fileImportsApi.processSaleData(date);
+      setProcessResult(result);
+      
+      // Refresh the file imports to show updated status
+      await fetchFileImportsByDate(date);
+    } catch (error) {
+      console.error('Error processing sale data:', error);
+      setProcessResult({
+        success: false,
+        message: 'Failed to process sale data',
+        date: date,
+        total_files: 0,
+        processed_files: 0,
+        failed_files: 0,
+        files: [],
+        errors: [],
+        processed_at: new Date().toISOString(),
+      });
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading file imports...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const dateStats = getDateStats(fileImports || []);
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center mb-4">
+            <button
+              onClick={() => navigate('/file-imports')}
+              className="mr-4 text-blue-600 hover:text-blue-800 font-medium"
+            >
+              ← Back to File Imports
+            </button>
+          </div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Files Imported on {date ? formatDate(date) : 'Unknown Date'}
+          </h1>
+          <p className="text-gray-600">
+            {date && new Date(date).toLocaleDateString('en-US', { 
+              weekday: 'long', 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            })}
+          </p>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="text-2xl font-bold text-blue-600">{dateStats.totalFiles}</div>
+            <div className="text-sm text-gray-600">Total Files</div>
+          </div>
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="text-2xl font-bold text-green-600">{dateStats.processedFiles}</div>
+            <div className="text-sm text-gray-600">Processed</div>
+          </div>
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="text-2xl font-bold text-yellow-600">{dateStats.pendingFiles}</div>
+            <div className="text-sm text-gray-600">Pending</div>
+          </div>
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="text-2xl font-bold text-purple-600">{formatFileSize(dateStats.totalSize)}</div>
+            <div className="text-sm text-gray-600">Total Size</div>
+          </div>
+        </div>
+
+        {/* Files Table */}
+        <div className="bg-white rounded-lg shadow-md overflow-hidden mb-8">
+          <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+            <h2 className="text-lg font-medium text-gray-900">Attached Files</h2>
+            <button
+              onClick={handleProcessSaleData}
+              disabled={processing || !fileImports || fileImports.length === 0}
+              className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-md transition-colors"
+            >
+              {processing ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Processing...
+                </>
+              ) : (
+                'Process Sale Data'
+              )}
+            </button>
+          </div>
+          
+          {!fileImports || fileImports.length === 0 ? (
+            <div className="px-6 py-12 text-center">
+              <div className="text-gray-500">
+                <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+                </svg>
+                <h3 className="mt-2 text-sm font-medium text-gray-900">No files found</h3>
+                <p className="mt-1 text-sm text-gray-500">
+                  No files were imported on this date.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      File Name
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Size
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Type
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Uploaded At
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Notes
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {(fileImports || []).map((file) => (
+                    <tr key={file.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">
+                          {file.original_name}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          ID: {file.id}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {formatFileSize(file.file_size)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {file.mime_type}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {getStatusBadge(file.processed)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {formatDateTime(file.created_at)}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
+                        {file.notes || '-'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        {/* Process Results */}
+        {processResult && (
+          <div className="bg-white rounded-lg shadow-md overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h2 className="text-lg font-medium text-gray-900">Sale Data Processing Results</h2>
+            </div>
+            <div className="px-6 py-4">
+              <div className="mb-4">
+                <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                  processResult.success 
+                    ? 'bg-green-100 text-green-800' 
+                    : 'bg-red-100 text-red-800'
+                }`}>
+                  {processResult.success ? '✓ Success' : '✗ Failed'}
+                </div>
+                <p className="mt-2 text-gray-600">{processResult.message}</p>
+                <p className="text-sm text-gray-500">
+                  Processed at: {formatDateTime(processResult.processed_at)}
+                </p>
+              </div>
+
+              {/* Processing Summary */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <div className="text-2xl font-bold text-blue-600">{processResult.total_files}</div>
+                  <div className="text-sm text-blue-800">Total Files</div>
+                </div>
+                <div className="bg-green-50 p-4 rounded-lg">
+                  <div className="text-2xl font-bold text-green-600">{processResult.processed_files}</div>
+                  <div className="text-sm text-green-800">Successfully Processed</div>
+                </div>
+                <div className="bg-red-50 p-4 rounded-lg">
+                  <div className="text-2xl font-bold text-red-600">{processResult.failed_files}</div>
+                  <div className="text-sm text-red-800">Failed</div>
+                </div>
+              </div>
+
+              {/* Processed Files List */}
+              {processResult.files && processResult.files.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="text-md font-medium text-gray-900 mb-3">Processed Files</h3>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            File Name
+                          </th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Size
+                          </th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Type
+                          </th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Status
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {(processResult.files || []).map((file) => (
+                          <tr key={file.id}>
+                            <td className="px-4 py-2 text-sm text-gray-900">{file.original_name}</td>
+                            <td className="px-4 py-2 text-sm text-gray-900">{formatFileSize(file.file_size)}</td>
+                            <td className="px-4 py-2 text-sm text-gray-900">{file.mime_type}</td>
+                            <td className="px-4 py-2 text-sm">
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                {file.status}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Errors List */}
+              {processResult.errors && processResult.errors.length > 0 && (
+                <div>
+                  <h3 className="text-md font-medium text-gray-900 mb-3">Processing Errors</h3>
+                  <div className="bg-red-50 border border-red-200 rounded-md p-4">
+                    {(processResult.errors || []).map((error, index) => (
+                      <div key={index} className="mb-2 last:mb-0">
+                        <p className="text-sm font-medium text-red-800">{error.file_name}</p>
+                        <p className="text-sm text-red-600">{error.error}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default FileImportsByDatePage;
