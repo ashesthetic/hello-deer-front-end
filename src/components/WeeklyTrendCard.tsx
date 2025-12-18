@@ -192,10 +192,6 @@ const WeeklyTrendCard: React.FC<WeeklyTrendCardProps> = ({ title, dataField, col
             };
           }
           
-          const previousValue = data[index - 1].value;
-          const currentValue = data[index].value;
-          const difference = currentValue - previousValue;
-          
           return {
             weight: 'bold' as const,
             size: 10

@@ -162,8 +162,7 @@ const DailySalesGraphPage: React.FC = () => {
     const weeklyGroupData: { [key: number]: number[] } = {};
     
     sales.forEach(sale => {
-      const [year, month, day] = sale.date.split('T')[0].split('-');
-      const dayOfMonth = parseInt(day);
+      const dayOfMonth = parseInt(sale.date.split('T')[0].split('-')[2]);
       if (!weeklyGroupData[dayOfMonth]) {
         weeklyGroupData[dayOfMonth] = [];
       }
@@ -194,13 +193,12 @@ const DailySalesGraphPage: React.FC = () => {
     const labels = availableDays.map(day => {
       // Use the first occurrence of this day to get the month and day name
       const firstSaleWithThisDay = sales.find(sale => {
-        const [year, month, dayStr] = sale.date.split('T')[0].split('-');
+        const dayStr = sale.date.split('T')[0].split('-')[2];
         return parseInt(dayStr) === day;
       });
       
       if (firstSaleWithThisDay) {
-        const [year, month, dayStr] = firstSaleWithThisDay.date.split('T')[0].split('-');
-        const date = new Date(Date.UTC(parseInt(year), parseInt(month) - 1, parseInt(dayStr)));
+        const date = new Date(Date.UTC(parseInt(firstSaleWithThisDay.date.split('T')[0].split('-')[0]), parseInt(firstSaleWithThisDay.date.split('T')[0].split('-')[1]) - 1, parseInt(firstSaleWithThisDay.date.split('T')[0].split('-')[2])));
         const monthStr = date.toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' });
         const dayName = date.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' });
         return `${monthStr} ${day}\n${dayName}`;

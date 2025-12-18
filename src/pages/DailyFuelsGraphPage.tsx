@@ -33,10 +33,6 @@ const DailyFuelsGraphPage: React.FC = () => {
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth() + 1);
 
-  useEffect(() => {
-    fetchFuels();
-  }, [currentYear, currentMonth]);
-
   const fetchFuels = async () => {
     setLoading(true);
     setError(null);
@@ -49,6 +45,11 @@ const DailyFuelsGraphPage: React.FC = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchFuels();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentYear, currentMonth]);
 
   const formatDate = (dateString: string) => {
     const [year, month, day] = dateString.split('T')[0].split('-');
