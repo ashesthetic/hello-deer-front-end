@@ -25,9 +25,9 @@ const DailySalesList: React.FC<DailySalesListProps> = ({
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-IN', {
+    return new Intl.NumberFormat('en-CA', {
       style: 'currency',
-      currency: 'INR'
+      currency: 'CAD'
     }).format(amount);
   };
 
