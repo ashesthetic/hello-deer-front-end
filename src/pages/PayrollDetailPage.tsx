@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../services/api';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 interface Payroll {
   id: number;
@@ -12,6 +14,7 @@ interface Payroll {
     id: number;
     preferred_name: string;
     full_legal_name: string;
+    address?: string;
   };
   regular_hours: number;
   regular_rate: number;
@@ -51,6 +54,8 @@ const PayrollDetailPage: React.FC = () => {
   const [payroll, setPayroll] = useState<Payroll | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [downloading, setDownloading] = useState(false);
+  const paystubRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchPayroll();
@@ -114,6 +119,65 @@ const PayrollDetailPage: React.FC = () => {
     return Number(num).toFixed(2);
   };
 
+  const downloadPaystub = async () => {
+    if (!paystubRef.current || !payroll) return;
+
+    try {
+      setDownloading(true);
+
+      // Capture the paystub content as canvas with better quality settings
+      const canvas = await html2canvas(paystubRef.current, {
+        scale: 1.5, // Reduced from 2 to decrease file size
+        useCORS: true,
+        allowTaint: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+        windowWidth: 1200,
+      });
+
+      // Create PDF with margins
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      
+      // Add margins (15mm on each side)
+      const margin = 15;
+      const contentWidth = pdfWidth - (margin * 2);
+      const contentHeight = pdfHeight - (margin * 2);
+
+      // Calculate image dimensions to fit within margins
+      const imgData = canvas.toDataURL('image/jpeg', 0.8); // Use JPEG with 80% quality to reduce size
+      const imgWidth = contentWidth;
+      const imgHeight = (canvas.height * contentWidth) / canvas.width;
+
+      let heightLeft = imgHeight;
+      let position = margin;
+
+      // Add first page with margins
+      pdf.addImage(imgData, 'JPEG', margin, position, imgWidth, imgHeight);
+      heightLeft -= contentHeight;
+
+      // Add additional pages if content is longer than one page
+      while (heightLeft > 0) {
+        position = margin - (imgHeight - heightLeft);
+        pdf.addPage();
+        pdf.addImage(imgData, 'JPEG', margin, position, imgWidth, imgHeight);
+        heightLeft -= contentHeight;
+      }
+
+      // Download the PDF
+      const employeeName = payroll.employee?.full_legal_name?.replace(/\s+/g, '_') || 'Employee';
+      const payDate = payroll.pay_date ? formatDate(payroll.pay_date).replace(/\s+/g, '_') : 'Unknown_Date';
+      const fileName = `Paystub_${employeeName}_${payDate}.pdf`;
+      pdf.save(fileName);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Failed to generate paystub PDF');
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -159,16 +223,56 @@ const PayrollDetailPage: React.FC = () => {
               {payroll.employee?.full_legal_name || 'Unknown Employee'}
             </p>
           </div>
-          <button
-            onClick={() => navigate('/employees/payroll')}
-            className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center"
-          >
-            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            Back to List
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={downloadPaystub}
+              disabled={downloading}
+              className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center"
+            >
+              {downloading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  Download Paystub
+                </>
+              )}
+            </button>
+            <button
+              onClick={() => navigate('/employees/payroll')}
+              className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center"
+            >
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              Back to List
+            </button>
+          </div>
         </div>
+
+        {/* Paystub Content - This will be captured for PDF */}
+        <div ref={paystubRef} className="bg-white p-8">
+          {/* Company Header with Logo */}
+          <div className="mb-8 text-center border-b-2 border-gray-300 pb-6">
+            <div className="flex justify-center mb-4">
+              <img 
+                src="/hello-deer-logo.png" 
+                alt="Hello Deer! Logo" 
+                className="h-32 object-contain"
+                crossOrigin="anonymous"
+              />
+            </div>
+            <div className="mb-4">
+              <h2 className="text-xl font-bold text-gray-800">The Deer Hub Convenience Inc</h2>
+              <p className="text-lg text-gray-600">Traded as Hello Deer!</p>
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900">PAY STUB</h1>
+          </div>
 
         {/* Pay Period Information */}
         <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4 bg-gray-50 p-4 rounded-lg">
@@ -177,6 +281,11 @@ const PayrollDetailPage: React.FC = () => {
             <p className="text-gray-900 font-semibold">
               {payroll.employee?.full_legal_name || 'Unknown'}
             </p>
+            {payroll.employee?.address && (
+              <p className="text-gray-600 text-sm mt-1">
+                {payroll.employee.address}
+              </p>
+            )}
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Pay Period</label>
@@ -214,20 +323,24 @@ const PayrollDetailPage: React.FC = () => {
                   <td className="px-4 py-2 border border-gray-300 text-right text-sm">{formatCurrency(payroll.regular_current)}</td>
                   <td className="px-4 py-2 border border-gray-300 text-right text-sm">{formatCurrency(payroll.regular_ytd)}</td>
                 </tr>
-                <tr>
-                  <td className="px-4 py-2 border border-gray-300 text-sm">Stat Holiday Paid</td>
-                  <td className="px-4 py-2 border border-gray-300 text-center text-sm">{formatNumber(payroll.stat_hours)}</td>
-                  <td className="px-4 py-2 border border-gray-300 text-center text-sm">{formatCurrency(payroll.stat_rate)}</td>
-                  <td className="px-4 py-2 border border-gray-300 text-right text-sm">{formatCurrency(payroll.stat_current)}</td>
-                  <td className="px-4 py-2 border border-gray-300 text-right text-sm">{formatCurrency(payroll.stat_ytd)}</td>
-                </tr>
-                <tr>
-                  <td className="px-4 py-2 border border-gray-300 text-sm">Overtime</td>
-                  <td className="px-4 py-2 border border-gray-300 text-center text-sm">{formatNumber(payroll.overtime_hours)}</td>
-                  <td className="px-4 py-2 border border-gray-300 text-center text-sm">{formatCurrency(payroll.overtime_rate)}</td>
-                  <td className="px-4 py-2 border border-gray-300 text-right text-sm">{formatCurrency(payroll.overtime_current)}</td>
-                  <td className="px-4 py-2 border border-gray-300 text-right text-sm">{formatCurrency(payroll.overtime_ytd)}</td>
-                </tr>
+                {payroll.stat_ytd > 0 && (
+                  <tr>
+                    <td className="px-4 py-2 border border-gray-300 text-sm">Stat Holiday Paid</td>
+                    <td className="px-4 py-2 border border-gray-300 text-center text-sm">{formatNumber(payroll.stat_hours)}</td>
+                    <td className="px-4 py-2 border border-gray-300 text-center text-sm">{formatCurrency(payroll.stat_rate)}</td>
+                    <td className="px-4 py-2 border border-gray-300 text-right text-sm">{formatCurrency(payroll.stat_current)}</td>
+                    <td className="px-4 py-2 border border-gray-300 text-right text-sm">{formatCurrency(payroll.stat_ytd)}</td>
+                  </tr>
+                )}
+                {payroll.overtime_ytd > 0 && (
+                  <tr>
+                    <td className="px-4 py-2 border border-gray-300 text-sm">Overtime</td>
+                    <td className="px-4 py-2 border border-gray-300 text-center text-sm">{formatNumber(payroll.overtime_hours)}</td>
+                    <td className="px-4 py-2 border border-gray-300 text-center text-sm">{formatCurrency(payroll.overtime_rate)}</td>
+                    <td className="px-4 py-2 border border-gray-300 text-right text-sm">{formatCurrency(payroll.overtime_current)}</td>
+                    <td className="px-4 py-2 border border-gray-300 text-right text-sm">{formatCurrency(payroll.overtime_ytd)}</td>
+                  </tr>
+                )}
                 <tr>
                   <td className="px-4 py-2 border border-gray-300 text-sm">VAC Paid</td>
                   <td className="px-4 py-2 border border-gray-300 text-center text-sm">-</td>
@@ -317,18 +430,8 @@ const PayrollDetailPage: React.FC = () => {
             </table>
           </div>
         </div>
-
-        {/* Metadata */}
-        <div className="mt-6 pt-6 border-t border-gray-200">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
-            <div>
-              <span className="font-medium">Created:</span> {formatDate(payroll.created_at)}
-            </div>
-            <div>
-              <span className="font-medium">Last Updated:</span> {formatDate(payroll.updated_at)}
-            </div>
-          </div>
         </div>
+        {/* End of paystub content */}
       </div>
     </div>
   );
