@@ -9,8 +9,8 @@ import { usePageTitle } from '../hooks/usePageTitle';
 interface SmokesEntry {
   item: string;
   start: string;
-  end: string;
   added: string;
+  end: string;
 }
 
 const SmokesAddPage: React.FC = () => {
@@ -21,7 +21,6 @@ const SmokesAddPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [categories, setCategories] = useState<SmokesCategory[]>([]);
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [shift, setShift] = useState<'Morning' | 'Evening'>('Morning');
   const [entries, setEntries] = useState<Record<string, SmokesEntry>>({});
 
   useEffect(() => {
@@ -40,8 +39,8 @@ const SmokesAddPage: React.FC = () => {
         initialEntries[cat.name] = {
           item: cat.name,
           start: '',
-          end: '',
           added: '',
+          end: '',
         };
       });
       setEntries(initialEntries);
@@ -50,7 +49,7 @@ const SmokesAddPage: React.FC = () => {
     }
   };
 
-  const handleEntryChange = (itemName: string, field: 'start' | 'end' | 'added', value: string) => {
+  const handleEntryChange = (itemName: string, field: 'start' | 'added' | 'end', value: string) => {
     setEntries(prev => ({
       ...prev,
       [itemName]: {
@@ -68,15 +67,14 @@ const SmokesAddPage: React.FC = () => {
     try {
       // Submit all entries that have at least one field filled
       const promises = Object.values(entries)
-        .filter(entry => entry.start || entry.end || entry.added)
+        .filter(entry => entry.start || entry.added || entry.end)
         .map(entry => 
           smokesApi.create({
             date,
             item: entry.item,
-            shift,
             start: entry.start || '0',
-            end: entry.end || '0',
             added: entry.added || '0',
+            end: entry.end || '0',
           })
         );
       
@@ -130,7 +128,7 @@ const SmokesAddPage: React.FC = () => {
       )}
       
       <form onSubmit={handleSubmit} className="bg-white rounded-lg border border-gray-200 p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 gap-6 mb-8">
           <div>
             <label htmlFor="date" className="block text-xs font-medium text-gray-700 mb-2">
               Date *
@@ -143,22 +141,6 @@ const SmokesAddPage: React.FC = () => {
               onChange={(e) => setDate(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-          </div>
-
-          <div>
-            <label htmlFor="shift" className="block text-xs font-medium text-gray-700 mb-2">
-              Shift *
-            </label>
-            <select
-              id="shift"
-              required
-              value={shift}
-              onChange={(e) => setShift(e.target.value as 'Morning' | 'Evening')}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="Morning">Morning</option>
-              <option value="Evening">Evening</option>
-            </select>
           </div>
         </div>
 
@@ -174,10 +156,10 @@ const SmokesAddPage: React.FC = () => {
                   Start
                 </th>
                 <th className="px-1 py-3 text-center text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-200" style={{ width: '21.66%' }}>
-                  End
+                  Added
                 </th>
                 <th className="px-1 py-3 text-center text-xs font-medium text-gray-700 uppercase tracking-wider" style={{ width: '21.66%' }}>
-                  Added
+                  End
                 </th>
               </tr>
             </thead>
@@ -203,8 +185,8 @@ const SmokesAddPage: React.FC = () => {
                       type="number"
                       step="0.01"
                       min="0"
-                      value={entries[category.name]?.end || ''}
-                      onChange={(e) => handleEntryChange(category.name, 'end', e.target.value)}
+                      value={entries[category.name]?.added || ''}
+                      onChange={(e) => handleEntryChange(category.name, 'added', e.target.value)}
                       className="w-full px-1 py-1 border border-gray-300 rounded text-center text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
                       placeholder="0"
                     />
@@ -214,8 +196,8 @@ const SmokesAddPage: React.FC = () => {
                       type="number"
                       step="0.01"
                       min="0"
-                      value={entries[category.name]?.added || ''}
-                      onChange={(e) => handleEntryChange(category.name, 'added', e.target.value)}
+                      value={entries[category.name]?.end || ''}
+                      onChange={(e) => handleEntryChange(category.name, 'end', e.target.value)}
                       className="w-full px-1 py-1 border border-gray-300 rounded text-center text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
                       placeholder="0"
                     />

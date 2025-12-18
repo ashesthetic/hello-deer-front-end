@@ -1013,7 +1013,6 @@ export interface Smokes {
   id: number;
   date: string;
   item: string;
-  shift: 'Morning' | 'Evening';
   start: number;
   end: number;
   added: number;
@@ -1025,7 +1024,6 @@ export interface Smokes {
 export interface SmokesFormData {
   date: string;
   item: string;
-  shift: 'Morning' | 'Evening';
   start: number | string;
   end: number | string;
   added?: number | string;
