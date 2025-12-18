@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { employeesApi } from '../services/api';
+import { parseDateSafely } from '../utils/dateUtils';
 
 interface EmployeeEarning {
   id: number;
@@ -64,7 +65,8 @@ const EmployeeEarningsPage: React.FC = () => {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-CA', {
+    const date = parseDateSafely(dateString);
+    return date.toLocaleDateString('en-CA', {
       year: 'numeric',
       month: 'short',
       day: 'numeric'
