@@ -8,7 +8,6 @@ import DailySalesList from '../components/DailySalesList';
 import { canCreate } from '../utils/permissions';
 import { usePageTitle } from '../hooks/usePageTitle';
 import { useUrlState } from '../hooks/useUrlState';
-import { exportToPDF } from '../utils/pdfExport';
 
 type SortField = 'date' | 'fuel_sale' | 'store_sale' | 'gst' | 'card' | 'cash' | 'reported_total' | 'approximate_profit';
 
@@ -180,8 +179,6 @@ const DailySalesPage: React.FC = () => {
         const margin = 15;
         const pageWidth = pdf.internal.pageSize.getWidth();
         const pageHeight = pdf.internal.pageSize.getHeight();
-        const usableWidth = pageWidth - (margin * 2);
-        const usableHeight = pageHeight - (margin * 2);
         
         // Column widths (in mm) - distribute evenly across the page
         const colWidths = {

@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { fileImportsApi, FileImport, UploadResponse } from '../services/api/fileImportsApi';
+import { fileImportsApi, UploadResponse } from '../services/api/fileImportsApi';
 
 const ImportDataPage: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<string>('');
