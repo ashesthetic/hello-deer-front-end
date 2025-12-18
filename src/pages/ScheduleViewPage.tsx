@@ -42,6 +42,10 @@ const ScheduleViewPage: React.FC = () => {
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [sending, setSending] = useState(false);
+  const [showSendModal, setShowSendModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [sendResult, setSendResult] = useState<{sent: number, failed: number, errors?: string[]}>({ sent: 0, failed: 0 });
 
   useEffect(() => {
     if (weekStartDate) {
@@ -73,8 +77,11 @@ const ScheduleViewPage: React.FC = () => {
   };
 
   const getWeekRangeString = (startDate: string, endDate: string) => {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+    // Parse dates properly to avoid timezone issues
+    const [startYear, startMonth, startDay] = startDate.split('-').map(Number);
+    const [endYear, endMonth, endDay] = endDate.split('-').map(Number);
+    const start = new Date(startYear, startMonth - 1, startDay);
+    const end = new Date(endYear, endMonth - 1, endDay);
     return `Mon ${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - Sun ${end.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
   };
 
@@ -189,8 +196,186 @@ const ScheduleViewPage: React.FC = () => {
     }
   };
 
+  const handleSendSchedule = async () => {
+    setShowSendModal(false);
+    
+    try {
+      setSending(true);
+      
+      // Generate PDF first
+      const element = document.getElementById('schedule-table-export');
+      if (!element) {
+        alert('Unable to generate schedule');
+        return;
+      }
+
+      // Make element visible but off-screen for capture
+      element.style.display = 'block';
+      element.style.position = 'absolute';
+      element.style.left = '-9999px';
+      element.style.top = '0';
+      element.style.width = '1200px';
+      element.style.padding = '40px';
+      element.style.backgroundColor = '#ffffff';
+
+      // Wait a bit for rendering
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Capture the element as canvas
+      const canvas = await html2canvas(element, {
+        scale: 1.5,
+        logging: false,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        width: 1200,
+        windowWidth: 1200
+      });
+
+      // Hide element again
+      element.style.display = 'none';
+      element.style.position = '';
+      element.style.left = '';
+      element.style.top = '';
+
+      // Convert to JPEG with compression
+      const imgData = canvas.toDataURL('image/jpeg', 0.85);
+      
+      // Create PDF
+      const pdf = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: 'a4',
+        compress: true
+      });
+
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const imgWidth = pdfWidth - 20;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      pdf.addImage(imgData, 'JPEG', 10, 10, imgWidth, imgHeight);
+      
+      // Get PDF as base64
+      const pdfBase64 = pdf.output('datauristring').split(',')[1];
+
+      // Send to backend
+      const response = await api.post('/schedules/email', {
+        week_start_date: weekStartDate?.split('T')[0],
+        pdf_data: pdfBase64
+      });
+
+      if (response.data.success) {
+        const { sent_count, failed_count, error_messages } = response.data.data;
+        setSendResult({ 
+          sent: sent_count, 
+          failed: failed_count, 
+          errors: error_messages 
+        });
+        setShowSuccessModal(true);
+      }
+    } catch (error: any) {
+      console.error('Error sending schedule:', error);
+      alert('Failed to send schedule: ' + (error.response?.data?.message || error.message));
+    } finally {
+      setSending(false);
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Send Schedule Confirmation Modal */}
+      {showSendModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <div className="flex items-center justify-center w-12 h-12 mx-auto bg-green-100 rounded-full">
+                <svg className="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <h3 className="text-lg leading-6 font-medium text-gray-900 text-center mt-4">
+                Send Schedule via Email
+              </h3>
+              <div className="mt-2 px-7 py-3">
+                <p className="text-sm text-gray-500 text-center">
+                  This will send the schedule PDF to all active employees who are scheduled for this week. Do you want to continue?
+                </p>
+              </div>
+              <div className="flex gap-3 px-4 py-3">
+                <button
+                  onClick={() => setShowSendModal(false)}
+                  className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSendSchedule}
+                  className="flex-1 px-4 py-2 bg-green-600 text-white text-base font-medium rounded-md shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+                >
+                  Send Email
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success/Result Modal */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <div className={`flex items-center justify-center w-12 h-12 mx-auto rounded-full ${sendResult.failed > 0 ? 'bg-yellow-100' : 'bg-green-100'}`}>
+                {sendResult.failed > 0 ? (
+                  <svg className="h-6 w-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                ) : (
+                  <svg className="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                )}
+              </div>
+              <h3 className="text-lg leading-6 font-medium text-gray-900 text-center mt-4">
+                {sendResult.failed > 0 ? 'Partially Sent' : 'Success!'}
+              </h3>
+              <div className="mt-2 px-7 py-3">
+                <p className="text-sm text-gray-500 text-center">
+                  {sendResult.failed > 0 ? (
+                    <>
+                      Schedule sent to <span className="font-semibold text-green-600">{sendResult.sent}</span> employee(s).
+                      <br />
+                      Failed to send to <span className="font-semibold text-red-600">{sendResult.failed}</span> employee(s).
+                      {sendResult.errors && sendResult.errors.length > 0 && (
+                        <div className="mt-2 text-xs text-red-600 text-left">
+                          <p className="font-semibold">Errors:</p>
+                          <ul className="list-disc list-inside">
+                            {sendResult.errors.slice(0, 3).map((err, idx) => (
+                              <li key={idx} className="truncate">{err}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      Schedule successfully sent to <span className="font-semibold text-green-600">{sendResult.sent}</span> employee(s)!
+                    </>
+                  )}
+                </p>
+              </div>
+              <div className="flex justify-center px-4 py-3">
+                <button
+                  onClick={() => setShowSuccessModal(false)}
+                  className="px-6 py-2 bg-blue-600 text-white text-base font-medium rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="mb-8">
         <div className="flex justify-between items-center">
@@ -248,15 +433,28 @@ const ScheduleViewPage: React.FC = () => {
         <div className="bg-white shadow rounded-lg p-6">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-medium text-gray-900">Employee Schedules</h3>
-            <button
-              onClick={handleExportPDF}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center space-x-2"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
-              </svg>
-              <span>Export PDF</span>
-            </button>
+            <div className="flex space-x-3">
+              <button
+                onClick={() => setShowSendModal(true)}
+                disabled={sending}
+                className="bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center space-x-2"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                  <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                </svg>
+                <span>{sending ? 'Sending...' : 'Send Schedule'}</span>
+              </button>
+              <button
+                onClick={handleExportPDF}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center space-x-2"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+                <span>Export PDF</span>
+              </button>
+            </div>
           </div>
           
           <div className="overflow-x-auto">

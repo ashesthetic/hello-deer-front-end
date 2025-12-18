@@ -85,8 +85,8 @@ const ScheduleCreatePage: React.FC = () => {
     // Get the current week's Monday (Monday = start of week)
     const currentWeekMonday = new Date(today);
     const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-    const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // If Sunday, go back 6 days to Monday
-    currentWeekMonday.setDate(today.getDate() - daysToMonday);
+    const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // If Sunday, go forward 1 day; otherwise go back to Monday
+    currentWeekMonday.setDate(today.getDate() + daysToMonday);
     currentWeekMonday.setHours(0, 0, 0, 0); // Reset time to start of day
     
     for (let i = 0; i < 5; i++) {
