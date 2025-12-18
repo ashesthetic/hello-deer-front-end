@@ -197,7 +197,7 @@ const ResolveHoursPage: React.FC = () => {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total Hours</p>
-                <p className="text-2xl font-semibold text-gray-900">{totalHours.toFixed(1)}h</p>
+                <p className="text-2xl font-semibold text-gray-900">{totalHours.toFixed(2)}h</p>
               </div>
             </div>
           </div>
@@ -336,38 +336,38 @@ const ResolveHoursPage: React.FC = () => {
               Employees ({filteredEmployees.length})
             </h2>
           </div>
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto lg:overflow-x-visible">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Employee
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Position & Department
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                    Position & Dept
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Total Hours
+                  <th className="px-2 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                    Total Hrs
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Resolved Hours
+                  <th className="px-2 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                    Resolved
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Unpaid Hours
+                  <th className="px-2 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                    Unpaid
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Total Earnings
+                  <th className="px-2 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                    Earnings
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-2 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Paid
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-2 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Due
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Actions
                   </th>
                 </tr>
@@ -375,35 +375,35 @@ const ResolveHoursPage: React.FC = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredEmployees.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="px-6 py-12 text-center text-gray-500">
+                    <td colSpan={10} className="px-6 py-12 text-center text-gray-500">
                       No employees found matching the current filters.
                     </td>
                   </tr>
                 ) : (
                   filteredEmployees.map((employee) => (
                     <tr key={employee.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-3 py-3 whitespace-nowrap">
                         <div className="flex items-center">
-                          <div className="flex-shrink-0 h-10 w-10">
-                            <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                              <span className="text-sm font-medium text-blue-600">
+                          <div className="flex-shrink-0 h-8 w-8">
+                            <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
+                              <span className="text-xs font-medium text-blue-600">
                                 {employee.full_legal_name.split(' ').map((n: string) => n[0]).join('')}
                               </span>
                             </div>
                           </div>
-                          <div className="ml-4">
+                          <div className="ml-3">
                             <div className="text-sm font-medium text-gray-900">{employee.full_legal_name}</div>
                             {employee.preferred_name && (
-                              <div className="text-sm text-gray-500">"{employee.preferred_name}"</div>
+                              <div className="text-xs text-gray-500">"{employee.preferred_name}"</div>
                             )}
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-3 py-3 whitespace-nowrap">
                         <div className="text-sm text-gray-900">{employee.position}</div>
-                        <div className="text-sm text-gray-500">{employee.department}</div>
+                        <div className="text-xs text-gray-500">{employee.department}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-2 py-3 whitespace-nowrap">
                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                           employee.status === 'active' 
                             ? 'bg-green-100 text-green-800' 
@@ -412,30 +412,30 @@ const ResolveHoursPage: React.FC = () => {
                           {employee.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold">
-                        {employee.total_hours.toFixed(1)}h
+                      <td className="px-2 py-3 whitespace-nowrap text-sm text-gray-900 font-semibold text-right">
+                        {employee.total_hours.toFixed(2)}h
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold text-blue-600">
-                        {employee.resolved_hours.toFixed(1)}h
+                      <td className="px-2 py-3 whitespace-nowrap text-sm text-gray-900 font-semibold text-blue-600 text-right">
+                        {employee.resolved_hours.toFixed(2)}h
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold text-orange-600">
-                        {employee.unpaid_hours.toFixed(1)}h
+                      <td className="px-2 py-3 whitespace-nowrap text-sm text-gray-900 font-semibold text-orange-600 text-right">
+                        {employee.unpaid_hours.toFixed(2)}h
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold">
+                      <td className="px-2 py-3 whitespace-nowrap text-sm text-gray-900 font-semibold text-right">
                         ${employee.total_earnings.toFixed(2)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold text-green-600">
+                      <td className="px-2 py-3 whitespace-nowrap text-sm text-gray-900 font-semibold text-green-600 text-right">
                         ${employee.total_paid.toFixed(2)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold text-red-600">
+                      <td className="px-2 py-3 whitespace-nowrap text-sm text-gray-900 font-semibold text-red-600 text-right">
                         ${employee.total_due.toFixed(2)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <td className="px-3 py-3 whitespace-nowrap text-sm font-medium text-center">
                         <button 
                           onClick={() => handleResolveHours(employee)}
                           className="text-blue-600 hover:text-blue-900 transition-colors"
                         >
-                          Resolve Hours
+                          Resolve
                         </button>
                       </td>
                     </tr>
@@ -452,19 +452,19 @@ const ResolveHoursPage: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-7 gap-4 text-center">
               <div>
                 <div className="text-2xl font-bold text-gray-900">
-                  {filteredEmployees.reduce((sum, emp) => sum + emp.total_hours, 0).toFixed(1)}h
+                  {filteredEmployees.reduce((sum, emp) => sum + emp.total_hours, 0).toFixed(2)}h
                 </div>
                 <div className="text-sm text-gray-600">Total Hours</div>
               </div>
               <div>
                 <div className="text-2xl font-bold text-blue-600">
-                  {filteredEmployees.reduce((sum, emp) => sum + emp.resolved_hours, 0).toFixed(1)}h
+                  {filteredEmployees.reduce((sum, emp) => sum + emp.resolved_hours, 0).toFixed(2)}h
                 </div>
                 <div className="text-sm text-gray-600">Resolved Hours</div>
               </div>
               <div>
                 <div className="text-2xl font-bold text-orange-600">
-                  {filteredEmployees.reduce((sum, emp) => sum + emp.unpaid_hours, 0).toFixed(1)}h
+                  {filteredEmployees.reduce((sum, emp) => sum + emp.unpaid_hours, 0).toFixed(2)}h
                 </div>
                 <div className="text-sm text-gray-600">Unpaid Hours</div>
               </div>

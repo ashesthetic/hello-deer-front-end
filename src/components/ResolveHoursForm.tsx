@@ -8,7 +8,7 @@ interface ResolveHoursFormProps {
 }
 
 const ResolveHoursForm: React.FC<ResolveHoursFormProps> = ({ employee, onSuccess, onCancel }) => {
-  const [resolvedHours, setResolvedHours] = useState(employee.resolved_hours.toString());
+  const [resolvedHours, setResolvedHours] = useState('');
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -17,6 +17,12 @@ const ResolveHoursForm: React.FC<ResolveHoursFormProps> = ({ employee, onSuccess
     e.preventDefault();
     setLoading(true);
     setError('');
+
+    if (!resolvedHours || resolvedHours.trim() === '') {
+      setError('Please enter the resolved hours');
+      setLoading(false);
+      return;
+    }
 
     const resolvedHoursNum = parseFloat(resolvedHours);
     if (isNaN(resolvedHoursNum) || resolvedHoursNum < 0) {
@@ -44,7 +50,8 @@ const ResolveHoursForm: React.FC<ResolveHoursFormProps> = ({ employee, onSuccess
     }
   };
 
-  const additionalHours = parseFloat(resolvedHours) - employee.resolved_hours;
+  const resolvedHoursNum = parseFloat(resolvedHours);
+  const additionalHours = !isNaN(resolvedHoursNum) ? resolvedHoursNum - employee.resolved_hours : 0;
   const additionalPayment = additionalHours * parseFloat(employee.hourly_rate);
 
   return (
@@ -94,12 +101,13 @@ const ResolveHoursForm: React.FC<ResolveHoursFormProps> = ({ employee, onSuccess
               </label>
               <input
                 type="number"
-                step="0.25"
+                step="any"
                 min="0"
                 max={employee.total_hours}
                 id="resolvedHours"
                 value={resolvedHours}
                 onChange={(e) => setResolvedHours(e.target.value)}
+                placeholder="Enter resolved hours (e.g., 40.5)"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 required
               />
@@ -123,7 +131,7 @@ const ResolveHoursForm: React.FC<ResolveHoursFormProps> = ({ employee, onSuccess
             </div>
 
             {/* Payment Preview */}
-            {!isNaN(parseFloat(resolvedHours)) && parseFloat(resolvedHours) !== employee.resolved_hours && (
+            {resolvedHours && !isNaN(resolvedHoursNum) && resolvedHoursNum !== employee.resolved_hours && (
               <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
                 <h4 className="font-medium text-blue-900 mb-2">Payment Summary</h4>
                 <div className="space-y-1 text-sm">
@@ -144,7 +152,7 @@ const ResolveHoursForm: React.FC<ResolveHoursFormProps> = ({ employee, onSuccess
                   <div className="flex justify-between">
                     <span className="text-blue-700">New Unpaid Hours:</span>
                     <span className="font-medium">
-                      {Math.max(0, employee.total_hours - parseFloat(resolvedHours)).toFixed(2)}h
+                      {Math.max(0, employee.total_hours - resolvedHoursNum).toFixed(2)}h
                     </span>
                   </div>
                 </div>
