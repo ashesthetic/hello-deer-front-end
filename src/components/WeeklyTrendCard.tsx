@@ -109,11 +109,11 @@ const WeeklyTrendCard: React.FC<WeeklyTrendCardProps> = ({ title, dataField, col
 
       setData(sortedData);
 
-      // Calculate percentage change - compare last week with previous week
+      // Calculate percentage change - compare first and last weeks
       if (sortedData.length >= 2) {
+        const firstWeekValue = sortedData[0].value;
         const lastWeekValue = sortedData[sortedData.length - 1].value;
-        const previousWeekValue = sortedData[sortedData.length - 2].value;
-        const change = previousWeekValue !== 0 ? ((lastWeekValue - previousWeekValue) / previousWeekValue) * 100 : 0;
+        const change = firstWeekValue !== 0 ? ((lastWeekValue - firstWeekValue) / firstWeekValue) * 100 : 0;
         setPercentageChange(change);
       }
 
@@ -155,7 +155,7 @@ const WeeklyTrendCard: React.FC<WeeklyTrendCardProps> = ({ title, dataField, col
           </div>
         </div>
       }
-      subtitle="Last 4 weeks trend"
+      subtitle="First to last week trend"
       loading={loading}
     >
       <Line data={chartData} options={lineChartOptions} />

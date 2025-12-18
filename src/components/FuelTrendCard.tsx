@@ -140,20 +140,11 @@ const FuelTrendCard: React.FC<FuelTrendCardProps> = ({ title, dataField, color }
       
       setData(allDates);
 
-      // Calculate percentage change - compare last 4 days with previous 4 days for 8-day chart
-      if (allDates.length >= 8) {
-        // Calculate sum of last 4 days
-        const last4DaysSum = allDates.slice(-4).reduce((sum, item) => sum + item.value, 0);
-        // Calculate sum of previous 4 days
-        const previous4DaysSum = allDates.slice(-8, -4).reduce((sum, item) => sum + item.value, 0);
-        
-        const change = previous4DaysSum !== 0 ? ((last4DaysSum - previous4DaysSum) / previous4DaysSum) * 100 : 0;
-        setPercentageChange(change);
-      } else if (allDates.length >= 2) {
-        // Fallback: if we don't have 8 days, compare last day with previous day
-        const currentValue = allDates[allDates.length - 1].value;
-        const previousValue = allDates[allDates.length - 2].value;
-        const change = previousValue !== 0 ? ((currentValue - previousValue) / previousValue) * 100 : 0;
+      // Calculate percentage change - compare first and last dates
+      if (allDates.length >= 2) {
+        const firstDateValue = allDates[0].value;
+        const lastDateValue = allDates[allDates.length - 1].value;
+        const change = firstDateValue !== 0 ? ((lastDateValue - firstDateValue) / firstDateValue) * 100 : 0;
         setPercentageChange(change);
       } else {
         setPercentageChange(0);

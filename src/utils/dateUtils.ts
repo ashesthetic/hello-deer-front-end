@@ -140,4 +140,16 @@ export const formatDateTimeForDisplay = (dateTimeString: string): string => {
     hour12: true,
     timeZone: ALBERTA_TIMEZONE
   });
+};
+
+/**
+ * Format currency for display (e.g., "$1,234.56")
+ * @param amount - Amount to format
+ * @returns Formatted currency string
+ */
+export const formatCurrency = (amount: number): string => {
+  return new Intl.NumberFormat('en-CA', {
+    style: 'currency',
+    currency: 'CAD',
+  }).format(amount);
 }; 
