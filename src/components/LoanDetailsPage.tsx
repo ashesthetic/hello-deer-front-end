@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { loanApi, Loan, LoanFormData } from '../services/api';
+import Modal from './Modal';
 
 const LoanDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -12,6 +13,8 @@ const LoanDetailsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   
   const [formData, setFormData] = useState<LoanFormData>({
     name: '',
@@ -108,20 +111,25 @@ const LoanDetailsPage: React.FC = () => {
     }
   };
 
-  const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this loan account? This action cannot be undone.')) {
-      return;
-    }
+  const handleDeleteClick = () => {
+    setDeleteModalOpen(true);
+  };
 
+  const handleConfirmDelete = async () => {
     try {
-      setSaving(true);
+      setDeleting(true);
       await loanApi.delete(parseInt(id!));
       navigate('/accounting/loan-accounts');
     } catch (err) {
       console.error('Error deleting loan:', err);
       setError('Failed to delete loan');
-      setSaving(false);
+      setDeleting(false);
+      setDeleteModalOpen(false);
     }
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteModalOpen(false);
   };
 
   if (loading) {
@@ -179,8 +187,8 @@ const LoanDetailsPage: React.FC = () => {
                 Edit
               </button>
               <button
-                onClick={handleDelete}
-                disabled={saving}
+                onClick={handleDeleteClick}
+                disabled={saving || deleting}
                 className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
               >
                 Delete
@@ -366,6 +374,28 @@ const LoanDetailsPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={deleteModalOpen}
+        title="Delete Loan Account"
+        onClose={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+        confirmText="Delete"
+        cancelText="Cancel"
+        loading={deleting}
+      >
+        Are you sure you want to delete the loan account <b>{loan?.name}</b>?
+        <br />
+        <br />
+        Amount: <b>${parseFloat(loan?.amount || '0').toLocaleString(undefined, {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })} {loan?.currency}</b>
+        <br />
+        <br />
+        This action cannot be undone.
+      </Modal>
     </div>
   );
 };
