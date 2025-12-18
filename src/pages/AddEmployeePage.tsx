@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { employeesApi, EmployeeFormData } from '../services/api';
 
 interface EmployeeForm {
   // Personal Information
@@ -141,12 +142,54 @@ const AddEmployeePage: React.FC = () => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Demo success message
-    alert('Employee added successfully!');
-    navigate('/employees');
+    try {
+      // Convert form data to API format (camelCase to snake_case)
+      const apiData: EmployeeFormData = {
+        full_legal_name: formData.fullLegalName,
+        preferred_name: formData.preferredName,
+        date_of_birth: formData.dateOfBirth,
+        address: formData.address,
+        postal_code: formData.postalCode,
+        country: formData.country,
+        phone_number: formData.phoneNumber,
+        alternate_number: formData.alternateNumber,
+        email: formData.email,
+        emergency_name: formData.emergencyName,
+        emergency_relationship: formData.emergencyRelationship,
+        emergency_address_line1: formData.emergencyAddressLine1,
+        emergency_address_line2: formData.emergencyAddressLine2,
+        emergency_city: formData.emergencyCity,
+        emergency_state: formData.emergencyState,
+        emergency_postal_code: formData.emergencyPostalCode,
+        emergency_country: formData.emergencyCountry,
+        emergency_phone: formData.emergencyPhone,
+        emergency_alternate_number: formData.emergencyAlternateNumber,
+        status_in_canada: formData.statusInCanada,
+        other_status: formData.otherStatus,
+        sin_number: formData.sinNumber,
+        position: formData.position,
+        department: formData.department,
+        hire_date: formData.hireDate,
+        hourly_rate: formData.salary,
+        status: 'active',
+        facebook: formData.facebook,
+        linkedin: formData.linkedin,
+        twitter: formData.twitter,
+        government_id_file: formData.governmentIdFile || undefined,
+        work_permit_file: formData.workPermitFile || undefined,
+        resume_file: formData.resumeFile || undefined,
+        photo_file: formData.photoFile || undefined,
+        void_cheque_file: formData.voidChequeFile || undefined,
+      };
+
+      await employeesApi.create(apiData);
+      navigate('/employees');
+    } catch (error: any) {
+      console.error('Error creating employee:', error);
+      alert(error.response?.data?.message || 'Failed to create employee');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleCancel = () => {
@@ -181,7 +224,7 @@ const AddEmployeePage: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label htmlFor="fullLegalName" className="block text-sm font-medium text-gray-700 mb-1">
-                    Full Legal Name *
+                    Full Legal Name
                   </label>
                   <input
                     type="text"
@@ -189,7 +232,6 @@ const AddEmployeePage: React.FC = () => {
                     name="fullLegalName"
                     value={formData.fullLegalName}
                     onChange={handleInputChange}
-                    required
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="Enter full legal name"
                   />
@@ -212,7 +254,7 @@ const AddEmployeePage: React.FC = () => {
 
                 <div>
                   <label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700 mb-1">
-                    Date of Birth *
+                    Date of Birth
                   </label>
                   <input
                     type="date"
@@ -220,14 +262,13 @@ const AddEmployeePage: React.FC = () => {
                     name="dateOfBirth"
                     value={formData.dateOfBirth}
                     onChange={handleInputChange}
-                    required
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
 
                 <div>
                   <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-1">
-                    Phone Number *
+                    Phone Number
                   </label>
                   <input
                     type="tel"
@@ -235,7 +276,6 @@ const AddEmployeePage: React.FC = () => {
                     name="phoneNumber"
                     value={formData.phoneNumber}
                     onChange={handleInputChange}
-                    required
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="(555) 123-4567"
                   />
@@ -258,7 +298,7 @@ const AddEmployeePage: React.FC = () => {
 
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                    Email *
+                    Email
                   </label>
                   <input
                     type="email"
@@ -266,7 +306,6 @@ const AddEmployeePage: React.FC = () => {
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
-                    required
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="Enter email address"
                   />
@@ -274,7 +313,7 @@ const AddEmployeePage: React.FC = () => {
 
                 <div className="md:col-span-2">
                   <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">
-                    Address *
+                    Address
                   </label>
                   <textarea
                     id="address"
@@ -282,7 +321,6 @@ const AddEmployeePage: React.FC = () => {
                     value={formData.address}
                     onChange={handleInputChange}
                     rows={3}
-                    required
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="Enter address"
                   />
@@ -329,7 +367,7 @@ const AddEmployeePage: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label htmlFor="emergencyName" className="block text-sm font-medium text-gray-700 mb-1">
-                    Name *
+                    Name
                   </label>
                   <input
                     type="text"
@@ -337,7 +375,6 @@ const AddEmployeePage: React.FC = () => {
                     name="emergencyName"
                     value={formData.emergencyName}
                     onChange={handleInputChange}
-                    required
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="Enter emergency contact name"
                   />
@@ -345,7 +382,7 @@ const AddEmployeePage: React.FC = () => {
 
                 <div>
                   <label htmlFor="emergencyRelationship" className="block text-sm font-medium text-gray-700 mb-1">
-                    Relationship *
+                    Relationship
                   </label>
                   <input
                     type="text"
@@ -353,7 +390,6 @@ const AddEmployeePage: React.FC = () => {
                     name="emergencyRelationship"
                     value={formData.emergencyRelationship}
                     onChange={handleInputChange}
-                    required
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="e.g., Spouse, Parent, Sibling"
                   />
@@ -361,7 +397,7 @@ const AddEmployeePage: React.FC = () => {
 
                 <div>
                   <label htmlFor="emergencyPhone" className="block text-sm font-medium text-gray-700 mb-1">
-                    Phone Number *
+                    Phone Number
                   </label>
                   <input
                     type="tel"
@@ -369,7 +405,6 @@ const AddEmployeePage: React.FC = () => {
                     name="emergencyPhone"
                     value={formData.emergencyPhone}
                     onChange={handleInputChange}
-                    required
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="(555) 123-4567"
                   />
@@ -491,14 +526,13 @@ const AddEmployeePage: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label htmlFor="statusInCanada" className="block text-sm font-medium text-gray-700 mb-1">
-                    Status in Canada *
+                    Status in Canada
                   </label>
                   <select
                     id="statusInCanada"
                     name="statusInCanada"
                     value={formData.statusInCanada}
                     onChange={handleInputChange}
-                    required
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="">--- Select Choice ---</option>
@@ -510,7 +544,7 @@ const AddEmployeePage: React.FC = () => {
 
                 <div>
                   <label htmlFor="sinNumber" className="block text-sm font-medium text-gray-700 mb-1">
-                    SIN Number *
+                    SIN Number
                   </label>
                   <input
                     type="text"
@@ -518,7 +552,6 @@ const AddEmployeePage: React.FC = () => {
                     name="sinNumber"
                     value={formData.sinNumber}
                     onChange={handleInputChange}
-                    required
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="123-456-789"
                   />
@@ -535,7 +568,6 @@ const AddEmployeePage: React.FC = () => {
                       name="otherStatus"
                       value={formData.otherStatus}
                       onChange={handleInputChange}
-                      required
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       placeholder="Enter your status"
                     />
@@ -547,7 +579,7 @@ const AddEmployeePage: React.FC = () => {
               <div className="mt-6 space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Copy of Government ID (Driver's License / Passport / PR Card) *
+                    Copy of Government ID (Driver's License / Passport / PR Card)
                   </label>
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
                     <input
@@ -559,7 +591,6 @@ const AddEmployeePage: React.FC = () => {
                       }}
                       className="hidden"
                       id="governmentIdFile"
-                      required
                     />
                     <label htmlFor="governmentIdFile" className="cursor-pointer">
                       <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
@@ -597,7 +628,7 @@ const AddEmployeePage: React.FC = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Resume *
+                    Resume
                   </label>
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
                     <input
@@ -609,7 +640,6 @@ const AddEmployeePage: React.FC = () => {
                       }}
                       className="hidden"
                       id="resumeFile"
-                      required
                     />
                     <label htmlFor="resumeFile" className="cursor-pointer">
                       <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
@@ -622,7 +652,7 @@ const AddEmployeePage: React.FC = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Photo *
+                    Photo
                   </label>
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
                     <input
@@ -634,7 +664,6 @@ const AddEmployeePage: React.FC = () => {
                       }}
                       className="hidden"
                       id="photoFile"
-                      required
                     />
                     <label htmlFor="photoFile" className="cursor-pointer">
                       <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
@@ -647,7 +676,7 @@ const AddEmployeePage: React.FC = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Void Cheque *
+                    Void Cheque
                   </label>
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
                     <input
@@ -659,7 +688,6 @@ const AddEmployeePage: React.FC = () => {
                       }}
                       className="hidden"
                       id="voidChequeFile"
-                      required
                     />
                     <label htmlFor="voidChequeFile" className="cursor-pointer">
                       <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
@@ -729,14 +757,13 @@ const AddEmployeePage: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label htmlFor="department" className="block text-sm font-medium text-gray-700 mb-1">
-                    Department *
+                    Department
                   </label>
                   <select
                     id="department"
                     name="department"
                     value={formData.department}
                     onChange={handleInputChange}
-                    required
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="">Select department</option>
@@ -748,14 +775,13 @@ const AddEmployeePage: React.FC = () => {
 
                 <div>
                   <label htmlFor="position" className="block text-sm font-medium text-gray-700 mb-1">
-                    Position *
+                    Position
                   </label>
                   <select
                     id="position"
                     name="position"
                     value={formData.position}
                     onChange={handleInputChange}
-                    required
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="">Select position</option>
@@ -767,7 +793,7 @@ const AddEmployeePage: React.FC = () => {
 
                 <div>
                   <label htmlFor="hireDate" className="block text-sm font-medium text-gray-700 mb-1">
-                    Hire Date *
+                    Hire Date
                   </label>
                   <input
                     type="date"
@@ -775,8 +801,7 @@ const AddEmployeePage: React.FC = () => {
                     name="hireDate"
                     value={formData.hireDate}
                     onChange={handleInputChange}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
                   />
                 </div>
 

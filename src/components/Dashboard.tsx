@@ -4,6 +4,8 @@ import SalesReportCard from './SalesReportCard';
 import WeeklyReportCard from './WeeklyReportCard';
 import WeeklyTrendCard from './WeeklyTrendCard';
 import WeeklyFuelTrendCard from './WeeklyFuelTrendCard';
+import MonthlySalesTrendCard from './MonthlySalesTrendCard';
+import MonthlyFuelTrendCard from './MonthlyFuelTrendCard';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -22,7 +24,7 @@ const Dashboard: React.FC = () => {
         {/* Dashboard Section */}
         <div>
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Dashboard</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6">
             <SalesReportCard 
               title="Total Sales Trend" 
               dataField="reported_total" 
@@ -69,6 +71,30 @@ const Dashboard: React.FC = () => {
               title="Weekly Fuel Quantities" 
               dataField="total_quantity" 
               color="#F59E0B" 
+            />
+          </div>
+        </div>
+
+        {/* Monthly Sales Trend Section */}
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Monthly Sales Trend</h2>
+          <div className="grid grid-cols-1 gap-6">
+            <MonthlySalesTrendCard 
+              title="Current Month Total Sales" 
+              dataField="reported_total" 
+              color="#3B82F6" 
+            />
+          </div>
+        </div>
+
+        {/* Monthly Fuel Trend Section */}
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Monthly Fuel Trend</h2>
+          <div className="grid grid-cols-1 gap-6">
+            <MonthlyFuelTrendCard 
+              title="Current Month Fuel Sales" 
+              dataField="total_amount" 
+              color="#10B981" 
             />
           </div>
         </div>

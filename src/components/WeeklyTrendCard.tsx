@@ -164,7 +164,7 @@ const WeeklyTrendCard: React.FC<WeeklyTrendCardProps> = ({ title, dataField, col
     maintainAspectRatio: false,
     layout: {
       padding: {
-        top: 30,
+        top: 50,
         bottom: 20,
         left: 15,
         right: 15
@@ -187,7 +187,7 @@ const WeeklyTrendCard: React.FC<WeeklyTrendCardProps> = ({ title, dataField, col
         color: '#374151',
         font: {
           weight: 'bold' as const,
-          size: 10
+          size: 9
         },
         formatter: function(value: any) {
           const numValue = parseFloat(value) || 0;
@@ -195,14 +195,14 @@ const WeeklyTrendCard: React.FC<WeeklyTrendCardProps> = ({ title, dataField, col
         },
         anchor: 'end' as const,
         align: 'top' as const,
-        offset: 8,
-        backgroundColor: 'rgba(255, 255, 255, 0.8)',
-        borderRadius: 4,
+        offset: 4,
+        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        borderRadius: 3,
         padding: {
-          top: 2,
-          bottom: 2,
-          left: 4,
-          right: 4
+          top: 1,
+          bottom: 1,
+          left: 3,
+          right: 3
         }
       }
     },

@@ -29,6 +29,9 @@ import AddHoursPage from './pages/AddHoursPage';
 import EmployeeViewPage from './pages/EmployeeViewPage';
 import EmployeeEditPage from './pages/EmployeeEditPage';
 import EmployeeEarningsPage from './pages/EmployeeEarningsPage';
+import WorkHoursListPage from './pages/WorkHoursListPage';
+import WorkHoursEditPage from './pages/WorkHoursEditPage';
+import WorkHoursViewPage from './pages/WorkHoursViewPage';
 
 const App: React.FC = () => {
   const dispatch = useDispatch();
@@ -125,6 +128,24 @@ const App: React.FC = () => {
           <Route 
             path="/employees/:id/edit" 
             element={isAuthenticated ? <Layout><EmployeeEditPage /></Layout> : <Navigate to="/login" />} 
+          />
+          
+          {/* Work Hours Routes */}
+          <Route 
+            path="/work-hours" 
+            element={isAuthenticated ? <Layout><WorkHoursListPage /></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/work-hours/create" 
+            element={isAuthenticated ? <Layout><WorkHoursEditPage /></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/work-hours/:id" 
+            element={isAuthenticated ? <Layout><WorkHoursViewPage /></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/work-hours/:id/edit" 
+            element={isAuthenticated ? <Layout><WorkHoursEditPage /></Layout> : <Navigate to="/login" />} 
           />
           
           {/* Reports Routes */}
