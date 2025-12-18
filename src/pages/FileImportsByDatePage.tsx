@@ -420,6 +420,46 @@ const FileImportsByDatePage: React.FC = () => {
                       </div>
                     </div>
                   </div>
+                  
+                  {/* Department Totals */}
+                  <div className="bg-green-50 p-6 rounded-lg border border-green-200 mt-6">
+                    <h4 className="text-md font-medium text-gray-900 mb-4">Department Totals</h4>
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full">
+                        <tbody className="divide-y divide-green-200">
+                          <tr>
+                            <td className="py-2 px-4 text-sm font-medium text-green-900">Tobacco 25</td>
+                            <td className="py-2 px-4 text-sm text-green-900">${sftProcessResult.data.tobacco_25.toFixed(2)}</td>
+                            <td className="py-2 px-4 text-sm font-medium text-green-900">Tobacco 20</td>
+                            <td className="py-2 px-4 text-sm text-green-900">${sftProcessResult.data.tobacco_20.toFixed(2)}</td>
+                          </tr>
+                          <tr>
+                            <td className="py-2 px-4 text-sm font-medium text-green-900">Lottery Total</td>
+                            <td className="py-2 px-4 text-sm text-green-900">${sftProcessResult.data.lottery_total.toFixed(2)}</td>
+                            <td className="py-2 px-4 text-sm font-medium text-green-900">Prepay Total</td>
+                            <td className="py-2 px-4 text-sm text-green-900">${sftProcessResult.data.prepay_total.toFixed(2)}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* Loyalty Discounts */}
+                  <div className="bg-orange-50 p-6 rounded-lg border border-orange-200 mt-6">
+                    <h4 className="text-md font-medium text-gray-900 mb-4">Loyalty Discounts</h4>
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full">
+                        <tbody className="divide-y divide-orange-200">
+                          <tr>
+                            <td className="py-2 px-4 text-sm font-medium text-orange-900">Journey Discount</td>
+                            <td className="py-2 px-4 text-sm text-orange-900">${sftProcessResult.data.journey_discount.toFixed(2)}</td>
+                            <td className="py-2 px-4 text-sm font-medium text-orange-900">Aeroplan Discount</td>
+                            <td className="py-2 px-4 text-sm text-orange-900">${sftProcessResult.data.aeroplan_discount.toFixed(2)}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -472,6 +512,12 @@ const FileImportsByDatePage: React.FC = () => {
                           <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Payouts
                           </th>
+                          <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Journey
+                          </th>
+                          <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Aeroplan
+                          </th>
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
@@ -503,6 +549,12 @@ const FileImportsByDatePage: React.FC = () => {
                             </td>
                             <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
                               ${file.payouts.toFixed(2)}
+                            </td>
+                            <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                              ${file.journey_discount.toFixed(2)}
+                            </td>
+                            <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                              ${file.aeroplan_discount.toFixed(2)}
                             </td>
                           </tr>
                         ))}
