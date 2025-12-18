@@ -62,7 +62,7 @@ const DailySalesList: React.FC<DailySalesListProps> = ({
               Counter Sale
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Total
+              Grand Total
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Actions
@@ -82,7 +82,7 @@ const DailySalesList: React.FC<DailySalesListProps> = ({
                 {formatCurrency(sale.total_counter_sale || 0)}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                {formatCurrency(sale.grand_total || 0)}
+                {formatCurrency(sale.reported_total || 0)}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                 <div className="flex space-x-2">
