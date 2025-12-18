@@ -460,6 +460,41 @@ const FileImportsByDatePage: React.FC = () => {
                       </table>
                     </div>
                   </div>
+
+                  {/* Fuel Volume Data */}
+                  <div className="bg-teal-50 p-6 rounded-lg border border-teal-200 mt-6">
+                    <h4 className="text-md font-medium text-gray-900 mb-4">Fuel Volume Data</h4>
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full">
+                        <tbody className="divide-y divide-teal-200">
+                          <tr>
+                            <td className="py-2 px-4 text-sm font-medium text-teal-900">Diesel Volume</td>
+                            <td className="py-2 px-4 text-sm text-teal-900">{sftProcessResult.data.diesel_volume.toFixed(2)} L</td>
+                            <td className="py-2 px-4 text-sm font-medium text-teal-900">Diesel Total</td>
+                            <td className="py-2 px-4 text-sm text-teal-900">${sftProcessResult.data.diesel_total.toFixed(2)}</td>
+                          </tr>
+                          <tr>
+                            <td className="py-2 px-4 text-sm font-medium text-teal-900">Regular Volume</td>
+                            <td className="py-2 px-4 text-sm text-teal-900">{sftProcessResult.data.regular_volume.toFixed(2)} L</td>
+                            <td className="py-2 px-4 text-sm font-medium text-teal-900">Regular Total</td>
+                            <td className="py-2 px-4 text-sm text-teal-900">${sftProcessResult.data.regular_total.toFixed(2)}</td>
+                          </tr>
+                          <tr>
+                            <td className="py-2 px-4 text-sm font-medium text-teal-900">Plus Volume</td>
+                            <td className="py-2 px-4 text-sm text-teal-900">{sftProcessResult.data.plus_volume.toFixed(2)} L</td>
+                            <td className="py-2 px-4 text-sm font-medium text-teal-900">Plus Total</td>
+                            <td className="py-2 px-4 text-sm text-teal-900">${sftProcessResult.data.plus_total.toFixed(2)}</td>
+                          </tr>
+                          <tr>
+                            <td className="py-2 px-4 text-sm font-medium text-teal-900">Sup Plus Volume</td>
+                            <td className="py-2 px-4 text-sm text-teal-900">{sftProcessResult.data.sup_plus_volume.toFixed(2)} L</td>
+                            <td className="py-2 px-4 text-sm font-medium text-teal-900">Sup Plus Total</td>
+                            <td className="py-2 px-4 text-sm text-teal-900">${sftProcessResult.data.sup_plus_total.toFixed(2)}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
                 </div>
               )}
 
