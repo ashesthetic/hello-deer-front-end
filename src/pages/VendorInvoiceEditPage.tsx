@@ -6,6 +6,7 @@ import { vendorInvoicesApi, VendorInvoiceFormData, VendorInvoice } from '../serv
 import { canUpdate } from '../utils/permissions';
 import { usePageTitle } from '../hooks/usePageTitle';
 import { formatDateForAPI, parseDateSafely } from '../utils/dateUtils';
+import GoogleDriveAuth from '../components/GoogleDriveAuth';
 
 interface Vendor {
   id: number;
@@ -32,6 +33,7 @@ const VendorInvoiceEditPage: React.FC = () => {
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [invoice, setInvoice] = useState<VendorInvoice | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isGoogleDriveAuthenticated, setIsGoogleDriveAuthenticated] = useState<boolean>(false);
 
   const [formData, setFormData] = useState<VendorInvoiceFormData>({
     vendor_id: 0,
@@ -135,6 +137,10 @@ const VendorInvoiceEditPage: React.FC = () => {
     setSelectedFile(file);
   };
 
+  const handleGoogleAuthChange = (isAuthenticated: boolean) => {
+    setIsGoogleDriveAuthenticated(isAuthenticated);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -173,6 +179,12 @@ const VendorInvoiceEditPage: React.FC = () => {
       return;
     }
 
+    // Check Google Drive authentication if file is selected
+    if (selectedFile && !isGoogleDriveAuthenticated) {
+      setError('Please authenticate with Google Drive before uploading files');
+      return;
+    }
+
     setSaving(true);
     setError(null);
 
@@ -185,7 +197,14 @@ const VendorInvoiceEditPage: React.FC = () => {
       await vendorInvoicesApi.update(parseInt(id!), submitData);
       navigate(`/accounting/vendor-invoices/${id}`);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to update vendor invoice');
+      const errorMessage = err.response?.data?.message || 'Failed to update vendor invoice';
+      const errorCode = err.response?.data?.error_code;
+      
+      if (errorCode === 'GOOGLE_AUTH_REQUIRED') {
+        setError('Google Drive authentication required. Please connect your Google Drive account and try again.');
+      } else {
+        setError(errorMessage);
+      }
     } finally {
       setSaving(false);
     }
@@ -502,6 +521,11 @@ const VendorInvoiceEditPage: React.FC = () => {
               />
             </div>
 
+            {/* Google Drive Authentication */}
+            <div className="md:col-span-2">
+              <GoogleDriveAuth onAuthChange={handleGoogleAuthChange} className="mb-4" />
+            </div>
+
             {/* Invoice File Upload */}
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -516,9 +540,14 @@ const VendorInvoiceEditPage: React.FC = () => {
               <p className="mt-1 text-sm text-gray-500">
                 Accepted formats: PDF, JPG, JPEG, PNG (max 10MB)
               </p>
-              {invoice.invoice_file_path && (
+              {(invoice as any).google_drive_file_name && (
+                <p className="mt-1 text-sm text-green-600">
+                  📁 Current file (Google Drive): {(invoice as any).google_drive_file_name}
+                </p>
+              )}
+              {!((invoice as any).google_drive_file_name) && invoice.invoice_file_path && (
                 <p className="mt-1 text-sm text-blue-600">
-                  Current file: {invoice.invoice_file_path.split('/').pop()}
+                  💾 Current file (Local): {invoice.invoice_file_path.split('/').pop()}
                 </p>
               )}
             </div>

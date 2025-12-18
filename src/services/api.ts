@@ -758,6 +758,7 @@ export const vendorInvoicesApi = {
   getVendors: () => api.get('/vendor-invoices/vendors'),
   getBankAccounts: () => api.get('/vendor-invoices/bank-accounts'),
   downloadFile: (id: number) => api.get(`/vendor-invoices/${id}/download`, { responseType: 'blob' }),
+  getFileViewLink: (id: number) => api.get(`/vendor-invoices/${id}/view-link`),
 };
 
 // User Management API (Admin only)

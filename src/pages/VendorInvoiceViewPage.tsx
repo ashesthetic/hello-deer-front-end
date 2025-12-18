@@ -72,13 +72,28 @@ const VendorInvoiceViewPage: React.FC = () => {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = invoice.invoice_file_path?.split('/').pop() || 'invoice';
+      // Use Google Drive file name if available, otherwise fallback to local path
+      const fileName = (invoice as any).google_drive_file_name || 
+                      invoice.invoice_file_path?.split('/').pop() || 
+                      'invoice';
+      a.download = fileName;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (err: any) {
       setError('Failed to download file');
+    }
+  };
+
+  const handleViewInGoogleDrive = async () => {
+    if (!invoice) return;
+    
+    try {
+      const response = await vendorInvoicesApi.getFileViewLink(invoice.id);
+      window.open(response.data.view_link, '_blank');
+    } catch (err: any) {
+      setError('Failed to get Google Drive view link');
     }
   };
 
@@ -243,21 +258,43 @@ const VendorInvoiceViewPage: React.FC = () => {
             )}
 
             {/* Invoice File */}
-            {invoice.invoice_file_path && (
+            {((invoice as any).google_drive_file_id || invoice.invoice_file_path) && (
               <div>
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Invoice File</h3>
                 <div className="flex items-center space-x-3">
                   <div className="flex-1">
                     <p className="text-sm text-gray-600">
-                      File: {invoice.invoice_file_path.split('/').pop()}
+                      File: {(invoice as any).google_drive_file_name || 
+                             invoice.invoice_file_path?.split('/').pop() || 
+                             'Unknown file'}
                     </p>
+                    {(invoice as any).google_drive_file_id && (
+                      <p className="text-xs text-green-600">
+                        📁 Stored in Google Drive
+                      </p>
+                    )}
+                    {!((invoice as any).google_drive_file_id) && invoice.invoice_file_path && (
+                      <p className="text-xs text-gray-500">
+                        💾 Stored locally
+                      </p>
+                    )}
                   </div>
-                  <button
-                    onClick={handleDownloadFile}
-                    className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                  >
-                    Download
-                  </button>
+                  <div className="flex space-x-2">
+                    {(invoice as any).google_drive_file_id && (
+                      <button
+                        onClick={handleViewInGoogleDrive}
+                        className="px-3 py-1 text-sm bg-green-600 text-white rounded-md hover:bg-green-700"
+                      >
+                        View in Drive
+                      </button>
+                    )}
+                    <button
+                      onClick={handleDownloadFile}
+                      className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                    >
+                      Download
+                    </button>
+                  </div>
                 </div>
               </div>
             )}

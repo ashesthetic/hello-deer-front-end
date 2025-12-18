@@ -7,6 +7,7 @@ import { canCreate } from '../utils/permissions';
 import { usePageTitle } from '../hooks/usePageTitle';
 import { getTodayForInput } from '../utils/dateUtils';
 import { setupDateInput } from '../utils/dateInputUtils';
+import GoogleDriveAuth from '../components/GoogleDriveAuth';
 
 interface Vendor {
   id: number;
@@ -30,6 +31,7 @@ const VendorInvoiceAddPage: React.FC = () => {
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isGoogleDriveAuthenticated, setIsGoogleDriveAuthenticated] = useState<boolean>(false);
   
   // Refs for date inputs
   const invoiceDateRef = useRef<HTMLInputElement>(null);
@@ -109,6 +111,10 @@ const VendorInvoiceAddPage: React.FC = () => {
     setSelectedFile(file);
   };
 
+  const handleGoogleAuthChange = (isAuthenticated: boolean) => {
+    setIsGoogleDriveAuthenticated(isAuthenticated);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -147,6 +153,12 @@ const VendorInvoiceAddPage: React.FC = () => {
       return;
     }
 
+    // Check Google Drive authentication if file is selected
+    if (selectedFile && !isGoogleDriveAuthenticated) {
+      setError('Please authenticate with Google Drive before uploading files');
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -159,7 +171,14 @@ const VendorInvoiceAddPage: React.FC = () => {
       await vendorInvoicesApi.create(submitData);
       navigate('/accounting/vendor-invoices');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to create vendor invoice');
+      const errorMessage = err.response?.data?.message || 'Failed to create vendor invoice';
+      const errorCode = err.response?.data?.error_code;
+      
+      if (errorCode === 'GOOGLE_AUTH_REQUIRED') {
+        setError('Google Drive authentication required. Please connect your Google Drive account and try again.');
+      } else {
+        setError(errorMessage);
+      }
     } finally {
       setLoading(false);
     }
@@ -470,6 +489,11 @@ const VendorInvoiceAddPage: React.FC = () => {
               />
             </div>
 
+            {/* Google Drive Authentication */}
+            <div className="md:col-span-2">
+              <GoogleDriveAuth onAuthChange={handleGoogleAuthChange} className="mb-4" />
+            </div>
+
             {/* Invoice File Upload */}
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -482,7 +506,7 @@ const VendorInvoiceAddPage: React.FC = () => {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <p className="mt-1 text-sm text-gray-500">
-                Accepted formats: PDF, JPG, JPEG, PNG (max 10MB)
+                Accepted formats: PDF, JPG, JPEG, PNG (max 10MB). Files will be securely stored in Google Drive.
               </p>
             </div>
 
