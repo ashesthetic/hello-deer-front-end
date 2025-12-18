@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -67,13 +67,7 @@ const SalesReportPage: React.FC = () => {
     fetchDataWithParams(mode, year, month, startDate, endDate);
   }, [searchParams]);
 
-  // Handle state changes for interactive features
-  useEffect(() => {
-    // Only fetch data if this is not the initial load (when searchParams change)
-    if (reportMode && currentYear && currentMonth) {
-      fetchData();
-    }
-  }, [reportMode, currentYear, currentMonth, selectedYear, selectedMonth]);
+
 
   const updateURL = (mode: ReportMode, year?: number, month?: number, startDate?: string, endDate?: string) => {
     const params = new URLSearchParams();
@@ -160,9 +154,17 @@ const SalesReportPage: React.FC = () => {
     }
   };
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     await fetchDataWithParams(reportMode, currentYear, currentMonth, customStartDate, customEndDate);
-  };
+  }, [reportMode, currentYear, currentMonth, customStartDate, customEndDate]);
+
+  // Handle state changes for interactive features
+  useEffect(() => {
+    // Only fetch data if this is not the initial load (when searchParams change)
+    if (reportMode && currentYear && currentMonth) {
+      fetchData();
+    }
+  }, [reportMode, currentYear, currentMonth, selectedYear, selectedMonth, fetchData]);
 
   const handlePreviousMonth = (e?: React.MouseEvent) => {
     if (e) {
@@ -463,7 +465,7 @@ const SalesReportPage: React.FC = () => {
     const weeklyGroupData: { [key: number]: number[] } = {};
     
     sales.forEach(sale => {
-      const [year, month, day] = sale.date.split('T')[0].split('-');
+      const [, , day] = sale.date.split('T')[0].split('-');
       const dayOfMonth = parseInt(day);
       if (!weeklyGroupData[dayOfMonth]) {
         weeklyGroupData[dayOfMonth] = [];
@@ -485,13 +487,13 @@ const SalesReportPage: React.FC = () => {
     
     const labels = availableDays.map(day => {
       const firstSaleWithThisDay = sales.find(sale => {
-        const [year, month, dayStr] = sale.date.split('T')[0].split('-');
+        const [, , dayStr] = sale.date.split('T')[0].split('-');
         return parseInt(dayStr) === day;
       });
       
       if (firstSaleWithThisDay) {
-        const [year, month, dayStr] = firstSaleWithThisDay.date.split('T')[0].split('-');
-        const date = new Date(Date.UTC(parseInt(year), parseInt(month) - 1, parseInt(dayStr)));
+        const [, , dayStr] = firstSaleWithThisDay.date.split('T')[0].split('-');
+        const date = new Date(Date.UTC(parseInt(dayStr), 0, parseInt(dayStr)));
         const monthStr = date.toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' });
         const dayName = date.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' });
         return `${monthStr} ${day}\n${dayName}`;
@@ -633,7 +635,6 @@ const SalesReportPage: React.FC = () => {
     
     const isPositive = growth > 0;
     const isNegative = growth < 0;
-    const isNeutral = growth === 0;
     
     return (
       <div className="absolute top-2 right-2 z-10">
@@ -687,9 +688,7 @@ const SalesReportPage: React.FC = () => {
         const monthName = date.toLocaleDateString('en-US', { month: 'long' });
         options.push({
           value: `${year}-${month}`,
-          label: `${monthName} ${year}`,
-          year,
-          month
+          label: `${monthName} ${year}`
         });
       }
     }

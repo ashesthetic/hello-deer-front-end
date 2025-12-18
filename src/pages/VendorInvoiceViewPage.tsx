@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
@@ -6,7 +6,7 @@ import { canUpdate, canDelete } from '../utils/permissions';
 import ConfirmationModal from '../components/ConfirmationModal';
 import { vendorInvoicesApi, VendorInvoice } from '../services/api';
 import { usePageTitle } from '../hooks/usePageTitle';
-import { formatDateForDisplay, formatDateDetailed, formatDateTimeForDisplay, formatCurrency } from '../utils/dateUtils';
+import { formatDateDetailed, formatDateTimeForDisplay, formatCurrency } from '../utils/dateUtils';
 
 const VendorInvoiceViewPage: React.FC = () => {
   usePageTitle('Vendor Invoice Details');
@@ -18,11 +18,9 @@ const VendorInvoiceViewPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  useEffect(() => {
-    fetchInvoice();
-  }, [id]);
 
-  const fetchInvoice = async () => {
+
+  const fetchInvoice = useCallback(async () => {
     if (!id) return;
     
     try {
@@ -36,7 +34,11 @@ const VendorInvoiceViewPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    fetchInvoice();
+  }, [id, fetchInvoice]);
 
   const handleEdit = () => {
     navigate(`/accounting/vendor-invoices/${id}/edit`);

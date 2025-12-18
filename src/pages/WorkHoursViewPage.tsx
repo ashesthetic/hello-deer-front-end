@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
@@ -18,11 +18,9 @@ const WorkHoursViewPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  useEffect(() => {
-    fetchWorkHour();
-  }, [id]);
 
-  const fetchWorkHour = async () => {
+
+  const fetchWorkHour = useCallback(async () => {
     if (!id) return;
     
     try {
@@ -36,7 +34,11 @@ const WorkHoursViewPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    fetchWorkHour();
+  }, [id, fetchWorkHour]);
 
   const handleEdit = () => {
     navigate(`/work-hours/${id}/edit`);

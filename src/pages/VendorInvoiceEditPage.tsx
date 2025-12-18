@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
@@ -38,14 +38,9 @@ const VendorInvoiceEditPage: React.FC = () => {
     description: '',
   });
 
-  useEffect(() => {
-    if (id) {
-      fetchInvoice();
-      fetchVendors();
-    }
-  }, [id]);
 
-  const fetchInvoice = async () => {
+
+  const fetchInvoice = useCallback(async () => {
     if (!id) return;
     
     try {
@@ -72,9 +67,11 @@ const VendorInvoiceEditPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
 
-  const fetchVendors = async () => {
+
+
+  const fetchVendors = useCallback(async () => {
     try {
       const response = await vendorInvoicesApi.getVendors();
       setVendors(response.data);
@@ -82,7 +79,14 @@ const VendorInvoiceEditPage: React.FC = () => {
       console.error('Vendor fetch error:', err);
       setError(`Failed to fetch vendors: ${err.response?.data?.message || err.message || 'Unknown error'}`);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (id) {
+      fetchInvoice();
+      fetchVendors();
+    }
+  }, [id, fetchInvoice, fetchVendors]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
@@ -17,11 +17,9 @@ const ProvidersPage: React.FC = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [perPage] = useState(10);
 
-  useEffect(() => {
-    fetchProviders();
-  }, [searchTerm, sortBy, sortDirection, currentPage]);
 
-  const fetchProviders = async () => {
+
+  const fetchProviders = useCallback(async () => {
     try {
       setLoading(true);
       const response = await providersApi.getAll({
@@ -38,7 +36,11 @@ const ProvidersPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchTerm, sortBy, sortDirection, currentPage, perPage]);
+
+  useEffect(() => {
+    fetchProviders();
+  }, [searchTerm, sortBy, sortDirection, currentPage, fetchProviders]);
 
   const handleDelete = async (id: number) => {
     if (!canDelete(currentUser)) {
