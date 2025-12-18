@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../store';
+import { logout } from '../store/slices/authSlice';
 import { canManageUsers, getRoleDisplayName, getRoleColor } from '../utils/permissions';
 import { helloDeerLogo } from '../assets/images';
 
@@ -16,7 +17,9 @@ const Navigation: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const currentUser = useSelector((state: RootState) => (state as any).auth.user);
+  const dispatch = useDispatch();
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const isActive = (path: string) => {
     return location.pathname === path || location.pathname.startsWith(path + '/');
@@ -329,8 +332,25 @@ const Navigation: React.FC = () => {
     children: settingsChildren
   });
 
+  // Add logout as a regular menu item
+  navItems.push({
+    path: '/logout',
+    label: 'Logout',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+      </svg>
+    )
+  });
+
   const handleDropdownToggle = (label: string) => {
     setOpenDropdown(openDropdown === label ? null : label);
+  };
+
+  const handleMobileMenuToggle = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+    // Close all dropdowns when mobile menu is toggled
+    setOpenDropdown(null);
   };
 
   const handleClickOutside = (event: MouseEvent) => {
@@ -361,12 +381,32 @@ const Navigation: React.FC = () => {
     const isDropdownOpen = openDropdown === item.label;
     const isItemActive = isActive(item.path) || (hasChildren && isChildActive(item.children!));
 
+    // Handle logout specially
+    if (item.path === '/logout') {
+      return (
+        <button
+          key={item.path}
+          onClick={() => {
+            dispatch(logout());
+            navigate('/login');
+            if (isMobile) {
+              setIsMobileMenuOpen(false);
+            }
+          }}
+          className="flex items-center w-full px-3 py-2 rounded-md text-sm font-medium transition-colors text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+        >
+          <span className="mr-2">{item.icon}</span>
+          {item.label}
+        </button>
+      );
+    }
+
     if (hasChildren) {
       return (
         <div key={item.path} className="relative" data-dropdown>
           <button
             onClick={() => handleDropdownToggle(item.label)}
-            className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+            className={`flex items-center w-full px-3 py-2 rounded-md text-sm font-medium transition-colors ${
               isItemActive
                 ? 'bg-blue-100 text-blue-700'
                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
@@ -375,7 +415,7 @@ const Navigation: React.FC = () => {
             <span className="mr-2">{item.icon}</span>
             {item.label}
             <svg
-              className={`ml-1 w-4 h-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
+              className={`ml-auto w-4 h-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -386,19 +426,26 @@ const Navigation: React.FC = () => {
 
           {/* Dropdown Menu */}
           <div
-            className={`absolute top-full left-0 mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50 ${
+            className={`${
+              isMobile 
+                ? 'relative mt-1 ml-4 border-l-2 border-gray-200 pl-4 z-10' 
+                : 'absolute top-full left-0 mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50'
+            } ${
               isDropdownOpen ? 'block' : 'hidden'
             }`}
           >
-            <div className="py-1">
+            <div className={isMobile ? 'space-y-1' : 'py-1'}>
               {item.children!.map((child) => (
                 <button
                   key={child.path}
                   onClick={() => {
                     navigate(child.path);
                     setOpenDropdown(null);
+                    if (isMobile) {
+                      setIsMobileMenuOpen(false);
+                    }
                   }}
-                  className={`flex items-center w-full px-4 py-2 text-sm text-left transition-colors ${
+                  className={`flex items-center w-full px-4 py-2 text-sm text-left transition-colors rounded-md ${
                     isActive(child.path)
                       ? 'bg-blue-50 text-blue-700'
                       : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
@@ -417,8 +464,13 @@ const Navigation: React.FC = () => {
     return (
       <button
         key={item.path}
-        onClick={() => navigate(item.path)}
-        className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+        onClick={() => {
+          navigate(item.path);
+          if (isMobile) {
+            setIsMobileMenuOpen(false);
+          }
+        }}
+        className={`flex items-center w-full px-3 py-2 rounded-md text-sm font-medium transition-colors ${
           isItemActive
             ? 'bg-blue-100 text-blue-700'
             : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
@@ -431,7 +483,7 @@ const Navigation: React.FC = () => {
   };
 
   return (
-    <nav className="bg-white shadow-sm border-b border-gray-200">
+    <nav className="bg-white shadow-sm border-b border-gray-200 relative z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           {/* Logo and Brand */}
@@ -452,26 +504,83 @@ const Navigation: React.FC = () => {
           </div>
 
           {/* Desktop Navigation Links */}
-          <div className="hidden md:flex items-center space-x-1">
+          <div className="hidden lg:flex items-center space-x-1">
             {navItems.map((item) => renderNavItem(item))}
           </div>
 
-          {/* User Menu */}
-          <div className="flex items-center space-x-4">
-            {currentUser && (
-              <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-700">{currentUser.name}</span>
-                <span className={`px-2 py-1 text-xs font-medium rounded-full ${getRoleColor(currentUser.role)}`}>
-                  {getRoleDisplayName(currentUser.role)}
-                </span>
-              </div>
-            )}
+          {/* User Menu and Mobile Menu Button */}
+          <div className="flex items-center space-x-4 relative">
+            {/* User Info - Hidden on mobile */}
+            <div className="hidden sm:flex items-center space-x-2">
+              {currentUser && (
+                <>
+                  <span className="text-sm text-gray-700">{currentUser.name}</span>
+                  <span className={`px-2 py-1 text-xs font-medium rounded-full ${getRoleColor(currentUser.role)}`}>
+                    {getRoleDisplayName(currentUser.role)}
+                  </span>
+                  {/* Desktop Logout Button */}
+                  <button
+                    onClick={() => {
+                      dispatch(logout());
+                      navigate('/login');
+                    }}
+                    className="ml-2 px-3 py-1 text-xs text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors"
+                  >
+                    Logout
+                  </button>
+                </>
+              )}
+            </div>
+
+            {/* Mobile Menu Button */}
+            <button
+              onClick={handleMobileMenuToggle}
+              className="lg:hidden inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 relative z-50"
+              aria-expanded="false"
+            >
+              <span className="sr-only">Open main menu</span>
+              {/* Hamburger Icon */}
+              <svg
+                className={`${isMobileMenuOpen ? 'hidden' : 'block'} h-6 w-6`}
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                aria-hidden="true"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+              {/* Close Icon */}
+              <svg
+                className={`${isMobileMenuOpen ? 'block' : 'hidden'} h-6 w-6`}
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                aria-hidden="true"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
         </div>
 
-        {/* Mobile Navigation */}
-        <div className="md:hidden">
-          <div className="flex space-x-1 overflow-x-auto pb-2">
+        {/* Mobile Navigation Menu */}
+        <div className={`lg:hidden ${isMobileMenuOpen ? 'block' : 'hidden'}`}>
+          <div className="px-2 pt-2 pb-3 space-y-1 bg-white border-t border-gray-200 shadow-lg relative z-50">
+            {/* User Info - Show on mobile when menu is open */}
+            {currentUser && (
+              <div className="px-3 py-2 mb-3 bg-gray-50 rounded-md">
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm font-medium text-gray-900">{currentUser.name}</span>
+                  <span className={`px-2 py-1 text-xs font-medium rounded-full ${getRoleColor(currentUser.role)}`}>
+                    {getRoleDisplayName(currentUser.role)}
+                  </span>
+                </div>
+              </div>
+            )}
+            
+            {/* Navigation Items */}
             {navItems.map((item) => renderNavItem(item, true))}
           </div>
         </div>
