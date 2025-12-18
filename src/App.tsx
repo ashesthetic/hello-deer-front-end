@@ -55,7 +55,9 @@ import IncomeReportPage from './pages/IncomeReportPage';
 import WorkHoursEditPage from './pages/WorkHoursEditPage';
 import WorkHoursViewPage from './pages/WorkHoursViewPage';
 import WorkSchedulesPage from './pages/WorkSchedulesPage';
-import WorkScheduleCreatePage from './pages/WorkScheduleCreatePage';
+import ScheduleCreatePage from './pages/ScheduleCreatePage';
+import ScheduleEditPage from './pages/ScheduleEditPage';
+import ScheduleViewPage from './pages/ScheduleViewPage';
 import VendorInvoicesPage from './pages/VendorInvoicesPage';
 import VendorInvoiceAddPage from './pages/VendorInvoiceAddPage';
 import VendorInvoiceEditPage from './pages/VendorInvoiceEditPage';
@@ -281,7 +283,15 @@ const App: React.FC = () => {
           />
           <Route 
             path="/work-schedules/create" 
-            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><WorkScheduleCreatePage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><ScheduleCreatePage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/work-schedules/edit/:id" 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><ScheduleEditPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/work-schedules/view/:id" 
+            element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><ScheduleViewPage /></ProtectedRoute></Layout> : <Navigate to="/login" />} 
           />
           
           {/* Reports Routes */}
