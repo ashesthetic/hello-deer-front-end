@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { DailySale, DailyFuel, FuelVolume, LoginCredentials, CreateUserData, UpdateUserData, CreateVendorData, UpdateVendorData, CreateOwnerData, UpdateOwnerData, CreateOwnerEquityData, UpdateOwnerEquityData, CreateBankAccountData, UpdateBankAccountData } from '../types';
+import { DailySale, DailyFuel, FuelVolume, LoginCredentials, CreateUserData, UpdateUserData, CreateVendorData, UpdateVendorData, CreateOwnerData, UpdateOwnerData, CreateOwnerEquityData, UpdateOwnerEquityData, CreateBankAccountData, UpdateBankAccountData, CreateResolutionData } from '../types';
 
 // Employee interfaces
 export interface Employee {
@@ -872,6 +872,14 @@ export const workScheduleApi = {
   employeesWithoutCurrentWeek: () => api.get('/work-schedules/employees-without-current-week'),
   weekOptions: () => api.get('/work-schedules/week-options'),
   employeeSchedules: (employeeId: number) => api.get(`/employees/${employeeId}/work-schedules`),
+};
+
+// Safedrop Resolution API
+export const safedropResolutionApi = {
+  getPendingItems: () => api.get('/safedrop-resolutions'),
+  resolve: (data: CreateResolutionData) => api.post('/safedrop-resolutions', data),
+  getHistory: (params?: any) => api.get('/safedrop-resolutions/history', { params }),
+  delete: (id: number) => api.delete(`/safedrop-resolutions/${id}`),
 };
 
 export default api;

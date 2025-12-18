@@ -439,4 +439,48 @@ export interface BankAccountSummary {
     count: number;
     total_balance: number;
   }>;
+}
+
+// Safedrop Resolution types
+export interface SafedropResolution {
+  id: number;
+  daily_sale_id: number;
+  bank_account_id: number;
+  user_id: number;
+  amount: number | string;
+  type: 'safedrops' | 'cash_in_hand';
+  notes?: string;
+  daily_sale?: DailySale;
+  bank_account?: BankAccount;
+  user?: User;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PendingItem {
+  id: number;
+  date: string;
+  user?: User;
+  safedrops: {
+    total_amount: number | string;
+    resolved_amount: number | string;
+    pending_amount: number | string;
+  };
+  cash_in_hand: {
+    total_amount: number | string;
+    resolved_amount: number | string;
+    pending_amount: number | string;
+  };
+}
+
+export interface ResolutionData {
+  bank_account_id: number;
+  amount: number;
+  notes?: string;
+}
+
+export interface CreateResolutionData {
+  daily_sale_id: number;
+  type: 'safedrops' | 'cash_in_hand';
+  resolutions: ResolutionData[];
 } 
