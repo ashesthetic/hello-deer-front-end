@@ -759,8 +759,8 @@ const SalesReportPage: React.FC = () => {
 		return (
 			<div className="absolute top-2 right-2 z-10">
 				<div className={`px-2 py-1 rounded-md text-xs font-medium ${isPositive ? 'bg-green-100 text-green-800' :
-						isNegative ? 'bg-red-100 text-red-800' :
-							'bg-gray-100 text-gray-800'
+					isNegative ? 'bg-red-100 text-red-800' :
+						'bg-gray-100 text-gray-800'
 					}`}>
 					{isPositive ? '↗' : isNegative ? '↘' : '→'} {Math.abs(growth).toFixed(1)}%
 				</div>
@@ -922,8 +922,8 @@ const SalesReportPage: React.FC = () => {
 										updateURL('current-month', currentYear, currentMonth);
 									}}
 									className={`px-3 py-2 text-sm rounded-md ${reportMode === 'current-month'
-											? 'bg-blue-600 text-white'
-											: 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+										? 'bg-blue-600 text-white'
+										: 'bg-gray-200 text-gray-700 hover:bg-gray-300'
 										}`}
 								>
 									Current Month
@@ -935,8 +935,8 @@ const SalesReportPage: React.FC = () => {
 										updateURL('previous-month', currentYear, currentMonth);
 									}}
 									className={`px-3 py-2 text-sm rounded-md ${reportMode === 'previous-month'
-											? 'bg-blue-600 text-white'
-											: 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+										? 'bg-blue-600 text-white'
+										: 'bg-gray-200 text-gray-700 hover:bg-gray-300'
 										}`}
 								>
 									Previous Month
@@ -968,8 +968,8 @@ const SalesReportPage: React.FC = () => {
 									updateURL('month-dropdown', selectedYear, selectedMonth);
 								}}
 								className={`mt-2 px-3 py-2 text-sm rounded-md ${reportMode === 'month-dropdown'
-										? 'bg-blue-600 text-white'
-										: 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+									? 'bg-blue-600 text-white'
+									: 'bg-gray-200 text-gray-700 hover:bg-gray-300'
 									}`}
 							>
 								Use Selected Month
@@ -1016,8 +1016,8 @@ const SalesReportPage: React.FC = () => {
 										onClick={handleCustomDateChange}
 										disabled={!customStartDate || !customEndDate}
 										className={`px-3 py-2 text-sm rounded-md ${reportMode === 'custom-date'
-												? 'bg-blue-600 text-white'
-												: 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+											? 'bg-blue-600 text-white'
+											: 'bg-gray-200 text-gray-700 hover:bg-gray-300'
 											} disabled:opacity-50 disabled:cursor-not-allowed`}
 									>
 										Use Custom Range
@@ -1083,27 +1083,27 @@ const SalesReportPage: React.FC = () => {
 										</div>
 									)}
 
-					{/* Tobacco Sales by Month (Tobacco 25 + Tobacco 20) */}
-					<div className="bg-white rounded-lg shadow-lg p-6">
-						<h3 className="text-lg font-semibold text-gray-900 mb-4">Tobacco Sales by Month (Tobacco 25 + Tobacco 20)</h3>
-						<div className="h-80">
-							<Bar
-								data={{
-									labels: monthlyTrends.map(m => m.month_name),
-									datasets: [{
-										label: 'Total Tobacco Sales',
-										data: monthlyTrends.map(m => (Number(m.tobacco_25) || 0) + (Number(m.tobacco_20) || 0)),
-										backgroundColor: '#8B5CF6',
-										borderColor: '#8B5CF6',
-										borderWidth: 1,
-										borderRadius: 4,
-										borderSkipped: false,
-									}]
-								}}
-								options={monthlyTrendChartOptions}
-							/>
-						</div>
-					</div>									{/* Lottery Sales by Month */}
+									{/* Tobacco Sales by Month (Tobacco 25 + Tobacco 20) */}
+									<div className="bg-white rounded-lg shadow-lg p-6">
+										<h3 className="text-lg font-semibold text-gray-900 mb-4">Tobacco Sales by Month (Tobacco 25 + Tobacco 20)</h3>
+										<div className="h-80">
+											<Bar
+												data={{
+													labels: monthlyTrends.map(m => m.month_name),
+													datasets: [{
+														label: 'Total Tobacco Sales',
+														data: monthlyTrends.map(m => (Number(m.tobacco_25) || 0) + (Number(m.tobacco_20) || 0)),
+														backgroundColor: '#8B5CF6',
+														borderColor: '#8B5CF6',
+														borderWidth: 1,
+														borderRadius: 4,
+														borderSkipped: false,
+													}]
+												}}
+												options={monthlyTrendChartOptions}
+											/>
+										</div>
+									</div>									{/* Lottery Sales by Month */}
 									<div className="bg-white rounded-lg shadow-lg p-6">
 										<h3 className="text-lg font-semibold text-gray-900 mb-4">Lottery Sales by Month</h3>
 										<div className="h-80">
