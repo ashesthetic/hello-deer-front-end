@@ -76,6 +76,9 @@ const DailySalesForm: React.FC<DailySalesFormProps> = ({
 
   // Separate state for cash on hand input display
   const [cashOnHandInput, setCashOnHandInput] = useState<string>('');
+  
+  // Separate state for cash input display
+  const [cashInput, setCashInput] = useState<string>('');
 
   useEffect(() => {
     if (initialData) {
@@ -139,6 +142,11 @@ const DailySalesForm: React.FC<DailySalesFormProps> = ({
       if (initialData.cash_on_hand !== undefined) {
         setCashOnHandInput(initialData.cash_on_hand.toString());
       }
+      
+      // Initialize cash input display
+      if (initialData.cash !== undefined) {
+        setCashInput(initialData.cash.toString());
+      }
     }
   }, [initialData]);
 
@@ -150,10 +158,14 @@ const DailySalesForm: React.FC<DailySalesFormProps> = ({
   };
 
   const handleCurrencyInputChange = (field: keyof DailySale, value: string) => {
-    // Special handling for cash_on_hand to allow negative values
-    if (field === 'cash_on_hand') {
-      // Update the input display value
-      setCashOnHandInput(value);
+    // Special handling for cash_on_hand and cash to allow negative values
+    if (field === 'cash_on_hand' || field === 'cash') {
+      // Update the input display value for both fields
+      if (field === 'cash_on_hand') {
+        setCashOnHandInput(value);
+      } else if (field === 'cash') {
+        setCashInput(value);
+      }
       
       // Allow negative numbers, decimal points, and digits
       let cleanValue = value.replace(/[^\d.-]/g, '');
@@ -507,10 +519,10 @@ const DailySalesForm: React.FC<DailySalesFormProps> = ({
               <input
                 type="text"
                 required
-                value={formData.cash !== undefined ? Number(formData.cash).toFixed(2) : ''}
+                value={cashInput}
                 onChange={(e) => handleCurrencyInputChange('cash', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="0.00"
+                placeholder="0.00 (negative allowed)"
               />
             </div>
             <div>

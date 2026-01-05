@@ -88,7 +88,7 @@ const ResolvePendingPage: React.FC = () => {
     handleBatchModalClose();
   };
 
-  const pendingSafedrops = pendingItems.filter(item => parseFloat(item.safedrops.pending_amount.toString()) > 0);
+  const pendingSafedrops = pendingItems.filter(item => parseFloat(item.safedrops.pending_amount.toString()) !== 0);
   const totalPendingSafedrops = pendingSafedrops.reduce((sum, item) => 
     sum + parseFloat(item.safedrops.pending_amount.toString()), 0
   );
@@ -262,7 +262,7 @@ const ResolvePendingPage: React.FC = () => {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-y-2">
-                          {parseFloat(item.safedrops.pending_amount.toString()) > 0 && (
+                          {parseFloat(item.safedrops.pending_amount.toString()) !== 0 && (
                             <button
                               onClick={() => handleResolve(item, 'safedrops')}
                               className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
@@ -270,7 +270,7 @@ const ResolvePendingPage: React.FC = () => {
                               Resolve Safedrops
                             </button>
                           )}
-                          {parseFloat(item.cash_in_hand.pending_amount.toString()) > 0 && (
+                          {parseFloat(item.cash_in_hand.pending_amount.toString()) !== 0 && (
                             <button
                               onClick={() => handleResolve(item, 'cash_in_hand')}
                               className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 ml-2"
@@ -425,7 +425,7 @@ const BatchSafedropResolutionModal: React.FC<BatchSafedropResolutionModalProps> 
       for (const item of items) {
         const pendingAmount = parseFloat(item.safedrops.pending_amount.toString());
         
-        if (pendingAmount > 0) {
+        if (pendingAmount !== 0) {
           await safedropResolutionApi.resolve({
             daily_sale_id: item.id,
             type: 'safedrops',

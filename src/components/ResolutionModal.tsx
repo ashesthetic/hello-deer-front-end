@@ -62,13 +62,19 @@ const ResolutionModal: React.FC<ResolutionModalProps> = ({
   const isValid = () => {
     // Check if all resolutions have valid bank accounts and amounts
     const hasValidResolutions = resolutions.every(res => 
-      res.bank_account_id > 0 && res.amount > 0
+      res.bank_account_id > 0 && res.amount !== 0
     );
     
     // Check if total doesn't exceed pending amount (with tolerance for floating-point errors)
-    const validTotal = totalAllocatedRounded <= pendingAmountRounded + 0.001 && totalAllocatedRounded > 0;
-    
-    return hasValidResolutions && validTotal;
+    if (pendingAmount < 0) {
+      // For negative amounts, total allocation should not go below the pending amount
+      const validTotal = totalAllocatedRounded >= pendingAmountRounded - 0.001 && totalAllocatedRounded !== 0;
+      return hasValidResolutions && validTotal;
+    } else {
+      // For positive amounts, total allocation should not exceed pending amount
+      const validTotal = totalAllocatedRounded <= pendingAmountRounded + 0.001 && totalAllocatedRounded > 0;
+      return hasValidResolutions && validTotal;
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -83,7 +89,7 @@ const ResolutionModal: React.FC<ResolutionModalProps> = ({
       await safedropResolutionApi.resolve({
         daily_sale_id: item.id,
         type,
-        resolutions: resolutions.filter(res => res.amount > 0)
+        resolutions: resolutions.filter(res => res.amount !== 0)
       });
 
       onSuccess();
@@ -218,8 +224,6 @@ const ResolutionModal: React.FC<ResolutionModalProps> = ({
                     <input
                       type="number"
                       step="0.01"
-                      min="0.01"
-                      max={pendingAmountRounded}
                       required
                       value={resolution.amount || ''}
                       onChange={(e) => updateResolution(index, 'amount', parseFloat(e.target.value) || 0)}
