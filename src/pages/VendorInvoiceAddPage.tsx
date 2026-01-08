@@ -10,624 +10,624 @@ import { setupDateInput } from '../utils/dateInputUtils';
 import GoogleDriveAuth from '../components/GoogleDriveAuth';
 
 interface Vendor {
-  id: number;
-  name: string;
+	id: number;
+	name: string;
 }
 
 interface BankAccount {
-  id: number;
-  bank_name: string;
-  account_name: string;
-  account_number: string;
-  display_name: string;
+	id: number;
+	bank_name: string;
+	account_name: string;
+	account_number: string;
+	display_name: string;
 }
 
 const VendorInvoiceAddPage: React.FC = () => {
-  usePageTitle('Add Vendor Invoice');
-  const navigate = useNavigate();
-  const currentUser = useSelector((state: RootState) => (state as any).auth.user);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [vendors, setVendors] = useState<Vendor[]>([]);
-  const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [isGoogleDriveAuthenticated, setIsGoogleDriveAuthenticated] = useState<boolean>(false);
-  
-  // Refs for date inputs
-  const invoiceDateRef = useRef<HTMLInputElement>(null);
-  const paymentDateRef = useRef<HTMLInputElement>(null);
+	usePageTitle('Add Vendor Invoice');
+	const navigate = useNavigate();
+	const currentUser = useSelector((state: RootState) => (state as any).auth.user);
+	const [loading, setLoading] = useState(false);
+	const [error, setError] = useState<string | null>(null);
+	const [successMessage, setSuccessMessage] = useState<string | null>(null);
+	const [vendors, setVendors] = useState<Vendor[]>([]);
+	const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
+	const [selectedFile, setSelectedFile] = useState<File | null>(null);
+	const [isGoogleDriveAuthenticated, setIsGoogleDriveAuthenticated] = useState<boolean>(false);
 
-  const [formData, setFormData] = useState<VendorInvoiceFormData>({
-    vendor_id: 0,
-    invoice_number: '',
-    invoice_date: getTodayForInput(),
-    status: 'Unpaid',
-    type: 'Expense',
-    reference: 'Vendor',
-    payment_date: '',
-    payment_method: undefined,
-    bank_account_id: undefined,
-    gst: '',
-    total: '',
-    notes: '',
-    description: '',
-  });
+	// Refs for date inputs
+	const invoiceDateRef = useRef<HTMLInputElement>(null);
+	const paymentDateRef = useRef<HTMLInputElement>(null);
 
-  const fetchVendors = useCallback(async () => {
-    try {
-      // Use staff endpoint if user is staff, otherwise use regular endpoint
-      const response = isStaff(currentUser) 
-        ? await vendorInvoicesApi.getVendorsForStaff()
-        : await vendorInvoicesApi.getVendors();
-      setVendors(response.data);
-    } catch (err: any) {
-      setError(`Failed to fetch vendors: ${err.response?.data?.message || err.message || 'Unknown error'}`);
-    }
-  }, [currentUser]);
+	const [formData, setFormData] = useState<VendorInvoiceFormData>({
+		vendor_id: 0,
+		invoice_number: '',
+		invoice_date: getTodayForInput(),
+		status: 'Unpaid',
+		type: 'Expense',
+		reference: 'Vendor',
+		payment_date: '',
+		payment_method: undefined,
+		bank_account_id: undefined,
+		gst: '',
+		total: '',
+		notes: '',
+		description: '',
+	});
 
-  useEffect(() => {
-    // Check for auth success/error in URL params
-    const urlParams = new URLSearchParams(window.location.search);
-    const authSuccess = urlParams.get('auth_success');
-    const authError = urlParams.get('auth_error');
-    
-    if (authSuccess) {
-      setSuccessMessage('Google Drive connected successfully!');
-      // Clean up URL
-      window.history.replaceState({}, '', window.location.pathname);
-      // Auto-clear success message after 5 seconds
-      setTimeout(() => setSuccessMessage(null), 5000);
-    }
-    
-    if (authError) {
-      setError(decodeURIComponent(authError));
-      // Clean up URL
-      window.history.replaceState({}, '', window.location.pathname);
-    }
-  }, []);
+	const fetchVendors = useCallback(async () => {
+		try {
+			// Use staff endpoint if user is staff, otherwise use regular endpoint
+			const response = isStaff(currentUser)
+				? await vendorInvoicesApi.getVendorsForStaff()
+				: await vendorInvoicesApi.getVendors();
+			setVendors(response.data);
+		} catch (err: any) {
+			setError(`Failed to fetch vendors: ${err.response?.data?.message || err.message || 'Unknown error'}`);
+		}
+	}, [currentUser]);
 
-  useEffect(() => {
-    // Only run when currentUser is available
-    if (!currentUser) return;
-    
-    fetchVendors();
-    // Only fetch bank accounts for non-staff users since staff can only create unpaid invoices
-    if (!isStaff(currentUser)) {
-      fetchBankAccounts();
-    }
-  }, [currentUser, fetchVendors]);
+	useEffect(() => {
+		// Check for auth success/error in URL params
+		const urlParams = new URLSearchParams(window.location.search);
+		const authSuccess = urlParams.get('auth_success');
+		const authError = urlParams.get('auth_error');
 
-  // Set up date input enhancements
-  useEffect(() => {
-    if (invoiceDateRef.current) {
-      setupDateInput(invoiceDateRef.current);
-    }
-    if (paymentDateRef.current) {
-      setupDateInput(paymentDateRef.current);
-    }
-  }, [formData.status]); // Re-run when status changes to handle payment date visibility
+		if (authSuccess) {
+			setSuccessMessage('Google Drive connected successfully!');
+			// Clean up URL
+			window.history.replaceState({}, '', window.location.pathname);
+			// Auto-clear success message after 5 seconds
+			setTimeout(() => setSuccessMessage(null), 5000);
+		}
 
-  const fetchBankAccounts = async () => {
-    try {
-      const response = await vendorInvoicesApi.getBankAccounts();
-      setBankAccounts(response.data);
-    } catch (err: any) {
-      setError(`Failed to fetch bank accounts: ${err.response?.data?.message || err.message || 'Unknown error'}`);
-    }
-  };
+		if (authError) {
+			setError(decodeURIComponent(authError));
+			// Clean up URL
+			window.history.replaceState({}, '', window.location.pathname);
+		}
+	}, []);
 
-  // GST rate (5% for Canada GST)
-  const GST_RATE = 0.05;
+	useEffect(() => {
+		// Only run when currentUser is available
+		if (!currentUser) return;
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    
-    // Handle total field change - auto calculate GST
-    if (name === 'total' && value) {
-      const totalAmount = parseFloat(value);
-      if (!isNaN(totalAmount) && totalAmount > 0) {
-        // Calculate GST from total (total includes GST already)
-        // Formula: GST = Total × GST_RATE / (1 + GST_RATE)
-        const calculatedGST = (totalAmount * GST_RATE / (1 + GST_RATE));
-        
-        setFormData(prev => ({
-          ...prev,
-          [name]: value,
-          gst: calculatedGST.toFixed(2)
-        }));
-        return;
-      }
-    }
-    
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+		fetchVendors();
+		// Only fetch bank accounts for non-staff users since staff can only create unpaid invoices
+		if (!isStaff(currentUser)) {
+			fetchBankAccounts();
+		}
+	}, [currentUser, fetchVendors]);
 
-    // Clear payment fields if status is changed to Unpaid
-    if (name === 'status' && value === 'Unpaid') {
-      setFormData(prev => ({
-        ...prev,
-        payment_date: '',
-        payment_method: undefined,
-        bank_account_id: undefined
-      }));
-    }
-  };
+	// Set up date input enhancements
+	useEffect(() => {
+		if (invoiceDateRef.current) {
+			setupDateInput(invoiceDateRef.current);
+		}
+		if (paymentDateRef.current) {
+			setupDateInput(paymentDateRef.current);
+		}
+	}, [formData.status]); // Re-run when status changes to handle payment date visibility
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
-    setSelectedFile(file);
-  };
+	const fetchBankAccounts = async () => {
+		try {
+			const response = await vendorInvoicesApi.getBankAccounts();
+			setBankAccounts(response.data);
+		} catch (err: any) {
+			setError(`Failed to fetch bank accounts: ${err.response?.data?.message || err.message || 'Unknown error'}`);
+		}
+	};
 
-  const handleGoogleAuthChange = (isAuthenticated: boolean) => {
-    setIsGoogleDriveAuthenticated(isAuthenticated);
-  };
+	// GST rate (5% for Canada GST)
+	const GST_RATE = 0.05;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!canCreate(currentUser) && !isStaff(currentUser)) {
-      setError('You do not have permission to create vendor invoices');
-      return;
-    }
+	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+		const { name, value } = e.target;
 
-    if (formData.vendor_id === 0) {
-      setError('Please select a vendor');
-      return;
-    }
+		// Handle total field change - auto calculate GST
+		if (name === 'total' && value) {
+			const totalAmount = parseFloat(value);
+			if (!isNaN(totalAmount) && totalAmount > 0) {
+				// Calculate GST from total (total includes GST already)
+				// Formula: GST = Total × GST_RATE / (1 + GST_RATE)
+				const calculatedGST = (totalAmount * GST_RATE / (1 + GST_RATE));
 
-    if (!formData.total || parseFloat(formData.total) <= 0) {
-      setError('Please enter a valid total amount');
-      return;
-    }
+				setFormData(prev => ({
+					...prev,
+					[name]: value,
+					gst: calculatedGST.toFixed(2)
+				}));
+				return;
+			}
+		}
 
-    if (!formData.gst || parseFloat(formData.gst) < 0) {
-      setError('Please enter a valid GST amount');
-      return;
-    }
+		setFormData(prev => ({
+			...prev,
+			[name]: value
+		}));
 
-    // For non-staff users, validate payment fields
-    if (!isStaff(currentUser)) {
-      if (formData.status === 'Paid' && !formData.payment_date) {
-        setError('Payment date is required for paid invoices');
-        return;
-      }
+		// Clear payment fields if status is changed to Unpaid
+		if (name === 'status' && value === 'Unpaid') {
+			setFormData(prev => ({
+				...prev,
+				payment_date: '',
+				payment_method: undefined,
+				bank_account_id: undefined
+			}));
+		}
+	};
 
-      if (formData.status === 'Paid' && !formData.payment_method) {
-        setError('Payment method is required for paid invoices');
-        return;
-      }
+	const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const file = e.target.files?.[0] || null;
+		setSelectedFile(file);
+	};
 
-      if (formData.status === 'Paid' && !formData.bank_account_id) {
-        setError('Bank account is required for paid invoices');
-        return;
-      }
-    }
+	const handleGoogleAuthChange = (isAuthenticated: boolean) => {
+		setIsGoogleDriveAuthenticated(isAuthenticated);
+	};
 
-    // Check Google Drive authentication if file is selected
-    if (selectedFile && !isGoogleDriveAuthenticated) {
-      setError('Please authenticate with Google Drive before uploading files');
-      return;
-    }
+	const handleSubmit = async (e: React.FormEvent) => {
+		e.preventDefault();
 
-    setLoading(true);
-    setError(null);
+		if (!canCreate(currentUser) && !isStaff(currentUser)) {
+			setError('You do not have permission to create vendor invoices');
+			return;
+		}
 
-    try {
-      const submitData = {
-        ...formData,
-        invoice_file: selectedFile || undefined
-      };
+		if (formData.vendor_id === 0) {
+			setError('Please select a vendor');
+			return;
+		}
 
-      // Use staff endpoint if user is staff
-      if (isStaff(currentUser)) {
-        await vendorInvoicesApi.createForStaff(submitData);
-        navigate('/dashboard'); // Staff users go back to dashboard
-      } else {
-        await vendorInvoicesApi.create(submitData);
-        navigate('/accounting/vendor-invoices'); // Regular users go to vendor invoices list
-      }
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.message || 'Failed to create vendor invoice';
-      const errorCode = err.response?.data?.error_code;
-      
-      if (errorCode === 'GOOGLE_AUTH_REQUIRED') {
-        setError('Google Drive authentication required. Please connect your Google Drive account and try again.');
-      } else {
-        setError(errorMessage);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+		if (!formData.total || parseFloat(formData.total) <= 0) {
+			setError('Please enter a valid total amount');
+			return;
+		}
 
-  const handleCancel = () => {
-    if (isStaff(currentUser)) {
-      navigate('/dashboard');
-    } else {
-      navigate('/accounting/vendor-invoices');
-    }
-  };
+		if (!formData.gst || parseFloat(formData.gst) < 0) {
+			setError('Please enter a valid GST amount');
+			return;
+		}
 
-  if (!canCreate(currentUser) && !isStaff(currentUser)) {
-    return (
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center py-12">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h2>
-          <p className="text-gray-600 mb-6">You do not have permission to create vendor invoices.</p>
-          <button
-            onClick={handleCancel}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-          >
-            Back to {isStaff(currentUser) ? 'Dashboard' : 'Vendor Invoices'}
-          </button>
-        </div>
-      </div>
-    );
-  }
+		// For non-staff users, validate payment fields
+		if (!isStaff(currentUser)) {
+			if (formData.status === 'Paid' && !formData.payment_date) {
+				setError('Payment date is required for paid invoices');
+				return;
+			}
 
-  return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Add Vendor Invoice</h1>
-            <p className="text-gray-600">Create a new vendor invoice</p>
-          </div>
-          <button
-            onClick={handleCancel}
-            className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
-          >
-            Cancel
-          </button>
-        </div>
+			if (formData.status === 'Paid' && !formData.payment_method) {
+				setError('Payment method is required for paid invoices');
+				return;
+			}
 
-        {/* Error Message */}
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-md p-4">
-            <p className="text-red-800">{error}</p>
-          </div>
-        )}
+			if (formData.status === 'Paid' && !formData.bank_account_id) {
+				setError('Bank account is required for paid invoices');
+				return;
+			}
+		}
 
-        {/* Success Message */}
-        {successMessage && (
-          <div className="bg-green-50 border border-green-200 rounded-md p-4">
-            <p className="text-green-800">{successMessage}</p>
-          </div>
-        )}
+		// Check Google Drive authentication if file is selected
+		if (selectedFile && !isGoogleDriveAuthenticated) {
+			setError('Please authenticate with Google Drive before uploading files');
+			return;
+		}
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Vendor */}
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Vendor <span className="text-red-500">*</span>
-              </label>
-              <select
-                name="vendor_id"
-                value={formData.vendor_id}
-                onChange={handleInputChange}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value={0}>Select a vendor</option>
-                {vendors.map((vendor) => (
-                  <option key={vendor.id} value={vendor.id}>
-                    {vendor.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+		setLoading(true);
+		setError(null);
 
-            {/* Invoice Number */}
-            <div>
-              <label htmlFor="invoice_number" className="block text-sm font-medium text-gray-700 mb-1">
-                Vendor Invoice Number
-              </label>
-              <input
-                type="text"
-                id="invoice_number"
-                name="invoice_number"
-                value={formData.invoice_number}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter invoice number"
-              />
-            </div>
+		try {
+			const submitData = {
+				...formData,
+				invoice_file: selectedFile || undefined
+			};
 
-            {/* Invoice Date */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Invoice Date <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <input
-                  ref={invoiceDateRef}
-                  type="date"
-                  name="invoice_date"
-                  value={formData.invoice_date}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer"
-                  placeholder="Select date"
-                  data-lpignore="true"
-                  autoComplete="off"
-                />
-                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                  <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                </div>
-              </div>
-            </div>
+			// Use staff endpoint if user is staff
+			if (isStaff(currentUser)) {
+				await vendorInvoicesApi.createForStaff(submitData);
+				navigate('/dashboard'); // Staff users go back to dashboard
+			} else {
+				await vendorInvoicesApi.create(submitData);
+				navigate('/accounting/vendor-invoices'); // Regular users go to vendor invoices list
+			}
+		} catch (err: any) {
+			const errorMessage = err.response?.data?.message || 'Failed to create vendor invoice';
+			const errorCode = err.response?.data?.error_code;
 
-            {/* Type */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Type <span className="text-red-500">*</span>
-              </label>
-              <select
-                name="type"
-                value={formData.type}
-                onChange={handleInputChange}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="Expense">Expense</option>
-                <option value="Income">Income</option>
-              </select>
-            </div>
+			if (errorCode === 'GOOGLE_AUTH_REQUIRED') {
+				setError('Google Drive authentication required. Please connect your Google Drive account and try again.');
+			} else {
+				setError(errorMessage);
+			}
+		} finally {
+			setLoading(false);
+		}
+	};
 
-            {/* Reference */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Reference <span className="text-red-500">*</span>
-              </label>
-              <select
-                name="reference"
-                value={formData.reference}
-                onChange={handleInputChange}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="Vendor">Vendor</option>
-                <option value="Ash">Ash</option>
-                <option value="Nafi">Nafi</option>
-              </select>
-            </div>
+	const handleCancel = () => {
+		if (isStaff(currentUser)) {
+			navigate('/dashboard');
+		} else {
+			navigate('/accounting/vendor-invoices');
+		}
+	};
 
-            {/* Subtotal (Read-only) */}
-            <div>
-              <label htmlFor="subtotal" className="block text-sm font-medium text-gray-700 mb-1">
-                Subtotal (Calculated)
-              </label>
-              <input
-                type="number"
-                id="subtotal"
-                name="subtotal"
-                value={formData.total && formData.gst ? (Number(formData.total) - Number(formData.gst)).toFixed(2) : ''}
-                readOnly
-                className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-600 cursor-not-allowed"
-                placeholder="Calculated automatically"
-              />
-            </div>
+	if (!canCreate(currentUser) && !isStaff(currentUser)) {
+		return (
+			<div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+				<div className="text-center py-12">
+					<h2 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h2>
+					<p className="text-gray-600 mb-6">You do not have permission to create vendor invoices.</p>
+					<button
+						onClick={handleCancel}
+						className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+					>
+						Back to {isStaff(currentUser) ? 'Dashboard' : 'Vendor Invoices'}
+					</button>
+				</div>
+			</div>
+		);
+	}
 
-            {/* GST */}
-            <div>
-              <label htmlFor="gst" className="block text-sm font-medium text-gray-700 mb-1">
-                GST (Auto-calculated at 5%) <span className="text-red-500">*</span>
-                <span className="text-xs text-gray-500 ml-2">Can be modified if needed</span>
-              </label>
-              <input
-                type="number"
-                id="gst"
-                name="gst"
-                value={formData.gst}
-                onChange={handleInputChange}
-                required
-                min="0"
-                step="0.01"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="0.00"
-              />
-            </div>
+	return (
+		<div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+			<div className="space-y-6">
+				{/* Header */}
+				<div className="flex items-center justify-between">
+					<div>
+						<h1 className="text-2xl font-bold text-gray-900">Add Vendor Invoice</h1>
+						<p className="text-gray-600">Create a new vendor invoice</p>
+					</div>
+					<button
+						onClick={handleCancel}
+						className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
+					>
+						Cancel
+					</button>
+				</div>
 
-            {/* Total */}
-            <div>
-              <label htmlFor="total" className="block text-sm font-medium text-gray-700 mb-1">
-                Total (Tax Inclusive) <span className="text-red-500">*</span>
-                <span className="text-xs text-gray-500 ml-2">GST will be auto-calculated</span>
-              </label>
-              <input
-                type="number"
-                id="total"
-                name="total"
-                value={formData.total}
-                onChange={handleInputChange}
-                required
-                min="0"
-                step="0.01"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="0.00"
-              />
-            </div>
+				{/* Error Message */}
+				{error && (
+					<div className="bg-red-50 border border-red-200 rounded-md p-4">
+						<p className="text-red-800">{error}</p>
+					</div>
+				)}
 
-            {/* Status */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Status <span className="text-red-500">*</span>
-              </label>
-              {isStaff(currentUser) ? (
-                <input
-                  type="text"
-                  value="Unpaid"
-                  readOnly
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-600 cursor-not-allowed"
-                />
-              ) : (
-                <select
-                  name="status"
-                  value={formData.status}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="Unpaid">Unpaid</option>
-                  <option value="Paid">Paid</option>
-                </select>
-              )}
-            </div>
+				{/* Success Message */}
+				{successMessage && (
+					<div className="bg-green-50 border border-green-200 rounded-md p-4">
+						<p className="text-green-800">{successMessage}</p>
+					</div>
+				)}
 
-            {/* Payment Date - Only show if status is Paid and not staff */}
-            {formData.status === 'Paid' && !isStaff(currentUser) && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Payment Date <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <input
-                    ref={paymentDateRef}
-                    type="date"
-                    name="payment_date"
-                    value={formData.payment_date}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer"
-                    placeholder="Select payment date"
-                    data-lpignore="true"
-                    autoComplete="off"
-                  />
-                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                    <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-            )}
+				{/* Form */}
+				<form onSubmit={handleSubmit} className="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
+					<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+						{/* Vendor */}
+						<div className="md:col-span-2">
+							<label className="block text-sm font-medium text-gray-700 mb-1">
+								Vendor <span className="text-red-500">*</span>
+							</label>
+							<select
+								name="vendor_id"
+								value={formData.vendor_id}
+								onChange={handleInputChange}
+								required
+								className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+							>
+								<option value={0}>Select a vendor</option>
+								{vendors.map((vendor) => (
+									<option key={vendor.id} value={vendor.id}>
+										{vendor.name}
+									</option>
+								))}
+							</select>
+						</div>
 
-            {/* Payment Method - Only show if status is Paid and not staff */}
-            {formData.status === 'Paid' && !isStaff(currentUser) && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Payment Method <span className="text-red-500">*</span>
-                </label>
-                <select
-                  name="payment_method"
-                  value={formData.payment_method || ''}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Select payment method</option>
-                  <option value="Card">Card</option>
-                  <option value="Cash">Cash</option>
-                  <option value="Bank">Bank</option>
-                </select>
-              </div>
-            )}
+						{/* Invoice Number */}
+						<div>
+							<label htmlFor="invoice_number" className="block text-sm font-medium text-gray-700 mb-1">
+								Vendor Invoice Number
+							</label>
+							<input
+								type="text"
+								id="invoice_number"
+								name="invoice_number"
+								value={formData.invoice_number}
+								onChange={handleInputChange}
+								className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+								placeholder="Enter invoice number"
+							/>
+						</div>
 
-            {/* Bank Account - Only show if status is Paid and not staff */}
-            {formData.status === 'Paid' && !isStaff(currentUser) && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Bank Account <span className="text-red-500">*</span>
-                </label>
-                <select
-                  name="bank_account_id"
-                  value={formData.bank_account_id || ''}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Select bank account</option>
-                  {bankAccounts.map((account) => (
-                    <option key={account.id} value={account.id}>
-                      {account.display_name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
+						{/* Invoice Date */}
+						<div>
+							<label className="block text-sm font-medium text-gray-700 mb-1">
+								Invoice Date <span className="text-red-500">*</span>
+							</label>
+							<div className="relative">
+								<input
+									ref={invoiceDateRef}
+									type="date"
+									name="invoice_date"
+									value={formData.invoice_date}
+									onChange={handleInputChange}
+									required
+									className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer"
+									placeholder="Select date"
+									data-lpignore="true"
+									autoComplete="off"
+								/>
+								<div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+									<svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+									</svg>
+								</div>
+							</div>
+						</div>
 
-            {/* Notes */}
-            <div className="md:col-span-2">
-              <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">
-                Notes
-              </label>
-              <textarea
-                id="notes"
-                name="notes"
-                value={formData.notes}
-                onChange={handleInputChange}
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter any additional notes..."
-              />
-            </div>
+						{/* Type */}
+						<div>
+							<label className="block text-sm font-medium text-gray-700 mb-1">
+								Type <span className="text-red-500">*</span>
+							</label>
+							<select
+								name="type"
+								value={formData.type}
+								onChange={handleInputChange}
+								required
+								className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+							>
+								<option value="Expense">Expense</option>
+								<option value="Income">Income</option>
+							</select>
+						</div>
 
-            {/* Google Drive Authentication */}
-            <div className="md:col-span-2">
-              <GoogleDriveAuth onAuthChange={handleGoogleAuthChange} className="mb-4" />
-            </div>
+						{/* Reference */}
+						<div>
+							<label className="block text-sm font-medium text-gray-700 mb-1">
+								Reference <span className="text-red-500">*</span>
+							</label>
+							<select
+								name="reference"
+								value={formData.reference}
+								onChange={handleInputChange}
+								required
+								className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+							>
+								<option value="Vendor">Vendor</option>
+								<option value="Ash">Ash</option>
+								<option value="Nafi">Nafi</option>
+							</select>
+						</div>
 
-            {/* Invoice File Upload */}
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Invoice File
-              </label>
-              <input
-                type="file"
-                onChange={handleFileChange}
-                accept=".pdf,.jpg,.jpeg,.png"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <p className="mt-1 text-sm text-gray-500">
-                Accepted formats: PDF, JPG, JPEG, PNG (max 10MB). Files will be securely stored in Google Drive.
-              </p>
-            </div>
+						{/* Subtotal (Read-only) */}
+						<div>
+							<label htmlFor="subtotal" className="block text-sm font-medium text-gray-700 mb-1">
+								Subtotal (Calculated)
+							</label>
+							<input
+								type="number"
+								id="subtotal"
+								name="subtotal"
+								value={formData.total && formData.gst ? (Number(formData.total) - Number(formData.gst)).toFixed(2) : ''}
+								readOnly
+								className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-600 cursor-not-allowed"
+								placeholder="Calculated automatically"
+							/>
+						</div>
 
-            {/* Description */}
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Description
-              </label>
-              <textarea
-                name="description"
-                value={formData.description}
-                onChange={handleInputChange}
-                rows={4}
-                placeholder="Enter invoice description..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-          </div>
+						{/* GST */}
+						<div>
+							<label htmlFor="gst" className="block text-sm font-medium text-gray-700 mb-1">
+								GST (Auto-calculated at 5%) <span className="text-red-500">*</span>
+								<span className="text-xs text-gray-500 ml-2">Can be modified if needed</span>
+							</label>
+							<input
+								type="number"
+								id="gst"
+								name="gst"
+								value={formData.gst}
+								onChange={handleInputChange}
+								required
+								min="0"
+								step="0.01"
+								className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+								placeholder="0.00"
+							/>
+						</div>
 
-          {/* Submit Button */}
-          <div className="mt-6 flex justify-end space-x-3">
-            <button
-              type="button"
-              onClick={handleCancel}
-              className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
-            >
-              {loading ? 'Creating...' : 'Create Invoice'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
+						{/* Total */}
+						<div>
+							<label htmlFor="total" className="block text-sm font-medium text-gray-700 mb-1">
+								Total (Tax Inclusive) <span className="text-red-500">*</span>
+								<span className="text-xs text-gray-500 ml-2">GST will be auto-calculated</span>
+							</label>
+							<input
+								type="number"
+								id="total"
+								name="total"
+								value={formData.total}
+								onChange={handleInputChange}
+								required
+								min="0"
+								step="0.01"
+								className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+								placeholder="0.00"
+							/>
+						</div>
+
+						{/* Status */}
+						<div>
+							<label className="block text-sm font-medium text-gray-700 mb-1">
+								Status <span className="text-red-500">*</span>
+							</label>
+							{isStaff(currentUser) ? (
+								<input
+									type="text"
+									value="Unpaid"
+									readOnly
+									className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-600 cursor-not-allowed"
+								/>
+							) : (
+								<select
+									name="status"
+									value={formData.status}
+									onChange={handleInputChange}
+									required
+									className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+								>
+									<option value="Unpaid">Unpaid</option>
+									<option value="Paid">Paid</option>
+								</select>
+							)}
+						</div>
+
+						{/* Payment Date - Only show if status is Paid and not staff */}
+						{formData.status === 'Paid' && !isStaff(currentUser) && (
+							<div>
+								<label className="block text-sm font-medium text-gray-700 mb-1">
+									Payment Date <span className="text-red-500">*</span>
+								</label>
+								<div className="relative">
+									<input
+										ref={paymentDateRef}
+										type="date"
+										name="payment_date"
+										value={formData.payment_date}
+										onChange={handleInputChange}
+										required
+										className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer"
+										placeholder="Select payment date"
+										data-lpignore="true"
+										autoComplete="off"
+									/>
+									<div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+										<svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+										</svg>
+									</div>
+								</div>
+							</div>
+						)}
+
+						{/* Payment Method - Only show if status is Paid and not staff */}
+						{formData.status === 'Paid' && !isStaff(currentUser) && (
+							<div>
+								<label className="block text-sm font-medium text-gray-700 mb-1">
+									Payment Method <span className="text-red-500">*</span>
+								</label>
+								<select
+									name="payment_method"
+									value={formData.payment_method || ''}
+									onChange={handleInputChange}
+									required
+									className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+								>
+									<option value="">Select payment method</option>
+									<option value="Card">Card</option>
+									<option value="Cash">Cash</option>
+									<option value="Bank">Bank</option>
+								</select>
+							</div>
+						)}
+
+						{/* Bank Account - Only show if status is Paid and not staff */}
+						{formData.status === 'Paid' && !isStaff(currentUser) && (
+							<div>
+								<label className="block text-sm font-medium text-gray-700 mb-1">
+									Bank Account <span className="text-red-500">*</span>
+								</label>
+								<select
+									name="bank_account_id"
+									value={formData.bank_account_id || ''}
+									onChange={handleInputChange}
+									required
+									className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+								>
+									<option value="">Select bank account</option>
+									{bankAccounts.map((account) => (
+										<option key={account.id} value={account.id}>
+											{account.display_name}
+										</option>
+									))}
+								</select>
+							</div>
+						)}
+
+						{/* Notes */}
+						<div className="md:col-span-2">
+							<label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">
+								Notes
+							</label>
+							<textarea
+								id="notes"
+								name="notes"
+								value={formData.notes}
+								onChange={handleInputChange}
+								rows={3}
+								className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+								placeholder="Enter any additional notes..."
+							/>
+						</div>
+
+						{/* Google Drive Authentication */}
+						<div className="md:col-span-2">
+							<GoogleDriveAuth onAuthChange={handleGoogleAuthChange} className="mb-4" />
+						</div>
+
+						{/* Invoice File Upload */}
+						<div className="md:col-span-2">
+							<label className="block text-sm font-medium text-gray-700 mb-1">
+								Invoice File
+							</label>
+							<input
+								type="file"
+								onChange={handleFileChange}
+								accept=".pdf,.jpg,.jpeg,.png"
+								className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+							/>
+							<p className="mt-1 text-sm text-gray-500">
+								Accepted formats: PDF, JPG, JPEG, PNG (max 10MB). Files will be securely stored in Google Drive.
+							</p>
+						</div>
+
+						{/* Description */}
+						<div className="md:col-span-2">
+							<label className="block text-sm font-medium text-gray-700 mb-1">
+								Description
+							</label>
+							<textarea
+								name="description"
+								value={formData.description}
+								onChange={handleInputChange}
+								rows={4}
+								placeholder="Enter invoice description..."
+								className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+							/>
+						</div>
+					</div>
+
+					{/* Submit Button */}
+					<div className="mt-6 flex justify-end space-x-3">
+						<button
+							type="button"
+							onClick={handleCancel}
+							className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
+						>
+							Cancel
+						</button>
+						<button
+							type="submit"
+							disabled={loading}
+							className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+						>
+							{loading ? 'Creating...' : 'Create Invoice'}
+						</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	);
 };
 
 export default VendorInvoiceAddPage; 
