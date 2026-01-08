@@ -117,8 +117,29 @@ const VendorInvoiceAddPage: React.FC = () => {
     }
   };
 
+  // GST rate (5% for Canada GST)
+  const GST_RATE = 0.05;
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
+    
+    // Handle total field change - auto calculate GST
+    if (name === 'total' && value) {
+      const totalAmount = parseFloat(value);
+      if (!isNaN(totalAmount) && totalAmount > 0) {
+        // Calculate GST from total (total includes GST already)
+        // Formula: GST = Total × GST_RATE / (1 + GST_RATE)
+        const calculatedGST = (totalAmount * GST_RATE / (1 + GST_RATE));
+        
+        setFormData(prev => ({
+          ...prev,
+          [name]: value,
+          gst: calculatedGST.toFixed(2)
+        }));
+        return;
+      }
+    }
+    
     setFormData(prev => ({
       ...prev,
       [name]: value
@@ -398,7 +419,8 @@ const VendorInvoiceAddPage: React.FC = () => {
             {/* GST */}
             <div>
               <label htmlFor="gst" className="block text-sm font-medium text-gray-700 mb-1">
-                GST <span className="text-red-500">*</span>
+                GST (Auto-calculated at 5%) <span className="text-red-500">*</span>
+                <span className="text-xs text-gray-500 ml-2">Can be modified if needed</span>
               </label>
               <input
                 type="number"
@@ -417,7 +439,8 @@ const VendorInvoiceAddPage: React.FC = () => {
             {/* Total */}
             <div>
               <label htmlFor="total" className="block text-sm font-medium text-gray-700 mb-1">
-                Total <span className="text-red-500">*</span>
+                Total (Tax Inclusive) <span className="text-red-500">*</span>
+                <span className="text-xs text-gray-500 ml-2">GST will be auto-calculated</span>
               </label>
               <input
                 type="number"
