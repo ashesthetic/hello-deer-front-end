@@ -63,6 +63,15 @@ const Navigation: React.FC = () => {
 						)
 					},
 					{
+						path: '/fuel-prices',
+						label: 'Fuel Prices',
+						icon: (
+							<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m1 0H6m15 0v14a2 2 0 01-2 2H5a2 2 0 01-2-2V4m10 0H9" />
+							</svg>
+						)
+					},
+					{
 						path: '/entry/smokes',
 						label: 'Smokes',
 						icon: (
@@ -644,8 +653,8 @@ const Navigation: React.FC = () => {
 					<button
 						onClick={() => handleDropdownToggle(item.label)}
 						className={`flex items-center w-full px-3 py-2 rounded-md text-sm font-medium transition-colors ${isItemActive
-								? 'bg-blue-100 text-blue-700'
-								: 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+							? 'bg-blue-100 text-blue-700'
+							: 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
 							}`}
 					>
 						<span className="mr-2">{item.icon}</span>
@@ -663,8 +672,8 @@ const Navigation: React.FC = () => {
 					{/* Dropdown Menu */}
 					<div
 						className={`${isMobile
-								? 'relative mt-1 ml-4 border-l-2 border-gray-200 pl-4 z-10'
-								: 'absolute top-full left-0 mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50'
+							? 'relative mt-1 ml-4 border-l-2 border-gray-200 pl-4 z-10'
+							: 'absolute top-full left-0 mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50'
 							} ${isDropdownOpen ? 'block' : 'hidden'
 							}`}
 					>
@@ -680,8 +689,8 @@ const Navigation: React.FC = () => {
 										}
 									}}
 									className={`flex items-center w-full px-4 py-2 text-sm text-left transition-colors rounded-md ${isActive(child.path)
-											? 'bg-blue-50 text-blue-700'
-											: 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+										? 'bg-blue-50 text-blue-700'
+										: 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
 										}`}
 								>
 									<span className="mr-3">{child.icon}</span>
@@ -704,8 +713,8 @@ const Navigation: React.FC = () => {
 					}
 				}}
 				className={`flex items-center w-full px-3 py-2 rounded-md text-sm font-medium transition-colors ${isItemActive
-						? 'bg-blue-100 text-blue-700'
-						: 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+					? 'bg-blue-100 text-blue-700'
+					: 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
 					}`}
 			>
 				<span className="mr-2">{item.icon}</span>
