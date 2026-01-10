@@ -19,6 +19,9 @@ import FileImportsListPage from './pages/FileImportsListPage';
 import FileImportsByDatePage from './pages/FileImportsByDatePage';
 import FuelVolumeViewPage from './pages/FuelVolumeViewPage';
 import FuelVolumeEditPage from './pages/FuelVolumeEditPage';
+import FuelPricesPage from './pages/FuelPricesPage';
+import FuelPriceViewPage from './pages/FuelPriceViewPage';
+import FuelPriceEditPage from './pages/FuelPriceEditPage';
 import DailyAtmPage from './pages/DailyAtmPage';
 import DailyAtmAddPage from './pages/DailyAtmAddPage';
 import DailyAtmViewPage from './pages/DailyAtmViewPage';
@@ -201,6 +204,24 @@ const App: React.FC = () => {
           <Route 
             path="/fuel-volumes/new" 
             element={isAuthenticated ? <Layout><FuelVolumeEditPage /></Layout> : <Navigate to="/login" />} 
+          />
+          
+          {/* Fuel Price Routes */}
+          <Route 
+            path="/fuel-prices" 
+            element={isAuthenticated ? <Layout><FuelPricesPage /></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/fuel-prices/:id" 
+            element={isAuthenticated ? <Layout><FuelPriceViewPage /></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/fuel-prices/:id/edit" 
+            element={isAuthenticated ? <Layout><FuelPriceEditPage /></Layout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/fuel-prices/new" 
+            element={isAuthenticated ? <Layout><FuelPriceEditPage /></Layout> : <Navigate to="/login" />} 
           />
           
           {/* Daily ATM Routes */}

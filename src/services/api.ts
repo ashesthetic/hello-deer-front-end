@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { DailySale, DailyFuel, FuelVolume, LoginCredentials, CreateUserData, UpdateUserData, CreateVendorData, UpdateVendorData, CreateOwnerData, UpdateOwnerData, CreateOwnerEquityData, UpdateOwnerEquityData, CreateBankAccountData, UpdateBankAccountData, CreateResolutionData, VendorInvoice } from '../types';
+import { DailySale, DailyFuel, FuelVolume, FuelPrice, LoginCredentials, CreateUserData, UpdateUserData, CreateVendorData, UpdateVendorData, CreateOwnerData, UpdateOwnerData, CreateOwnerEquityData, UpdateOwnerEquityData, CreateBankAccountData, UpdateBankAccountData, CreateResolutionData, VendorInvoice } from '../types';
 
 // Re-export types for convenience
 export type { VendorInvoice };
@@ -323,6 +323,22 @@ export const fuelVolumeApi = {
 	getAllForStaff: (params?: string) => api.get(`/staff/fuel-volumes${params ? `?${params}` : ''}`),
 	getForStaff: (id: number) => api.get(`/staff/fuel-volumes/${id}`),
 	createForStaff: (data: Omit<FuelVolume, 'id'>) => api.post('/staff/fuel-volumes', data),
+};
+
+// Fuel Price API
+export const fuelPriceApi = {
+	index: (params?: string) => api.get(`/fuel-prices${params ? `?${params}` : ''}`),
+	show: (id: number) => api.get(`/fuel-prices/${id}`),
+	store: (data: Omit<FuelPrice, 'id'>) => api.post('/fuel-prices', data),
+	update: (id: number, data: Partial<FuelPrice>) => api.put(`/fuel-prices/${id}`, data),
+	delete: (id: number) => api.delete(`/fuel-prices/${id}`),
+	latest: () => api.get('/fuel-prices/latest'),
+	// Staff-specific methods
+	getAllForStaff: (params?: string) => api.get(`/staff/fuel-prices${params ? `?${params}` : ''}`),
+	getForStaff: (id: number) => api.get(`/staff/fuel-prices/${id}`),
+	createForStaff: (data: Omit<FuelPrice, 'id'>) => api.post('/staff/fuel-prices', data),
+	updateForStaff: (id: number, data: Partial<FuelPrice>) => api.put(`/staff/fuel-prices/${id}`, data),
+	getLatestForStaff: () => api.get('/staff/fuel-prices/latest'),
 };
 
 // Vendor API

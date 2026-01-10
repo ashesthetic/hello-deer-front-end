@@ -188,6 +188,19 @@ export interface FuelVolume {
   morning_shift?: FuelVolume;
 }
 
+export interface FuelPrice {
+  id?: number;
+  regular_87: number;
+  midgrade_91: number;
+  premium_94: number;
+  diesel: number;
+  user_id?: number;
+  user?: User;
+  created_at?: string;
+  updated_at?: string;
+  deleted_at?: string;
+}
+
 export interface Vendor {
   id?: number;
   name: string;
