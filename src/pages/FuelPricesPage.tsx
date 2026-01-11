@@ -92,9 +92,9 @@ const FuelPricesPage: React.FC = () => {
 
 	const formatPrice = (value: number | null | undefined) => {
 		if (value === null || value === undefined || isNaN(value)) {
-			return '0.000';
+			return '0.0';
 		}
-		return Number(value).toFixed(3);
+		return Number(value).toFixed(1);
 	};
 
 	const formatDate = (dateString: string) => {
@@ -260,16 +260,16 @@ const FuelPricesPage: React.FC = () => {
 												{formatDate(fuelPrice.created_at || '')}
 											</td>
 											<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-												<span className="font-mono text-green-600">${formatPrice(fuelPrice.regular_87)}</span>
+												<span className="font-mono text-green-600">{formatPrice(fuelPrice.regular_87)}</span>
 											</td>
 											<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-												<span className="font-mono text-blue-600">${formatPrice(fuelPrice.midgrade_91)}</span>
+												<span className="font-mono text-blue-600">{formatPrice(fuelPrice.midgrade_91)}</span>
 											</td>
 											<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-												<span className="font-mono text-purple-600">${formatPrice(fuelPrice.premium_94)}</span>
+												<span className="font-mono text-purple-600">{formatPrice(fuelPrice.premium_94)}</span>
 											</td>
 											<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-												<span className="font-mono text-orange-600">${formatPrice(fuelPrice.diesel)}</span>
+												<span className="font-mono text-orange-600">{formatPrice(fuelPrice.diesel)}</span>
 											</td>
 											<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
 												{fuelPrice.user?.name || 'Unknown'}
