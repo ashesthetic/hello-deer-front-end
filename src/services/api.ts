@@ -1117,4 +1117,12 @@ export const facebookApi = {
 	testConnection: () => api.get<FacebookPostResponse>('/facebook/test-connection'),
 };
 
+// Contact Submission API
+export const contactSubmissionApi = {
+	index: (params?: string) => api.get(`/contact-submissions${params ? `?${params}` : ''}`),
+	show: (id: number) => api.get(`/contact-submissions/${id}`),
+	destroy: (id: number) => api.delete(`/contact-submissions/${id}`),
+	stats: () => api.get('/contact-submissions/stats'),
+};
+
 export default api;

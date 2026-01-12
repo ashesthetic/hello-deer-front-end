@@ -625,4 +625,25 @@ export interface VendorInvoice {
 	formatted_payment_date?: string;
 	canBeUpdatedBy?: (user: User) => boolean;
 	canBeDeletedBy?: (user: User) => boolean;
-} 
+}
+
+// Contact Submission types
+export interface ContactSubmission {
+	id: number;
+	name: string;
+	email: string;
+	phone?: string | null;
+	message: string;
+	ip_address?: string | null;
+	user_agent?: string | null;
+	created_at: string;
+	updated_at: string;
+	deleted_at?: string | null;
+}
+
+export interface ContactSubmissionStats {
+	total: number;
+	today: number;
+	this_week: number;
+	this_month: number;
+}

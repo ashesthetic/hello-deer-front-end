@@ -41,6 +41,7 @@ import ExpensePage from './pages/ExpensePage';
 import BalancePage from './pages/BalancePage';
 import SettingsPage from './pages/SettingsPage';
 import UserManagementPage from './pages/UserManagementPage';
+import ContactSubmissionsPage from './pages/ContactSubmissionsPage';
 import EmployeesPage from './pages/EmployeesPage';
 import AddEmployeePage from './pages/AddEmployeePage';
 import AddHoursPage from './pages/AddHoursPage';
@@ -617,6 +618,12 @@ const App: React.FC = () => {
 					<Route
 						path="/users"
 						element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="canManageUsers"><UserManagementPage /></ProtectedRoute></Layout> : <Navigate to="/login" />}
+					/>
+
+					{/* Contact Submissions Route */}
+					<Route
+						path="/contact-submissions"
+						element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="canManageUsers"><ContactSubmissionsPage /></ProtectedRoute></Layout> : <Navigate to="/login" />}
 					/>
 
 					{/* Profile Route */}
