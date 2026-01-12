@@ -175,6 +175,9 @@ export interface FuelVolume {
 	added_regular: number | null;
 	added_premium: number | null;
 	added_diesel: number | null;
+	regular_price: number | null;
+	premium_price: number | null;
+	diesel_price: number | null;
 	user_id?: number;
 	user?: User;
 	created_at?: string;
