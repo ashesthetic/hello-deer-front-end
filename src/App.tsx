@@ -197,25 +197,25 @@ const App: React.FC = () => {
 						element={isAuthenticated ? <Layout><FuelVolumeViewPage /></Layout> : <Navigate to="/login" />}
 					/>
 					<Route
-						path="/fuel-volumes/:id/edit"
-						element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><FuelVolumeEditPage /></ProtectedRoute></Layout> : <Navigate to="/login" />}
-					/>
-					<Route
-						path="/fuel-volumes/new"
-						element={isAuthenticated ? <Layout><FuelVolumeEditPage /></Layout> : <Navigate to="/login" />}
-					/>
+					path="/fuel-volumes/new"
+					element={isAuthenticated ? <Layout><FuelVolumeEditPage /></Layout> : <Navigate to="/login" />}
+				/>
+				<Route
+					path="/fuel-volumes/:id/edit"
+					element={isAuthenticated ? <Layout><FuelVolumeEditPage /></Layout> : <Navigate to="/login" />}
+				/>
 
-					{/* Fuel Price Routes */}
-					<Route
-						path="/fuel-prices"
-						element={isAuthenticated ? <Layout><FuelPricesPage /></Layout> : <Navigate to="/login" />}
-					/>
+				{/* Fuel Price Routes */}
+				<Route
+					path="/fuel-prices"
+					element={isAuthenticated ? <Layout><FuelPricesPage /></Layout> : <Navigate to="/login" />}
+				/>
 
-					{/* Daily ATM Routes */}
-					<Route
-						path="/daily-atm"
-						element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="admin"><DailyAtmPage /></ProtectedRoute></Layout> : <Navigate to="/login" />}
-					/>
+				{/* Daily ATM Routes */}
+				<Route
+					path="/daily-atm"
+					element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="admin"><DailyAtmPage /></ProtectedRoute></Layout> : <Navigate to="/login" />}
+				/>
 					<Route
 						path="/daily-atm/add"
 						element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="admin"><DailyAtmAddPage /></ProtectedRoute></Layout> : <Navigate to="/login" />}

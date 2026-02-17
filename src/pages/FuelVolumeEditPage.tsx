@@ -49,51 +49,52 @@ const FuelVolumeEditPage: React.FC = () => {
 
 	const isEditing = Boolean(id);
 
-	// Check permissions
-	const canEdit = !isStaff(currentUser) && canUpdate(currentUser);
-	const canAdd = !isStaff(currentUser) || isStaff(currentUser); // Both admin and staff can add
-
-	// If staff trying to edit, redirect
-	useEffect(() => {
-		if (isEditing && isStaff(currentUser) && !canUpdate(currentUser)) {
-			navigate('/fuel-volumes');
-		}
-	}, [isEditing, currentUser, navigate]);
-
-	const fetchFuelVolume = useCallback(async () => {
-		try {
-			setLoading(true);
-			const response = await fuelVolumeApi.show(parseInt(id!));
-			const fuelVolume = response.data;
-
-			setFormData({
-				date: fuelVolume.date,
-				shift: fuelVolume.shift,
-				regular_tc_volume: fuelVolume.regular_tc_volume?.toString() || '',
-				regular_product_height: fuelVolume.regular_product_height?.toString() || '',
-				premium_tc_volume: fuelVolume.premium_tc_volume?.toString() || '',
-				premium_product_height: fuelVolume.premium_product_height?.toString() || '',
-				diesel_tc_volume: fuelVolume.diesel_tc_volume?.toString() || '',
-				diesel_product_height: fuelVolume.diesel_product_height?.toString() || '',
-				added_regular: fuelVolume.added_regular?.toString() || '',
-				added_premium: fuelVolume.added_premium?.toString() || '',
-				added_diesel: fuelVolume.added_diesel?.toString() || '',
-				regular_price: fuelVolume.regular_price?.toString() || '',
-				premium_price: fuelVolume.premium_price?.toString() || '',
-				diesel_price: fuelVolume.diesel_price?.toString() || '',
-			});
-		} catch (err: any) {
-			setError(err.response?.data?.message || 'Failed to fetch fuel volume');
-		} finally {
-			setLoading(false);
-		}
-	}, [id]);
+	// Check permissions - both staff and users with canUpdate permission can edit
+	const canEdit = isStaff(currentUser) || canUpdate(currentUser);
+	const canAdd = isStaff(currentUser) || canUpdate(currentUser); // Both admin, editors, and staff can add
 
 	useEffect(() => {
-		if (isEditing && id) {
+		const fetchFuelVolume = async () => {
+			if (!id || !currentUser) return;
+			
+			const numericId = parseInt(id);
+			if (isNaN(numericId)) return;
+			
+			try {
+				setLoading(true);
+				// Use staff API for staff users, regular API for others
+				const response = isStaff(currentUser) 
+					? await fuelVolumeApi.getForStaff(numericId)
+					: await fuelVolumeApi.show(numericId);
+				const fuelVolume = response.data;
+
+				setFormData({
+					date: fuelVolume.date.split('T')[0],
+					shift: fuelVolume.shift,
+					regular_tc_volume: fuelVolume.regular_tc_volume?.toString() || '',
+					regular_product_height: fuelVolume.regular_product_height?.toString() || '',
+					premium_tc_volume: fuelVolume.premium_tc_volume?.toString() || '',
+					premium_product_height: fuelVolume.premium_product_height?.toString() || '',
+					diesel_tc_volume: fuelVolume.diesel_tc_volume?.toString() || '',
+					diesel_product_height: fuelVolume.diesel_product_height?.toString() || '',
+					added_regular: fuelVolume.added_regular?.toString() || '',
+					added_premium: fuelVolume.added_premium?.toString() || '',
+					added_diesel: fuelVolume.added_diesel?.toString() || '',
+					regular_price: fuelVolume.regular_price?.toString() || '',
+					premium_price: fuelVolume.premium_price?.toString() || '',
+					diesel_price: fuelVolume.diesel_price?.toString() || '',
+				});
+			} catch (err: any) {
+				setError(err.response?.data?.message || 'Failed to fetch fuel volume');
+			} finally {
+				setLoading(false);
+			}
+		};
+
+		if (isEditing && id && currentUser) {
 			fetchFuelVolume();
 		}
-	}, [id, isEditing, fetchFuelVolume]);
+	}, [id, isEditing, currentUser]);
 
 	const handleInputChange = (field: keyof FuelVolumeForm, value: string) => {
 		setFormData(prev => ({ ...prev, [field]: value }));
@@ -135,7 +136,12 @@ const FuelVolumeEditPage: React.FC = () => {
 			};
 
 			if (isEditing) {
-				await fuelVolumeApi.update(parseInt(id!), submitData);
+				// Use staff API for staff users, regular API for others
+				if (isStaff(currentUser)) {
+					await fuelVolumeApi.updateForStaff(parseInt(id!), submitData);
+				} else {
+					await fuelVolumeApi.update(parseInt(id!), submitData);
+				}
 			} else {
 				// Use staff API for staff users, regular API for others
 				if (isStaff(currentUser)) {

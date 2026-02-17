@@ -40,7 +40,28 @@ const DailyFuelEditPage: React.FC = () => {
     setError(null);
     try {
       const response = await dailyFuelsApi.getById(fuelId);
-      setFormData(response.data);
+      const fuelData = response.data;
+      
+      // Ensure date is in YYYY-MM-DD format for date input
+      if (fuelData.date) {
+        fuelData.date = fuelData.date.split('T')[0];
+      }
+      
+      // Convert numeric string fields to numbers for proper calculations
+      const numericFields = [
+        'regular_quantity', 'regular_total_sale',
+        'plus_quantity', 'plus_total_sale',
+        'sup_plus_quantity', 'sup_plus_total_sale',
+        'diesel_quantity', 'diesel_total_sale'
+      ];
+      
+      numericFields.forEach(field => {
+        if (fuelData[field] !== null && fuelData[field] !== undefined && fuelData[field] !== '') {
+          fuelData[field] = parseFloat(fuelData[field]);
+        }
+      });
+      
+      setFormData(fuelData);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to fetch fuel entry');
     } finally {

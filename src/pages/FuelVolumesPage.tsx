@@ -454,7 +454,7 @@ const FuelVolumesPage: React.FC = () => {
 													>
 														View
 													</button>
-													{!isStaff(currentUser) && canCreate(currentUser) && (
+													{(isStaff(currentUser) || canCreate(currentUser)) && (
 														<button
 															onClick={() => navigate(`/fuel-volumes/${fuelVolume.id}/edit`)}
 															className="text-indigo-600 hover:text-indigo-900 mr-4"

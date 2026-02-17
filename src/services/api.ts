@@ -323,6 +323,7 @@ export const fuelVolumeApi = {
 	getAllForStaff: (params?: string) => api.get(`/staff/fuel-volumes${params ? `?${params}` : ''}`),
 	getForStaff: (id: number) => api.get(`/staff/fuel-volumes/${id}`),
 	createForStaff: (data: Omit<FuelVolume, 'id'>) => api.post('/staff/fuel-volumes', data),
+	updateForStaff: (id: number, data: Partial<FuelVolume>) => api.put(`/staff/fuel-volumes/${id}`, data),
 };
 
 // Fuel Price API (Add and view only - no edit/delete)
