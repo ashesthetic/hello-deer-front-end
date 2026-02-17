@@ -368,6 +368,9 @@ export const vendorsApi = {
 			formData.append('notes', data.notes);
 		}
 
+		// Add private field
+		formData.append('private', data.private ? '1' : '0');
+
 		// Add payment method specific fields
 		if (data.payment_method === 'E-transfer' && data.etransfer_email) {
 			formData.append('etransfer_email', data.etransfer_email);
@@ -415,6 +418,9 @@ export const vendorsApi = {
 		if (data.notes) {
 			formData.append('notes', data.notes);
 		}
+
+		// Add private field
+		formData.append('private', data.private ? '1' : '0');
 
 		// Add payment method specific fields
 		if (data.payment_method === 'E-transfer' && data.etransfer_email) {

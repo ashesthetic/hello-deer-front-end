@@ -220,6 +220,7 @@ export interface Vendor {
 	account_number?: string;
 	void_check_path?: string;
 	notes?: string;
+	private?: boolean;
 	user_id?: number;
 	user?: User;
 	created_at?: string;
@@ -243,6 +244,7 @@ export interface CreateVendorData {
 	account_number?: string;
 	void_check?: File;
 	notes?: string;
+	private?: boolean;
 }
 
 export interface UpdateVendorData {
@@ -258,6 +260,7 @@ export interface UpdateVendorData {
 	transit_number?: string;
 	institute_number?: string;
 	account_number?: string;
+	private?: boolean;
 	void_check?: File;
 	notes?: string;
 }
