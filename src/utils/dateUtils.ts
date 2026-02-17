@@ -49,9 +49,8 @@ export const getTodayAlberta = (): string => {
     month: '2-digit',
     day: '2-digit'
   });
-  // Convert from MM/DD/YYYY to YYYY-MM-DD
-  const [month, day, year] = albertaDate.split('/');
-  return `${year}-${month}-${day}`;
+  // en-CA locale returns date in YYYY-MM-DD format, so no conversion needed
+  return albertaDate;
 };
 
 /**

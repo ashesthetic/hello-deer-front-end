@@ -5,7 +5,7 @@ import { RootState } from '../store';
 import { vendorInvoicesApi, VendorInvoiceFormData, VendorInvoice } from '../services/api';
 import { canUpdate } from '../utils/permissions';
 import { usePageTitle } from '../hooks/usePageTitle';
-import { formatDateForAPI, parseDateSafely } from '../utils/dateUtils';
+import { formatDateForAPI, parseDateSafely, getTodayAlberta } from '../utils/dateUtils';
 import GoogleDriveAuth from '../components/GoogleDriveAuth';
 
 interface Vendor {
@@ -135,20 +135,43 @@ const VendorInvoiceEditPage: React.FC = () => {
 			}
 		}
 
-		setFormData(prev => ({
-			...prev,
-			[name]: value
-		}));
-
 		// Clear payment fields if status is changed to Unpaid
 		if (name === 'status' && value === 'Unpaid') {
 			setFormData(prev => ({
 				...prev,
+				[name]: value,
 				payment_date: '',
 				payment_method: undefined,
 				bank_account_id: undefined
 			}));
+			return;
 		}
+
+		// Auto-fill payment fields if status is changed to Paid
+		if (name === 'status' && value === 'Paid') {
+			// Find ATB Business + LOC bank account
+			const atbAccount = bankAccounts.find(account => 
+				account.display_name.includes('ATB Business + LOC')
+			);
+
+			const todayDate = getTodayAlberta();
+			console.log('Setting payment date to:', todayDate);
+			console.log('ATB Account found:', atbAccount);
+
+			setFormData(prev => ({
+				...prev,
+				[name]: value,
+				payment_date: todayDate,
+				payment_method: 'Bank',
+				bank_account_id: atbAccount?.id
+			}));
+			return;
+		}
+
+		setFormData(prev => ({
+			...prev,
+			[name]: value
+		}));
 	};
 
 	const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
