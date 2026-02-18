@@ -1132,4 +1132,68 @@ export const contactSubmissionApi = {
 	stats: () => api.get('/contact-submissions/stats'),
 };
 
+// Expense Type Interfaces
+export interface ExpenseType {
+	id: number;
+	expense_type: string;
+	parent_expense_type_id: number | null;
+	created_at: string;
+	updated_at: string;
+	deleted_at?: string | null;
+	parent_expense_type?: ExpenseType;
+	child_expense_types?: ExpenseType[];
+}
+
+export interface ExpenseTypeFormData {
+	expense_type: string;
+	parent_expense_type_id?: number | null;
+}
+
+// Expense Type API
+export const expenseTypeApi = {
+	getAll: (params?: any) => api.get('/expense-types', { params }),
+	getById: (id: number) => api.get(`/expense-types/${id}`),
+	create: (data: ExpenseTypeFormData) => api.post('/expense-types', data),
+	update: (id: number, data: ExpenseTypeFormData) => api.put(`/expense-types/${id}`, data),
+	delete: (id: number) => api.delete(`/expense-types/${id}`),
+	withTrashed: (params?: any) => api.get('/expense-types/with-trashed', { params }),
+	restore: (id: number) => api.post(`/expense-types/${id}/restore`),
+	forceDelete: (id: number) => api.delete(`/expense-types/${id}/force-delete`),
+	getRoots: () => api.get('/expense-types/roots'),
+};
+
+// Expense Breakdown Interfaces
+export interface ExpenseBreakdown {
+	id: number;
+	date: string;
+	expense_type_id: number;
+	amount: string | number;
+	notes?: string | null;
+	created_at: string;
+	updated_at: string;
+	deleted_at?: string | null;
+	expense_type?: ExpenseType;
+}
+
+export interface ExpenseBreakdownFormData {
+	date: string;
+	expense_type_id: number;
+	amount: number | string;
+	notes?: string;
+}
+
+// Expense Breakdown API
+export const expenseBreakdownApi = {
+	getAll: (params?: any) => api.get('/expense-breakdowns', { params }),
+	getById: (id: number) => api.get(`/expense-breakdowns/${id}`),
+	create: (data: ExpenseBreakdownFormData) => api.post('/expense-breakdowns', data),
+	update: (id: number, data: ExpenseBreakdownFormData) => api.put(`/expense-breakdowns/${id}`, data),
+	delete: (id: number) => api.delete(`/expense-breakdowns/${id}`),
+	withTrashed: (params?: any) => api.get('/expense-breakdowns/with-trashed', { params }),
+	restore: (id: number) => api.post(`/expense-breakdowns/${id}/restore`),
+	forceDelete: (id: number) => api.delete(`/expense-breakdowns/${id}/force-delete`),
+	getSummary: (params?: any) => api.get('/expense-breakdowns/summary', { params }),
+	getExpenseTypes: () => api.get('/expense-breakdowns/expense-types'),
+};
+
 export default api;

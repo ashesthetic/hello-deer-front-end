@@ -56,14 +56,14 @@ const FuelVolumeEditPage: React.FC = () => {
 	useEffect(() => {
 		const fetchFuelVolume = async () => {
 			if (!id || !currentUser) return;
-			
+
 			const numericId = parseInt(id);
 			if (isNaN(numericId)) return;
-			
+
 			try {
 				setLoading(true);
 				// Use staff API for staff users, regular API for others
-				const response = isStaff(currentUser) 
+				const response = isStaff(currentUser)
 					? await fuelVolumeApi.getForStaff(numericId)
 					: await fuelVolumeApi.show(numericId);
 				const fuelVolume = response.data;

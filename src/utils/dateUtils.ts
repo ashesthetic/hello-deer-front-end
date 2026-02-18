@@ -10,80 +10,80 @@ const ALBERTA_TIMEZONE = 'America/Edmonton';
  * @returns Date object in Alberta timezone
  */
 export const parseDateSafely = (dateString: string): Date => {
-  // Handle both YYYY-MM-DD and YYYY-MM-DDTHH:mm:ss formats
-  const datePart = dateString.split('T')[0];
-  const [year, month, day] = datePart.split('-').map(Number);
-  return new Date(year, month - 1, day); // month is 0-indexed
+	// Handle both YYYY-MM-DD and YYYY-MM-DDTHH:mm:ss formats
+	const datePart = dateString.split('T')[0];
+	const [year, month, day] = datePart.split('-').map(Number);
+	return new Date(year, month - 1, day); // month is 0-indexed
 };
 
 /**
  * Format a date string to Alberta timezone
  */
 export const formatDateToAlberta = (dateString: string, options?: Intl.DateTimeFormatOptions): string => {
-  const date = parseDateSafely(dateString);
-  return date.toLocaleDateString('en-CA', {
-    timeZone: ALBERTA_TIMEZONE,
-    ...options
-  });
+	const date = parseDateSafely(dateString);
+	return date.toLocaleDateString('en-CA', {
+		timeZone: ALBERTA_TIMEZONE,
+		...options
+	});
 };
 
 /**
  * Format a date string to Alberta timezone with time
  */
 export const formatDateTimeToAlberta = (dateString: string, options?: Intl.DateTimeFormatOptions): string => {
-  const date = new Date(dateString);
-  return date.toLocaleString('en-CA', {
-    timeZone: ALBERTA_TIMEZONE,
-    ...options
-  });
+	const date = new Date(dateString);
+	return date.toLocaleString('en-CA', {
+		timeZone: ALBERTA_TIMEZONE,
+		...options
+	});
 };
 
 /**
  * Get today's date in Alberta timezone (YYYY-MM-DD format)
  */
 export const getTodayAlberta = (): string => {
-  const now = new Date();
-  const albertaDate = now.toLocaleDateString('en-CA', {
-    timeZone: ALBERTA_TIMEZONE,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
-  });
-  // en-CA locale returns date in YYYY-MM-DD format, so no conversion needed
-  return albertaDate;
+	const now = new Date();
+	const albertaDate = now.toLocaleDateString('en-CA', {
+		timeZone: ALBERTA_TIMEZONE,
+		year: 'numeric',
+		month: '2-digit',
+		day: '2-digit'
+	});
+	// en-CA locale returns date in YYYY-MM-DD format, so no conversion needed
+	return albertaDate;
 };
 
 /**
  * Get today's date in YYYY-MM-DD format for input fields (simpler approach)
  */
 export const getTodayForInput = (): string => {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+	const now = new Date();
+	const year = now.getFullYear();
+	const month = String(now.getMonth() + 1).padStart(2, '0');
+	const day = String(now.getDate()).padStart(2, '0');
+	return `${year}-${month}-${day}`;
 };
 
 /**
  * Format a date for display in Alberta timezone
  */
 export const formatDateForDisplay = (dateString: string): string => {
-  return formatDateToAlberta(dateString, {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
+	return formatDateToAlberta(dateString, {
+		year: 'numeric',
+		month: 'long',
+		day: 'numeric'
+	});
 };
 
 /**
  * Format a date for input fields (YYYY-MM-DD)
  */
 export const formatDateForInput = (dateString: string): string => {
-  return formatDateToAlberta(dateString, {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
-  }).replace(/\//g, '-');
+	return formatDateToAlberta(dateString, {
+		year: 'numeric',
+		month: '2-digit',
+		day: '2-digit'
+	}).replace(/\//g, '-');
 };
 
 /**
@@ -92,7 +92,7 @@ export const formatDateForInput = (dateString: string): string => {
  * @returns Date string in YYYY-MM-DD format
  */
 export const formatDateForAPI = (date: Date): string => {
-  return date.toLocaleDateString('en-CA', { timeZone: ALBERTA_TIMEZONE }); // en-CA gives YYYY-MM-DD format
+	return date.toLocaleDateString('en-CA', { timeZone: ALBERTA_TIMEZONE }); // en-CA gives YYYY-MM-DD format
 };
 
 /**
@@ -101,14 +101,14 @@ export const formatDateForAPI = (date: Date): string => {
  * @returns Formatted date string
  */
 export const formatDateDetailed = (dateString: string): string => {
-  const date = parseDateSafely(dateString);
-  return date.toLocaleDateString('en-CA', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    timeZone: ALBERTA_TIMEZONE
-  });
+	const date = parseDateSafely(dateString);
+	return date.toLocaleDateString('en-CA', {
+		weekday: 'long',
+		year: 'numeric',
+		month: 'long',
+		day: 'numeric',
+		timeZone: ALBERTA_TIMEZONE
+	});
 };
 
 /**
@@ -117,16 +117,16 @@ export const formatDateDetailed = (dateString: string): string => {
  * @returns Formatted datetime string
  */
 export const formatDateTimeForDisplay = (dateTimeString: string): string => {
-  const date = new Date(dateTimeString);
-  return date.toLocaleString('en-CA', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true,
-    timeZone: ALBERTA_TIMEZONE
-  });
+	const date = new Date(dateTimeString);
+	return date.toLocaleString('en-CA', {
+		year: 'numeric',
+		month: 'short',
+		day: 'numeric',
+		hour: '2-digit',
+		minute: '2-digit',
+		hour12: true,
+		timeZone: ALBERTA_TIMEZONE
+	});
 };
 
 /**
@@ -135,12 +135,12 @@ export const formatDateTimeForDisplay = (dateTimeString: string): string => {
  * @returns Formatted time string
  */
 export const formatTimeForDisplay = (timeString: string): string => {
-  return new Date(`2000-01-01T${timeString}`).toLocaleTimeString('en-CA', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true,
-    timeZone: ALBERTA_TIMEZONE
-  });
+	return new Date(`2000-01-01T${timeString}`).toLocaleTimeString('en-CA', {
+		hour: '2-digit',
+		minute: '2-digit',
+		hour12: true,
+		timeZone: ALBERTA_TIMEZONE
+	});
 };
 
 /**
@@ -149,10 +149,10 @@ export const formatTimeForDisplay = (timeString: string): string => {
  * @returns Formatted currency string
  */
 export const formatCurrency = (amount: number): string => {
-  return new Intl.NumberFormat('en-CA', {
-    style: 'currency',
-    currency: 'CAD',
-  }).format(amount);
+	return new Intl.NumberFormat('en-CA', {
+		style: 'currency',
+		currency: 'CAD',
+	}).format(amount);
 };
 
 /**
@@ -163,16 +163,16 @@ export const formatCurrency = (amount: number): string => {
  * @returns Date string in YYYY-MM-DD format in Alberta timezone
  */
 export const createAlbertaDate = (year: number, month: number, day: number): string => {
-  const date = new Date(year, month, day);
-  const albertaDateString = date.toLocaleDateString('en-CA', {
-    timeZone: ALBERTA_TIMEZONE,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
-  });
-  // Convert from MM/DD/YYYY to YYYY-MM-DD
-  const [monthStr, dayStr, yearStr] = albertaDateString.split('/');
-  return `${yearStr}-${monthStr}-${dayStr}`;
+	const date = new Date(year, month, day);
+	const albertaDateString = date.toLocaleDateString('en-CA', {
+		timeZone: ALBERTA_TIMEZONE,
+		year: 'numeric',
+		month: '2-digit',
+		day: '2-digit'
+	});
+	// Convert from MM/DD/YYYY to YYYY-MM-DD
+	const [monthStr, dayStr, yearStr] = albertaDateString.split('/');
+	return `${yearStr}-${monthStr}-${dayStr}`;
 };
 
 /**
@@ -180,15 +180,15 @@ export const createAlbertaDate = (year: number, month: number, day: number): str
  * @returns Date object representing current date in Alberta timezone
  */
 export const getCurrentAlbertaDate = (): Date => {
-  const now = new Date();
-  const albertaDateString = now.toLocaleDateString('en-CA', {
-    timeZone: ALBERTA_TIMEZONE,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
-  });
-  const [month, day, year] = albertaDateString.split('/').map(Number);
-  return new Date(year, month - 1, day); // month is 0-indexed
+	const now = new Date();
+	const albertaDateString = now.toLocaleDateString('en-CA', {
+		timeZone: ALBERTA_TIMEZONE,
+		year: 'numeric',
+		month: '2-digit',
+		day: '2-digit'
+	});
+	const [month, day, year] = albertaDateString.split('/').map(Number);
+	return new Date(year, month - 1, day); // month is 0-indexed
 };
 
 /**
@@ -198,13 +198,13 @@ export const getCurrentAlbertaDate = (): Date => {
  * @returns Date string in the format expected by the backend
  */
 export const formatDateForBackend = (dateString: string): string => {
-  // The backend expects dates in Alberta timezone
-  // We need to ensure the date is interpreted as Alberta timezone, not UTC
-  const date = new Date(dateString + 'T00:00:00');
-  return date.toLocaleDateString('en-CA', {
-    timeZone: ALBERTA_TIMEZONE,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
-  }).replace(/\//g, '-');
+	// The backend expects dates in Alberta timezone
+	// We need to ensure the date is interpreted as Alberta timezone, not UTC
+	const date = new Date(dateString + 'T00:00:00');
+	return date.toLocaleDateString('en-CA', {
+		timeZone: ALBERTA_TIMEZONE,
+		year: 'numeric',
+		month: '2-digit',
+		day: '2-digit'
+	}).replace(/\//g, '-');
 }; 

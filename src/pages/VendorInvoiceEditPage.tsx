@@ -150,7 +150,7 @@ const VendorInvoiceEditPage: React.FC = () => {
 		// Auto-fill payment fields if status is changed to Paid
 		if (name === 'status' && value === 'Paid') {
 			// Find ATB Business + LOC bank account
-			const atbAccount = bankAccounts.find(account => 
+			const atbAccount = bankAccounts.find(account =>
 				account.display_name.includes('ATB Business + LOC')
 			);
 

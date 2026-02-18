@@ -106,6 +106,12 @@ import LotteryAddPage from './pages/LotteryAddPage';
 import LotteryEditPage from './pages/LotteryEditPage';
 import PostPage from './pages/PostPage';
 import PostAddPage from './pages/PostAddPage';
+import ExpenseTypesPage from './pages/ExpenseTypesPage';
+import ExpenseTypeFormPage from './pages/ExpenseTypeFormPage';
+import ExpenseTypeViewPage from './pages/ExpenseTypeViewPage';
+import ExpenseBreakdownsPage from './pages/ExpenseBreakdownsPage';
+import ExpenseBreakdownFormPage from './pages/ExpenseBreakdownFormPage';
+import ExpenseBreakdownViewPage from './pages/ExpenseBreakdownViewPage';
 
 const App: React.FC = () => {
 	const dispatch = useDispatch();
@@ -197,25 +203,25 @@ const App: React.FC = () => {
 						element={isAuthenticated ? <Layout><FuelVolumeViewPage /></Layout> : <Navigate to="/login" />}
 					/>
 					<Route
-					path="/fuel-volumes/new"
-					element={isAuthenticated ? <Layout><FuelVolumeEditPage /></Layout> : <Navigate to="/login" />}
-				/>
-				<Route
-					path="/fuel-volumes/:id/edit"
-					element={isAuthenticated ? <Layout><FuelVolumeEditPage /></Layout> : <Navigate to="/login" />}
-				/>
+						path="/fuel-volumes/new"
+						element={isAuthenticated ? <Layout><FuelVolumeEditPage /></Layout> : <Navigate to="/login" />}
+					/>
+					<Route
+						path="/fuel-volumes/:id/edit"
+						element={isAuthenticated ? <Layout><FuelVolumeEditPage /></Layout> : <Navigate to="/login" />}
+					/>
 
-				{/* Fuel Price Routes */}
-				<Route
-					path="/fuel-prices"
-					element={isAuthenticated ? <Layout><FuelPricesPage /></Layout> : <Navigate to="/login" />}
-				/>
+					{/* Fuel Price Routes */}
+					<Route
+						path="/fuel-prices"
+						element={isAuthenticated ? <Layout><FuelPricesPage /></Layout> : <Navigate to="/login" />}
+					/>
 
-				{/* Daily ATM Routes */}
-				<Route
-					path="/daily-atm"
-					element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="admin"><DailyAtmPage /></ProtectedRoute></Layout> : <Navigate to="/login" />}
-				/>
+					{/* Daily ATM Routes */}
+					<Route
+						path="/daily-atm"
+						element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="admin"><DailyAtmPage /></ProtectedRoute></Layout> : <Navigate to="/login" />}
+					/>
 					<Route
 						path="/daily-atm/add"
 						element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="admin"><DailyAtmAddPage /></ProtectedRoute></Layout> : <Navigate to="/login" />}
@@ -612,6 +618,42 @@ const App: React.FC = () => {
 					<Route
 						path="/accounting/owner-equities/:id/edit"
 						element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><OwnerEquityEditPage /></ProtectedRoute></Layout> : <Navigate to="/login" />}
+					/>
+
+					{/* Expense Type Routes */}
+					<Route
+						path="/accounting/expense-types"
+						element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="admin"><ExpenseTypesPage /></ProtectedRoute></Layout> : <Navigate to="/login" />}
+					/>
+					<Route
+						path="/accounting/expense-types/new"
+						element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="admin"><ExpenseTypeFormPage /></ProtectedRoute></Layout> : <Navigate to="/login" />}
+					/>
+					<Route
+						path="/accounting/expense-types/:id"
+						element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="admin"><ExpenseTypeViewPage /></ProtectedRoute></Layout> : <Navigate to="/login" />}
+					/>
+					<Route
+						path="/accounting/expense-types/:id/edit"
+						element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="admin"><ExpenseTypeFormPage /></ProtectedRoute></Layout> : <Navigate to="/login" />}
+					/>
+
+					{/* Expense Breakdown Routes */}
+					<Route
+						path="/accounting/expense-breakdowns"
+						element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="admin"><ExpenseBreakdownsPage /></ProtectedRoute></Layout> : <Navigate to="/login" />}
+					/>
+					<Route
+						path="/accounting/expense-breakdowns/new"
+						element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="admin"><ExpenseBreakdownFormPage /></ProtectedRoute></Layout> : <Navigate to="/login" />}
+					/>
+					<Route
+						path="/accounting/expense-breakdowns/:id"
+						element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="admin"><ExpenseBreakdownViewPage /></ProtectedRoute></Layout> : <Navigate to="/login" />}
+					/>
+					<Route
+						path="/accounting/expense-breakdowns/:id/edit"
+						element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="admin"><ExpenseBreakdownFormPage /></ProtectedRoute></Layout> : <Navigate to="/login" />}
 					/>
 
 					{/* Users Route */}

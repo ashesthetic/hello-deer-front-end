@@ -388,8 +388,8 @@ const FuelVolumesPage: React.FC = () => {
 												</td>
 												<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
 													<span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${fuelVolume.shift === 'morning'
-															? 'bg-yellow-100 text-yellow-800'
-															: 'bg-blue-100 text-blue-800'
+														? 'bg-yellow-100 text-yellow-800'
+														: 'bg-blue-100 text-blue-800'
 														}`}>
 														{fuelVolume.shift.charAt(0).toUpperCase() + fuelVolume.shift.slice(1)}
 													</span>
@@ -521,8 +521,8 @@ const FuelVolumesPage: React.FC = () => {
 										key={page}
 										onClick={() => setFilters(prev => ({ ...prev, page }))}
 										className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${page === pagination.current_page
-												? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
-												: 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+											? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
+											: 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
 											}`}
 									>
 										{page}
