@@ -12,7 +12,7 @@ import ConfirmationModal from '../components/ConfirmationModal';
 
 type SortField = 'invoice_date' | 'status' | 'type' | 'total' | 'payment_date' | 'created_at' | 'updated_at';
 
-const PER_PAGE_OPTIONS = [50, 100, 150, 200];
+const PER_PAGE_OPTIONS = [50, 100, 150, 200, 'ALL'];
 
 const VendorInvoicesPage: React.FC = () => {
 	usePageTitle('Vendor Invoices');
@@ -95,10 +95,14 @@ const VendorInvoicesPage: React.FC = () => {
 		try {
 			const params: any = {
 				page,
-				per_page: perPage,
 				sort_by: sortField,
 				sort_direction: sortDirection
 			};
+
+			// Only add per_page if not 'ALL'
+			if (perPage !== 'ALL' && perPage !== 0) {
+				params.per_page = perPage;
+			}
 
 			// Add search filter if provided
 			if (searchTerm) {
@@ -191,9 +195,8 @@ const VendorInvoicesPage: React.FC = () => {
 		}
 	};
 
-	const handlePerPageChange = (newPerPage: number) => {
+	const handlePerPageChange = (newPerPage: number | string) => {
 		setPerPage(newPerPage);
-		setCurrentPage(1);
 	};
 
 	const handleSearchChange = (term: string) => {
@@ -572,11 +575,17 @@ const VendorInvoicesPage: React.FC = () => {
 							<div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
 								<div>
 									<p className="text-sm text-gray-700">
-										Showing <span className="font-medium">{(currentPage - 1) * perPage + 1}</span> to{' '}
-										<span className="font-medium">
-											{Math.min(currentPage * perPage, totalItems)}
-										</span>{' '}
-										of <span className="font-medium">{totalItems}</span> results
+									{perPage === 'ALL' ? (
+										<>Showing <span className="font-medium">all {totalItems}</span> results</>
+									) : (
+										<>
+											Showing <span className="font-medium">{(currentPage - 1) * (perPage as number) + 1}</span> to{' '}
+											<span className="font-medium">
+												{Math.min(currentPage * (perPage as number), totalItems)}
+											</span>{' '}
+											of <span className="font-medium">{totalItems}</span> results
+										</>
+									)}
 									</p>
 								</div>
 								<div className="flex items-center space-x-4">
@@ -584,7 +593,7 @@ const VendorInvoicesPage: React.FC = () => {
 										<span className="text-sm text-gray-700">Per page:</span>
 										<select
 											value={perPage}
-											onChange={(e) => handlePerPageChange(Number(e.target.value))}
+											onChange={(e) => handlePerPageChange(e.target.value === 'ALL' ? 'ALL' : Number(e.target.value))}
 											className="border border-gray-300 rounded-md px-2 py-1 text-sm"
 										>
 											{PER_PAGE_OPTIONS.map((option) => (
@@ -594,6 +603,7 @@ const VendorInvoicesPage: React.FC = () => {
 											))}
 										</select>
 									</div>
+						{perPage !== 'ALL' && (
 									<nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
 										<button
 											onClick={() => setCurrentPage(currentPage - 1)}
@@ -610,6 +620,7 @@ const VendorInvoicesPage: React.FC = () => {
 											Next
 										</button>
 									</nav>
+						)}
 								</div>
 							</div>
 						</div>

@@ -80,6 +80,7 @@ const TransactionsPage: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
+      const perPageNum = typeof perPage === 'number' ? perPage : parseInt(perPage);
       const filters: TransactionFilters = {
         type: activeTab,
         bank_account_id: selectedBankAccount === 'all' ? undefined : parseInt(selectedBankAccount),
@@ -90,7 +91,7 @@ const TransactionsPage: React.FC = () => {
         search: searchTerm || undefined,
         sort_by: sortField as SortField,
         sort_order: sortDirection,
-        per_page: perPage
+        per_page: perPageNum
       };
 
       const response = await transactionsApi.getAll(filters);
@@ -568,10 +569,10 @@ const TransactionsPage: React.FC = () => {
                 <div>
                   <p className="text-sm text-gray-700">
                     Showing{' '}
-                    <span className="font-medium">{(currentPage - 1) * perPage + 1}</span>
+                    <span className="font-medium">{(currentPage - 1) * (typeof perPage === 'number' ? perPage : parseInt(perPage)) + 1}</span>
                     {' '}to{' '}
                     <span className="font-medium">
-                      {Math.min(currentPage * perPage, totalItems)}
+                      {Math.min(currentPage * (typeof perPage === 'number' ? perPage : parseInt(perPage)), totalItems)}
                     </span>
                     {' '}of{' '}
                     <span className="font-medium">{totalItems}</span>

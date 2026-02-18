@@ -331,9 +331,9 @@ const OwnersPage: React.FC = () => {
               <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                 <div>
                   <p className="text-sm text-gray-700">
-                    Showing <span className="font-medium">{(currentPage - 1) * perPage + 1}</span> to{' '}
+                    Showing <span className="font-medium">{(currentPage - 1) * (perPage as number) + 1}</span> to{' '}
                     <span className="font-medium">
-                      {Math.min(currentPage * perPage, totalItems)}
+                      {Math.min(currentPage * (perPage as number), totalItems)}
                     </span>{' '}
                     of <span className="font-medium">{totalItems}</span> results
                   </p>

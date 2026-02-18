@@ -18,7 +18,8 @@ export function useUrlState(options: UseUrlStateOptions = {}) {
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Get values from URL or use defaults
-  const perPage = parseInt(searchParams.get('perPage') || defaultPerPage.toString());
+  const perPageParam = searchParams.get('perPage') || defaultPerPage.toString();
+  const perPage: number | string = perPageParam === 'ALL' ? 'ALL' : parseInt(perPageParam);
   const currentPage = parseInt(searchParams.get('page') || defaultPage.toString());
   const sortField = searchParams.get('sortField') || defaultSortField;
   const sortDirection = (searchParams.get('sortDirection') as 'asc' | 'desc') || defaultSortDirection;
@@ -44,7 +45,7 @@ export function useUrlState(options: UseUrlStateOptions = {}) {
     setSearchParams(newParams);
   };
 
-  const setPerPage = (newPerPage: number) => {
+  const setPerPage = (newPerPage: number | string) => {
     updateUrl({ perPage: newPerPage, page: 1 }); // Reset to first page when changing per page
   };
 
