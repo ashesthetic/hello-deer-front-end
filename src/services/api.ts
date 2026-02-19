@@ -1196,4 +1196,46 @@ export const expenseBreakdownApi = {
 	getExpenseTypes: () => api.get('/expense-breakdowns/expense-types'),
 };
 
+// Document Interfaces
+export interface Document {
+	id: number;
+	name: string;
+	to: number;
+	document: string;
+	created_at: string;
+	updated_at: string;
+	deleted_at?: string | null;
+	employee?: {
+		id: number;
+		full_legal_name: string;
+		preferred_name?: string;
+	};
+}
+
+export interface DocumentFormData {
+	name: string;
+	to: number;
+	document?: File;
+}
+
+// Document API
+export const documentApi = {
+	getAll: (params?: any) => api.get('/documents', { params }),
+	getById: (id: number) => api.get(`/documents/${id}`),
+	create: (data: FormData) => api.post('/documents', data, {
+		headers: {
+			'Content-Type': 'multipart/form-data',
+		},
+	}),
+	update: (id: number, data: FormData) => api.post(`/documents/${id}`, data, {
+		headers: {
+			'Content-Type': 'multipart/form-data',
+		},
+	}),
+	delete: (id: number) => api.delete(`/documents/${id}`),
+	// Staff-specific endpoints
+	getAllForStaff: (params?: any) => api.get('/staff/documents', { params }),
+	getByIdForStaff: (id: number) => api.get(`/staff/documents/${id}`),
+};
+
 export default api;

@@ -112,6 +112,9 @@ import ExpenseTypeViewPage from './pages/ExpenseTypeViewPage';
 import ExpenseBreakdownsPage from './pages/ExpenseBreakdownsPage';
 import ExpenseBreakdownFormPage from './pages/ExpenseBreakdownFormPage';
 import ExpenseBreakdownViewPage from './pages/ExpenseBreakdownViewPage';
+import DocumentsPage from './pages/DocumentsPage';
+import DocumentFormPage from './pages/DocumentFormPage';
+import StaffDocumentsPage from './pages/StaffDocumentsPage';
 
 const App: React.FC = () => {
 	const dispatch = useDispatch();
@@ -538,6 +541,20 @@ const App: React.FC = () => {
 						element={isAuthenticated ? <Layout><PostAddPage /></Layout> : <Navigate to="/login" />}
 					/>
 
+					{/* Documents routes (Admin only) */}
+					<Route
+						path="/entry/documents"
+						element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="admin"><DocumentsPage /></ProtectedRoute></Layout> : <Navigate to="/login" />}
+					/>
+					<Route
+						path="/entry/documents/new"
+						element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="admin"><DocumentFormPage /></ProtectedRoute></Layout> : <Navigate to="/login" />}
+					/>
+					<Route
+						path="/entry/documents/:id/edit"
+						element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="admin"><DocumentFormPage /></ProtectedRoute></Layout> : <Navigate to="/login" />}
+					/>
+
 					{/* Staff Pay Stubs routes */}
 					<Route
 						path="/staff/pay-stubs"
@@ -546,6 +563,12 @@ const App: React.FC = () => {
 					<Route
 						path="/staff/pay-stubs/:id"
 						element={isAuthenticated ? <Layout><StaffPayStubDetailPage /></Layout> : <Navigate to="/login" />}
+					/>
+
+					{/* Staff Documents routes */}
+					<Route
+						path="/staff/documents"
+						element={isAuthenticated ? <Layout><StaffDocumentsPage /></Layout> : <Navigate to="/login" />}
 					/>
 
 					{/* Provider Routes */}
