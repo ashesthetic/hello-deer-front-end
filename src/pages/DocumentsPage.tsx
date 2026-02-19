@@ -96,14 +96,19 @@ const DocumentsPage: React.FC = () => {
 		});
 	};
 
-	const getFileUrl = (filePath: string) => {
-		const storageUrl = process.env.REACT_APP_STORAGE_URL || 'http://localhost:8000';
-		return `${storageUrl}/storage/${filePath}`;
-	};
-
-	const handleViewDocument = (document: Document) => {
+	const handleViewDocument = async (document: Document) => {
 		if (document.document) {
-			window.open(getFileUrl(document.document), '_blank');
+			try {
+				const response = await documentApi.downloadFile(document.id);
+				const blob = new Blob([response.data]);
+				const url = window.URL.createObjectURL(blob);
+				window.open(url, '_blank');
+				// Clean up the URL after a delay
+				setTimeout(() => window.URL.revokeObjectURL(url), 100);
+			} catch (error) {
+				console.error('Error viewing document:', error);
+				alert('Failed to view document');
+			}
 		}
 	};
 

@@ -1233,9 +1233,15 @@ export const documentApi = {
 		},
 	}),
 	delete: (id: number) => api.delete(`/documents/${id}`),
+	downloadFile: (id: number) => api.get(`/documents/${id}/download`, {
+		responseType: 'blob',
+	}),
 	// Staff-specific endpoints
 	getAllForStaff: (params?: any) => api.get('/staff/documents', { params }),
 	getByIdForStaff: (id: number) => api.get(`/staff/documents/${id}`),
+	downloadFileForStaff: (id: number) => api.get(`/staff/documents/${id}/download`, {
+		responseType: 'blob',
+	}),
 };
 
 export default api;

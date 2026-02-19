@@ -72,28 +72,39 @@ const StaffDocumentsPage: React.FC = () => {
 		});
 	};
 
-	const getFileUrl = (filePath: string) => {
-		const storageUrl = process.env.REACT_APP_STORAGE_URL || 'http://localhost:8000';
-		return `${storageUrl}/storage/${filePath}`;
-	};
-
-	const handleDownload = (document: Document) => {
+	const handleDownload = async (document: Document) => {
 		if (document.document) {
-			const url = getFileUrl(document.document);
-			// Create a temporary anchor element to trigger download
-			const link = window.document.createElement('a');
-			link.href = url;
-			link.download = document.name;
-			link.target = '_blank';
-			window.document.body.appendChild(link);
-			link.click();
-			window.document.body.removeChild(link);
+			try {
+				const response = await documentApi.downloadFileForStaff(document.id);
+				const blob = new Blob([response.data]);
+				const url = window.URL.createObjectURL(blob);
+				const link = window.document.createElement('a');
+				link.href = url;
+				link.download = document.name;
+				window.document.body.appendChild(link);
+				link.click();
+				window.document.body.removeChild(link);
+				window.URL.revokeObjectURL(url);
+			} catch (error) {
+				console.error('Error downloading document:', error);
+				alert('Failed to download document');
+			}
 		}
 	};
 
-	const handleView = (document: Document) => {
+	const handleView = async (document: Document) => {
 		if (document.document) {
-			window.open(getFileUrl(document.document), '_blank');
+			try {
+				const response = await documentApi.downloadFileForStaff(document.id);
+				const blob = new Blob([response.data]);
+				const url = window.URL.createObjectURL(blob);
+				window.open(url, '_blank');
+				// Clean up the URL after a delay
+				setTimeout(() => window.URL.revokeObjectURL(url), 100);
+			} catch (error) {
+				console.error('Error viewing document:', error);
+				alert('Failed to view document');
+			}
 		}
 	};
 
