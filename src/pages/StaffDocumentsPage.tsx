@@ -76,7 +76,8 @@ const StaffDocumentsPage: React.FC = () => {
 		if (document.document) {
 			try {
 				const response = await documentApi.downloadFileForStaff(document.id);
-				const blob = new Blob([response.data]);
+				const contentType = response.headers['content-type'] || 'application/octet-stream';
+				const blob = new Blob([response.data], { type: contentType });
 				const url = window.URL.createObjectURL(blob);
 				const link = window.document.createElement('a');
 				link.href = url;
@@ -96,7 +97,8 @@ const StaffDocumentsPage: React.FC = () => {
 		if (document.document) {
 			try {
 				const response = await documentApi.downloadFileForStaff(document.id);
-				const blob = new Blob([response.data]);
+				const contentType = response.headers['content-type'] || 'application/pdf';
+				const blob = new Blob([response.data], { type: contentType });
 				const url = window.URL.createObjectURL(blob);
 				window.open(url, '_blank');
 				// Clean up the URL after a delay

@@ -100,7 +100,9 @@ const DocumentsPage: React.FC = () => {
 		if (document.document) {
 			try {
 				const response = await documentApi.downloadFile(document.id);
-				const blob = new Blob([response.data]);
+				// Get content type from response or determine from filename
+				const contentType = response.headers['content-type'] || 'application/pdf';
+				const blob = new Blob([response.data], { type: contentType });
 				const url = window.URL.createObjectURL(blob);
 				window.open(url, '_blank');
 				// Clean up the URL after a delay
