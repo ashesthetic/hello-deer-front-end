@@ -97,8 +97,9 @@ const DocumentsPage: React.FC = () => {
 	};
 
 	const getFileUrl = (filePath: string) => {
-		// Assuming the backend serves files from storage/app/public
-		return `${process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000'}/storage/${filePath}`;
+		// Remove /api from the API URL and use the base URL for storage
+		const baseUrl = (process.env.REACT_APP_API_URL || 'http://localhost:8000/api').replace('/api', '');
+		return `${baseUrl}/storage/${filePath}`;
 	};
 
 	const handleViewDocument = (document: Document) => {
