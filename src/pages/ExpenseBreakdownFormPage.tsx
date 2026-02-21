@@ -40,8 +40,19 @@ const ExpenseBreakdownFormPage: React.FC = () => {
 			setLoadingData(true);
 			const response = await expenseBreakdownApi.getById(Number(id));
 			const expenseBreakdown = response.data.data;
+			
+			// Format date to YYYY-MM-DD for date input
+			let formattedDate = expenseBreakdown.date;
+			if (formattedDate) {
+				// Handle different date formats
+				const dateObj = new Date(formattedDate);
+				if (!isNaN(dateObj.getTime())) {
+					formattedDate = dateObj.toISOString().split('T')[0];
+				}
+			}
+			
 			setFormData({
-				date: expenseBreakdown.date,
+				date: formattedDate,
 				expense_type_id: expenseBreakdown.expense_type_id,
 				amount: expenseBreakdown.amount,
 				notes: expenseBreakdown.notes || '',
