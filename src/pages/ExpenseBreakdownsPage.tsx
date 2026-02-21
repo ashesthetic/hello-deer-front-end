@@ -1,34 +1,103 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { expenseBreakdownApi, ExpenseBreakdown } from '../services/api';
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { expenseBreakdownApi, ExpenseBreakdown, ExpenseType } from '../services/api';
 import Modal from '../components/Modal';
 
 const ExpenseBreakdownsPage: React.FC = () => {
 	const navigate = useNavigate();
+	const [searchParams, setSearchParams] = useSearchParams();
+	const expenseTypeDropdownRef = useRef<HTMLDivElement>(null);
 	const [expenseBreakdowns, setExpenseBreakdowns] = useState<ExpenseBreakdown[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 	const [expenseBreakdownToDelete, setExpenseBreakdownToDelete] = useState<ExpenseBreakdown | null>(null);
 	const [deleting, setDeleting] = useState(false);
-	const [currentPage, setCurrentPage] = useState(1);
+	const [currentPage, setCurrentPage] = useState(Number(searchParams.get('page')) || 1);
 	const [totalPages, setTotalPages] = useState(1);
 	const [totalItems, setTotalItems] = useState(0);
-	const [sortBy, setSortBy] = useState('date');
-	const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
-	const [filterExpenseTypeId, setFilterExpenseTypeId] = useState<string>('');
-	const [startDate, setStartDate] = useState('');
-	const [endDate, setEndDate] = useState('');
+	const [sortBy, setSortBy] = useState(searchParams.get('sort_by') || 'date');
+	const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>((searchParams.get('sort_direction') as 'asc' | 'desc') || 'desc');
+	const [perPage, setPerPage] = useState<string>(searchParams.get('per_page') || '15');
+	const [selectedExpenseTypes, setSelectedExpenseTypes] = useState<string[]>(() => {
+		const types = searchParams.get('expense_types');
+		return types ? types.split(',') : [];
+	});
+	const [expenseTypes, setExpenseTypes] = useState<ExpenseType[]>([]);
+	const [expenseTypesLoaded, setExpenseTypesLoaded] = useState(false);
+	const [startDate, setStartDate] = useState(searchParams.get('start_date') || '');
+	const [endDate, setEndDate] = useState(searchParams.get('end_date') || '');
+	const [showExpenseTypeDropdown, setShowExpenseTypeDropdown] = useState(false);
+
+	// Update URL when filters change
+	useEffect(() => {
+		const params: any = {
+			page: currentPage.toString(),
+			per_page: perPage,
+			sort_by: sortBy,
+			sort_direction: sortDirection,
+		};
+		if (selectedExpenseTypes.length > 0) params.expense_types = selectedExpenseTypes.join(',');
+		if (startDate) params.start_date = startDate;
+		if (endDate) params.end_date = endDate;
+
+		setSearchParams(params);
+	}, [currentPage, perPage, sortBy, sortDirection, selectedExpenseTypes, startDate, endDate, setSearchParams]);
+
+	// Fetch expense types on mount
+	useEffect(() => {
+		const fetchExpenseTypes = async () => {
+			try {
+				const response = await expenseBreakdownApi.getExpenseTypes();
+				// Handle different response structures
+				const data = Array.isArray(response.data) ? response.data : (response.data?.data || []);
+				setExpenseTypes(data);
+				setExpenseTypesLoaded(true);
+			} catch (error) {
+				console.error('Error fetching expense types:', error);
+				setExpenseTypesLoaded(true); // Set to true even on error to prevent blocking
+			}
+		};
+		fetchExpenseTypes();
+	}, []);
+
+	// Handle click outside to close dropdown
+	useEffect(() => {
+		const handleClickOutside = (event: MouseEvent) => {
+			if (expenseTypeDropdownRef.current && !expenseTypeDropdownRef.current.contains(event.target as Node)) {
+				setShowExpenseTypeDropdown(false);
+			}
+		};
+
+		if (showExpenseTypeDropdown) {
+			document.addEventListener('mousedown', handleClickOutside);
+		}
+
+		return () => {
+			document.removeEventListener('mousedown', handleClickOutside);
+		};
+	}, [showExpenseTypeDropdown]);
 
 	const fetchExpenseBreakdowns = async () => {
 		try {
 			setLoading(true);
 			const params: any = {
 				page: currentPage,
-				per_page: 15,
 				sort_by: sortBy,
 				sort_direction: sortDirection,
 			};
-			if (filterExpenseTypeId) params.expense_type_id = filterExpenseTypeId;
+			
+			// Handle per_page - if ALL, send a large number
+			if (perPage === 'ALL') {
+				params.per_page = 999999;
+			} else {
+				params.per_page = Number(perPage);
+			}
+			
+			// Get expanded expense type IDs (including children)
+			if (selectedExpenseTypes.length > 0) {
+				const expandedIds = getExpandedExpenseTypeIds();
+				params.expense_type_ids = expandedIds.join(',');
+			}
 			if (startDate) params.start_date = startDate;
 			if (endDate) params.end_date = endDate;
 
@@ -44,9 +113,12 @@ const ExpenseBreakdownsPage: React.FC = () => {
 	};
 
 	useEffect(() => {
-		fetchExpenseBreakdowns();
+		// Only fetch expense breakdowns after expense types are loaded
+		if (expenseTypesLoaded) {
+			fetchExpenseBreakdowns();
+		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [currentPage, sortBy, sortDirection, filterExpenseTypeId, startDate, endDate]);
+	}, [currentPage, sortBy, sortDirection, perPage, selectedExpenseTypes, startDate, endDate, expenseTypesLoaded]);
 
 	const handleAddNew = () => {
 		navigate('/accounting/expense-breakdowns/new');
@@ -114,10 +186,68 @@ const ExpenseBreakdownsPage: React.FC = () => {
 	};
 
 	const handleClearFilters = () => {
-		setFilterExpenseTypeId('');
+		setSelectedExpenseTypes([]);
 		setStartDate('');
 		setEndDate('');
+		setPerPage('15');
 		setCurrentPage(1);
+	};
+
+	const handleExpenseTypeToggle = (typeId: string) => {
+		setSelectedExpenseTypes(prev => {
+			if (prev.includes(typeId)) {
+				return prev.filter(id => id !== typeId);
+			} else {
+				return [...prev, typeId];
+			}
+		});
+		setCurrentPage(1);
+	};
+
+	// Get all child expense type IDs recursively
+	const getChildExpenseTypeIds = (typeId: number): number[] => {
+		const type = expenseTypes.find(t => t.id === typeId);
+		if (!type) {
+			return [];
+		}
+		
+		// Check both naming conventions (snake_case and camelCase)
+		const children = (type.child_expense_types || (type as any).childExpenseTypes || []) as ExpenseType[];
+		
+		if (children.length === 0) {
+			return [];
+		}
+		
+		const childIds: number[] = [];
+		children.forEach(child => {
+			childIds.push(child.id);
+			// Recursively get children of children
+			childIds.push(...getChildExpenseTypeIds(child.id));
+		});
+		
+		return childIds;
+	};
+
+	// Get expanded expense type IDs including children
+	const getExpandedExpenseTypeIds = (): string[] => {
+		const allIds = new Set<number>();
+		
+		selectedExpenseTypes.forEach(typeId => {
+			const numId = Number(typeId);
+			allIds.add(numId);
+			// Add all children recursively
+			const childIds = getChildExpenseTypeIds(numId);
+			childIds.forEach(childId => allIds.add(childId));
+		});
+		
+		return Array.from(allIds).map(id => id.toString());
+	};
+
+	const getTotalAmount = () => {
+		return expenseBreakdowns.reduce((sum, item) => {
+			const amount = typeof item.amount === 'string' ? parseFloat(item.amount) : item.amount;
+			return sum + amount;
+		}, 0);
 	};
 
 	if (loading && expenseBreakdowns.length === 0) {
@@ -152,7 +282,24 @@ const ExpenseBreakdownsPage: React.FC = () => {
 
 				{/* Filters */}
 				<div className="mb-4 bg-white p-4 rounded-lg shadow">
-					<div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+					<div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+						<div>
+							<label className="block text-sm font-medium text-gray-700 mb-1">Per Page</label>
+							<select
+								value={perPage}
+								onChange={(e) => {
+									setPerPage(e.target.value);
+									setCurrentPage(1);
+								}}
+								className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+							>
+								<option value="15">15</option>
+								<option value="30">30</option>
+								<option value="50">50</option>
+								<option value="100">100</option>
+								<option value="ALL">ALL</option>
+							</select>
+						</div>
 						<div>
 							<label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
 							<input
@@ -177,7 +324,37 @@ const ExpenseBreakdownsPage: React.FC = () => {
 								className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
 							/>
 						</div>
-						<div className="md:col-span-2 flex items-end">
+						<div className="relative" ref={expenseTypeDropdownRef}>
+							<label className="block text-sm font-medium text-gray-700 mb-1">Expense Types</label>
+							<button
+								onClick={() => setShowExpenseTypeDropdown(!showExpenseTypeDropdown)}
+								className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-left focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+							>
+								{selectedExpenseTypes.length === 0 ? 'All Types' : `${selectedExpenseTypes.length} selected`}
+							</button>
+							{showExpenseTypeDropdown && (
+								<div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+									{expenseTypes.map((type) => (
+										<label
+											key={type.id}
+											className="flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer"
+										>
+											<input
+												type="checkbox"
+												checked={selectedExpenseTypes.includes(type.id.toString())}
+												onChange={() => handleExpenseTypeToggle(type.id.toString())}
+												className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+											/>
+											<span className="ml-2 text-sm text-gray-900">{type.expense_type}</span>
+										</label>
+									))}
+									{expenseTypes.length === 0 && (
+										<div className="px-3 py-2 text-sm text-gray-500">No expense types available</div>
+									)}
+								</div>
+							)}
+						</div>
+						<div className="flex items-end">
 							<button
 								onClick={handleClearFilters}
 								className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
@@ -272,6 +449,19 @@ const ExpenseBreakdownsPage: React.FC = () => {
 								</tr>
 							))}
 						</tbody>
+						{expenseBreakdowns.length > 0 && (
+							<tfoot className="bg-gray-100">
+								<tr>
+									<td colSpan={3} className="px-6 py-4 text-sm font-bold text-gray-900 text-right">
+										Total:
+									</td>
+									<td className="px-6 py-4 text-sm font-bold text-gray-900 text-right">
+										{formatCurrency(getTotalAmount())}
+									</td>
+									<td colSpan={2}></td>
+								</tr>
+							</tfoot>
+						)}
 					</table>
 
 					{expenseBreakdowns.length === 0 && !loading && (
@@ -282,7 +472,7 @@ const ExpenseBreakdownsPage: React.FC = () => {
 				</div>
 
 				{/* Pagination */}
-				{totalPages > 1 && (
+				{totalPages > 1 && perPage !== 'ALL' && (
 					<div className="mt-4 flex items-center justify-between">
 						<button
 							onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}

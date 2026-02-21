@@ -21,7 +21,7 @@ const StaffDocumentsPage: React.FC = () => {
 				sort_by: sortBy,
 				sort_direction: sortDirection,
 			});
-			
+
 			// Handle both standard pagination and custom response formats
 			if (response.data.data) {
 				setDocuments(response.data.data);

@@ -1142,6 +1142,7 @@ export interface ExpenseType {
 	deleted_at?: string | null;
 	parent_expense_type?: ExpenseType;
 	child_expense_types?: ExpenseType[];
+	childExpenseTypes?: ExpenseType[]; // Laravel returns camelCase
 }
 
 export interface ExpenseTypeFormData {
