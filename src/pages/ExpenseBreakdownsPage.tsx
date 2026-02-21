@@ -250,6 +250,59 @@ const ExpenseBreakdownsPage: React.FC = () => {
 		}, 0);
 	};
 
+	const handleDownloadCSV = () => {
+		// Aggregate expenses by type
+		const aggregated: { [key: string]: number } = {};
+		
+		expenseBreakdowns.forEach((item) => {
+			const expenseType = item.expense_type?.expense_type || 'Unknown';
+			const amount = typeof item.amount === 'string' ? parseFloat(item.amount) : item.amount;
+			
+			if (aggregated[expenseType]) {
+				aggregated[expenseType] += amount;
+			} else {
+				aggregated[expenseType] = amount;
+			}
+		});
+
+		// Create CSV content
+		let csvContent = 'Expense Type,Amount\n';
+		
+		// Sort by expense type name for consistent output
+		let total = 0;
+		Object.keys(aggregated).sort().forEach((expenseType) => {
+			const amount = aggregated[expenseType].toFixed(2);
+			csvContent += `"${expenseType}",${amount}\n`;
+			total += aggregated[expenseType];
+		});
+		
+		// Add total row
+		csvContent += `\n"TOTAL",${total.toFixed(2)}\n`;
+
+		// Create a Blob and trigger download
+		const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+		const link = document.createElement('a');
+		const url = URL.createObjectURL(blob);
+		
+		// Generate filename with date range if applicable
+		let filename = 'expense-breakdowns';
+		if (startDate && endDate) {
+			filename += `_${startDate}_to_${endDate}`;
+		} else if (startDate) {
+			filename += `_from_${startDate}`;
+		} else if (endDate) {
+			filename += `_until_${endDate}`;
+		}
+		filename += '.csv';
+		
+		link.href = url;
+		link.setAttribute('download', filename);
+		document.body.appendChild(link);
+		link.click();
+		document.body.removeChild(link);
+		URL.revokeObjectURL(url);
+	};
+
 	if (loading && expenseBreakdowns.length === 0) {
 		return (
 			<div className="flex justify-center items-center py-12">
@@ -365,10 +418,21 @@ const ExpenseBreakdownsPage: React.FC = () => {
 					</div>
 				</div>
 
-				{/* Summary */}
+				{/* Summary and Download */}
 				{totalItems > 0 && (
-					<div className="mb-4 text-sm text-gray-600">
-						Showing {expenseBreakdowns.length} of {totalItems} expense breakdowns
+					<div className="mb-4 flex justify-between items-center">
+						<div className="text-sm text-gray-600">
+							Showing {expenseBreakdowns.length} of {totalItems} expense breakdowns
+						</div>
+						<button
+							onClick={handleDownloadCSV}
+							className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+						>
+							<svg className="h-5 w-5 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+							</svg>
+							Download CSV
+						</button>
 					</div>
 				)}
 
