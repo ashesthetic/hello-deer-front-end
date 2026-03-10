@@ -48,7 +48,7 @@ const GasBuddyPricesCard: React.FC = () => {
   const [displayName, setDisplayName] = useState('Red Deer');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [lastFetched, setLastFetched] = useState<Date | null>(null);
+  const [lastFetched, setLastFetched] = useState<string | null>(null);
 
   const fetchPrices = useCallback(async () => {
     try {
@@ -59,7 +59,7 @@ const GasBuddyPricesCard: React.FC = () => {
       if (!data.success) throw new Error(data.message ?? 'Unknown error');
       setStations(data.stations ?? []);
       setDisplayName(data.display_name ?? 'Red Deer');
-      setLastFetched(new Date());
+      setLastFetched(data.last_fetched_at ?? null);
     } catch (err: any) {
       setError(err?.response?.data?.message ?? err?.message ?? 'Failed to load GasBuddy prices');
     } finally {
@@ -70,13 +70,13 @@ const GasBuddyPricesCard: React.FC = () => {
   useEffect(() => { fetchPrices(); }, [fetchPrices]);
 
   // Compute best (lowest) price per fuel type across all stations
-  const lowestByFuel = FUEL_COLUMNS.reduce<Record<string, { price: number; station: string } | null>>(
+  const lowestByFuel = FUEL_COLUMNS.reduce<Record<string, { price: number; station: string; address: string | null } | null>>(
     (acc, col) => {
-      let best: { price: number; station: string } | null = null;
+      let best: { price: number; station: string; address: string | null } | null = null;
       stations.forEach(s => {
         const p = getPrice(s.prices, col.key);
         if (p !== null && (best === null || p < best.price)) {
-          best = { price: p, station: s.name };
+          best = { price: p, station: s.name, address: s.address?.line1?.trim() || null };
         }
       });
       acc[col.key] = best;
@@ -103,7 +103,7 @@ const GasBuddyPricesCard: React.FC = () => {
         <div className="flex items-center gap-3">
           {lastFetched && !loading && (
             <span className="text-xs text-gray-400">
-              Updated {lastFetched.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              Updated {new Date(lastFetched).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </span>
           )}
           <button
@@ -146,8 +146,11 @@ const GasBuddyPricesCard: React.FC = () => {
                     {best ? formatCents(best.price) : '—'}
                   </div>
                   {best && (
-                    <div className="text-xs text-gray-400 mt-1 truncate" title={best.station}>
-                      Best: {best.station}
+                    <div className="mt-1">
+                      <div className="text-xs text-gray-500 font-medium truncate" title={best.station}>{best.station}</div>
+                      {best.address && (
+                        <div className="text-xs text-gray-400 truncate" title={best.address}>{best.address}</div>
+                      )}
                     </div>
                   )}
                 </div>
