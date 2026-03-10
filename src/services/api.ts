@@ -1124,6 +1124,33 @@ export const facebookApi = {
 	testConnection: () => api.get<FacebookPostResponse>('/facebook/test-connection'),
 };
 
+// GasBuddy API
+export interface GasBuddyFuelPrice {
+	cash: { price: number | null; postedTime: string | null } | null;
+	credit: { price: number | null; postedTime: string | null } | null;
+	fuelProduct: string;
+}
+
+export interface GasBuddyStation {
+	id: number;
+	name: string;
+	address: { line1: string; line2: string } | null;
+	distance: string | null;
+	prices: GasBuddyFuelPrice[];
+}
+
+export interface GasBuddyResponse {
+	success: boolean;
+	display_name: string;
+	count: number;
+	stations: GasBuddyStation[];
+	message?: string;
+}
+
+export const gasBuddyApi = {
+	getRedDeerPrices: () => api.get<GasBuddyResponse>('/gasbuddy/red-deer-prices'),
+};
+
 // Contact Submission API
 export const contactSubmissionApi = {
 	index: (params?: string) => api.get(`/contact-submissions${params ? `?${params}` : ''}`),
