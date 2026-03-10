@@ -1,14 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { gasBuddyApi, GasBuddyStation, GasBuddyFuelPrice } from '../services/api';
 
-const FUEL_LABELS: Record<string, string> = {
-  regular_gas:  'Regular',
-  midgrade_gas: 'Midgrade',
-  premium_gas:  'Premium',
-  diesel:       'Diesel',
-  unleaded:     'Regular',
-  premium:      'Premium',
-};
 
 function getPrice(prices: GasBuddyFuelPrice[], product: string): number | null {
   const match = prices.find(p => p.fuelProduct?.toLowerCase() === product.toLowerCase());

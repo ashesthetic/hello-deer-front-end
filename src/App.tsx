@@ -115,6 +115,7 @@ import ExpenseBreakdownViewPage from './pages/ExpenseBreakdownViewPage';
 import DocumentsPage from './pages/DocumentsPage';
 import DocumentFormPage from './pages/DocumentFormPage';
 import StaffDocumentsPage from './pages/StaffDocumentsPage';
+import GasBuddyPage from './pages/GasBuddyPage';
 
 const App: React.FC = () => {
 	const dispatch = useDispatch();
@@ -701,6 +702,12 @@ const App: React.FC = () => {
 					<Route
 						path="/settings"
 						element={isAuthenticated ? <Layout><SettingsPage /></Layout> : <Navigate to="/login" />}
+					/>
+
+					{/* GasBuddy Settings Route */}
+					<Route
+						path="/settings/gasbuddy"
+						element={isAuthenticated ? <Layout><GasBuddyPage /></Layout> : <Navigate to="/login" />}
 					/>
 
 					{/* Legacy Routes - Redirect to new structure */}

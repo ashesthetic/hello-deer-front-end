@@ -1145,6 +1145,7 @@ export interface GasBuddyResponse {
 	count: number;
 	stations: GasBuddyStation[];
 	last_fetched_at?: string | null;
+	our_price?: number | null;
 	message?: string;
 }
 
