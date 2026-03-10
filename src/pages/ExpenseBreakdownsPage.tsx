@@ -85,14 +85,14 @@ const ExpenseBreakdownsPage: React.FC = () => {
 				sort_by: sortBy,
 				sort_direction: sortDirection,
 			};
-			
+
 			// Handle per_page - if ALL, send a large number
 			if (perPage === 'ALL') {
 				params.per_page = 999999;
 			} else {
 				params.per_page = Number(perPage);
 			}
-			
+
 			// Get expanded expense type IDs (including children)
 			if (selectedExpenseTypes.length > 0) {
 				const expandedIds = getExpandedExpenseTypeIds();
@@ -210,28 +210,28 @@ const ExpenseBreakdownsPage: React.FC = () => {
 		if (!type) {
 			return [];
 		}
-		
+
 		// Check both naming conventions (snake_case and camelCase)
 		const children = (type.child_expense_types || (type as any).childExpenseTypes || []) as ExpenseType[];
-		
+
 		if (children.length === 0) {
 			return [];
 		}
-		
+
 		const childIds: number[] = [];
 		children.forEach(child => {
 			childIds.push(child.id);
 			// Recursively get children of children
 			childIds.push(...getChildExpenseTypeIds(child.id));
 		});
-		
+
 		return childIds;
 	};
 
 	// Get expanded expense type IDs including children
 	const getExpandedExpenseTypeIds = (): string[] => {
 		const allIds = new Set<number>();
-		
+
 		selectedExpenseTypes.forEach(typeId => {
 			const numId = Number(typeId);
 			allIds.add(numId);
@@ -239,7 +239,7 @@ const ExpenseBreakdownsPage: React.FC = () => {
 			const childIds = getChildExpenseTypeIds(numId);
 			childIds.forEach(childId => allIds.add(childId));
 		});
-		
+
 		return Array.from(allIds).map(id => id.toString());
 	};
 
@@ -253,11 +253,11 @@ const ExpenseBreakdownsPage: React.FC = () => {
 	const handleDownloadCSV = () => {
 		// Aggregate expenses by type
 		const aggregated: { [key: string]: number } = {};
-		
+
 		expenseBreakdowns.forEach((item) => {
 			const expenseType = item.expense_type?.expense_type || 'Unknown';
 			const amount = typeof item.amount === 'string' ? parseFloat(item.amount) : item.amount;
-			
+
 			if (aggregated[expenseType]) {
 				aggregated[expenseType] += amount;
 			} else {
@@ -267,7 +267,7 @@ const ExpenseBreakdownsPage: React.FC = () => {
 
 		// Create CSV content
 		let csvContent = 'Expense Type,Amount\n';
-		
+
 		// Sort by expense type name for consistent output
 		let total = 0;
 		Object.keys(aggregated).sort().forEach((expenseType) => {
@@ -275,7 +275,7 @@ const ExpenseBreakdownsPage: React.FC = () => {
 			csvContent += `"${expenseType}",${amount}\n`;
 			total += aggregated[expenseType];
 		});
-		
+
 		// Add total row
 		csvContent += `\n"TOTAL",${total.toFixed(2)}\n`;
 
@@ -283,7 +283,7 @@ const ExpenseBreakdownsPage: React.FC = () => {
 		const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
 		const link = document.createElement('a');
 		const url = URL.createObjectURL(blob);
-		
+
 		// Generate filename with date range if applicable
 		let filename = 'expense-breakdowns';
 		if (startDate && endDate) {
@@ -294,7 +294,7 @@ const ExpenseBreakdownsPage: React.FC = () => {
 			filename += `_until_${endDate}`;
 		}
 		filename += '.csv';
-		
+
 		link.href = url;
 		link.setAttribute('download', filename);
 		document.body.appendChild(link);
@@ -462,9 +462,9 @@ const ExpenseBreakdownsPage: React.FC = () => {
 								>
 									Amount {getSortIcon('amount')}
 								</th>
-						<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-							Notes
-						</th>
+								<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+									Notes
+								</th>
 								<th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
 									Actions
 								</th>
@@ -487,9 +487,9 @@ const ExpenseBreakdownsPage: React.FC = () => {
 									<td className="px-6 py-4 whitespace-nowrap text-sm text-right font-semibold text-gray-900">
 										{formatCurrency(expenseBreakdown.amount)}
 									</td>
-						<td className="px-6 py-4 text-sm text-gray-500">
-							{expenseBreakdown.notes || "-"}
-						</td>
+									<td className="px-6 py-4 text-sm text-gray-500">
+										{expenseBreakdown.notes || "-"}
+									</td>
 									<td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
 										<button
 											onClick={() => handleView(expenseBreakdown)}

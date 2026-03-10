@@ -40,7 +40,7 @@ const ExpenseBreakdownFormPage: React.FC = () => {
 			setLoadingData(true);
 			const response = await expenseBreakdownApi.getById(Number(id));
 			const expenseBreakdown = response.data.data;
-			
+
 			// Format date to YYYY-MM-DD for date input
 			let formattedDate = expenseBreakdown.date;
 			if (formattedDate) {
@@ -50,7 +50,7 @@ const ExpenseBreakdownFormPage: React.FC = () => {
 					formattedDate = dateObj.toISOString().split('T')[0];
 				}
 			}
-			
+
 			setFormData({
 				date: formattedDate,
 				expense_type_id: expenseBreakdown.expense_type_id,
@@ -150,8 +150,8 @@ const ExpenseBreakdownFormPage: React.FC = () => {
 								value={formData.date}
 								onChange={handleChange}
 								className={`mt-1 block w-full rounded-md shadow-sm sm:text-sm ${errors.date
-										? 'border-red-300 focus:ring-red-500 focus:border-red-500'
-										: 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+									? 'border-red-300 focus:ring-red-500 focus:border-red-500'
+									: 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
 									}`}
 							/>
 							{errors.date && (
@@ -170,8 +170,8 @@ const ExpenseBreakdownFormPage: React.FC = () => {
 								value={formData.expense_type_id}
 								onChange={handleChange}
 								className={`mt-1 block w-full rounded-md shadow-sm sm:text-sm ${errors.expense_type_id
-										? 'border-red-300 focus:ring-red-500 focus:border-red-500'
-										: 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+									? 'border-red-300 focus:ring-red-500 focus:border-red-500'
+									: 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
 									}`}
 							>
 								<option value="">Select an expense type</option>
@@ -207,8 +207,8 @@ const ExpenseBreakdownFormPage: React.FC = () => {
 									step="0.01"
 									min="0"
 									className={`block w-full pl-10 rounded-md shadow-sm sm:text-sm ${errors.amount
-											? 'border-red-300 focus:ring-red-500 focus:border-red-500'
-											: 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+										? 'border-red-300 focus:ring-red-500 focus:border-red-500'
+										: 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
 										}`}
 									placeholder="0.00"
 								/>
