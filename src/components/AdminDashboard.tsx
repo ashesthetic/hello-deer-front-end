@@ -10,6 +10,7 @@ import MonthlyFuelTrendCard from './MonthlyFuelTrendCard';
 import FuelTrendCard from './FuelTrendCard';
 import DashboardStatsCards from './DashboardStatsCards';
 import GasBuddyDashboardCard from './GasBuddyDashboardCard';
+import LiveTankVolumeCard from './LiveTankVolumeCard';
 
 const AdminDashboard: React.FC = () => {
 	const navigate = useNavigate();
@@ -29,8 +30,7 @@ const AdminDashboard: React.FC = () => {
 				<div>
 					<h2 className="text-2xl font-bold text-gray-900 mb-6">Overview</h2>
 					<div className="grid grid-cols-1 gap-6 mb-6">
-						<GasBuddyDashboardCard />
-					</div>
+						<GasBuddyDashboardCard />					<LiveTankVolumeCard />					</div>
 					<DashboardStatsCards />
 				</div>
 

@@ -1153,6 +1153,45 @@ export const gasBuddyApi = {
 	getRedDeerPrices: () => api.get<GasBuddyResponse>('/gasbuddy/red-deer-prices'),
 };
 
+// Regular Fuel Volume API
+export interface RegularFuelVolumeRecord {
+	id: number;
+	datetime: string;
+	regular_volume: string | null;
+	regular_height: string | null;
+	regular_ullage: string | null;
+	regular_water: string | null;
+	regular_temp: string | null;
+	regular_fill: string | null;
+	regular_status: string | null;
+	premium_volume: string | null;
+	premium_height: string | null;
+	premium_ullage: string | null;
+	premium_water: string | null;
+	premium_temp: string | null;
+	premium_fill: string | null;
+	premium_status: string | null;
+	diesel_volume: string | null;
+	diesel_height: string | null;
+	diesel_ullage: string | null;
+	diesel_water: string | null;
+	diesel_temp: string | null;
+	diesel_fill: string | null;
+	diesel_status: string | null;
+	created_at: string;
+	updated_at: string;
+}
+
+export const regularFuelVolumeApi = {
+	getLatest: () => api.get<{ data: RegularFuelVolumeRecord[] }>('/regular-fuel-volumes?per_page=1&sort_by=datetime&sort_direction=desc'),
+	getAll: (params?: any) => api.get('/regular-fuel-volumes', { params }),
+	getByMonth: (year: number, month: number) => api.get(`/regular-fuel-volumes/month/${year}/${month}`),
+	getByDate: (date: string) => api.get(`/regular-fuel-volumes/date/${date}`),
+	create: (data: Partial<RegularFuelVolumeRecord>) => api.post('/regular-fuel-volumes', data),
+	update: (id: number, data: Partial<RegularFuelVolumeRecord>) => api.put(`/regular-fuel-volumes/${id}`, data),
+	destroy: (id: number) => api.delete(`/regular-fuel-volumes/${id}`),
+};
+
 // Contact Submission API
 export const contactSubmissionApi = {
 	index: (params?: string) => api.get(`/contact-submissions${params ? `?${params}` : ''}`),
