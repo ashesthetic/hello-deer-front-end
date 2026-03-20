@@ -1011,6 +1011,15 @@ export const dailyAtmApi = {
 	resolve: (id: number, data: { bank_account_id: number; notes?: string }) => api.post(`/daily-atm/${id}/resolve`, data),
 };
 
+export const dailyPosApi = {
+	index: (params?: string) => api.get(`/daily-pos${params ? `?${params}` : ''}`),
+	show: (id: number) => api.get(`/daily-pos/${id}`),
+	create: (data: { date: string; amount: number; notes?: string }) => api.post('/daily-pos', data),
+	update: (id: number, data: { date?: string; amount?: number; notes?: string }) => api.put(`/daily-pos/${id}`, data),
+	delete: (id: number) => api.delete(`/daily-pos/${id}`),
+	resolve: (id: number, data: { bank_account_id: number; amount: number; notes?: string }) => api.post(`/daily-pos/${id}/resolve`, data),
+};
+
 // Smokes Category Interfaces
 export interface SmokesCategory {
 	id: number;

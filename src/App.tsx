@@ -25,6 +25,7 @@ import DailyAtmAddPage from './pages/DailyAtmAddPage';
 import DailyAtmViewPage from './pages/DailyAtmViewPage';
 import DailyAtmEditPage from './pages/DailyAtmEditPage';
 import ResolveAtmPage from './pages/ResolveAtmPage';
+import ResolvePoPage from './pages/ResolvePoPage';
 import SalesReportPage from './pages/SalesReportPage';
 import FuelsReportPage from './pages/FuelsReportPage';
 import VendorsPage from './pages/VendorsPage';
@@ -445,6 +446,12 @@ const App: React.FC = () => {
 					<Route
 						path="/resolve-atm"
 						element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="admin"><ResolveAtmPage /></ProtectedRoute></Layout> : <Navigate to="/login" />}
+					/>
+
+					{/* Resolve POS Route (Admin only) */}
+					<Route
+						path="/resolve-pos"
+						element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="admin"><ResolvePoPage /></ProtectedRoute></Layout> : <Navigate to="/login" />}
 					/>
 
 					<Route
