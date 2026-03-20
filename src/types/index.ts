@@ -543,6 +543,7 @@ export interface TransactionFilters {
 	sort_by?: 'created_at' | 'amount' | 'type' | 'description';
 	sort_order?: 'asc' | 'desc';
 	per_page?: number;
+	page?: number;
 }
 
 export interface TransactionSummary {
