@@ -43,10 +43,10 @@ const TankRow: React.FC<TankRowProps> = ({
 				</div>
 				{status && (
 					<span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusOk
-							? 'bg-green-100 text-green-700'
-							: statusBad
-								? 'bg-red-100 text-red-700'
-								: 'bg-gray-100 text-gray-600'
+						? 'bg-green-100 text-green-700'
+						: statusBad
+							? 'bg-red-100 text-red-700'
+							: 'bg-gray-100 text-gray-600'
 						}`}>
 						{status}
 					</span>
@@ -103,7 +103,41 @@ const LiveTankVolumeCard: React.FC = () => {
 
 	useEffect(() => { fetchLatest(); }, [fetchLatest]);
 
-	const formatDatetime = (dt: string) => dt;
+	const formatDatetime = (dt: string) => {
+		if (!dt) return dt;
+
+		const match = dt.match(/^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})$/);
+		if (!match) return dt;
+
+		const [, year, month, day, hourStr, minute, second] = match;
+
+		// Create a Date in UTC using the given values
+		const date = new Date(Date.UTC(
+			parseInt(year),
+			parseInt(month) - 1,
+			parseInt(day),
+			parseInt(hourStr),
+			parseInt(minute),
+			parseInt(second)
+		));
+
+		// 🔥 Adjust timezone manually (−6 hours to get original)
+		date.setUTCHours(date.getUTCHours() - 6);
+
+		const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+		const m = months[date.getUTCMonth()];
+		const d = date.getUTCDate();
+		const y = date.getUTCFullYear();
+
+		let h = date.getUTCHours();
+		const min = date.getUTCMinutes().toString().padStart(2, '0');
+
+		const ampm = h >= 12 ? 'PM' : 'AM';
+		h = h % 12 || 12;
+
+		return `${m} ${d}, ${y}, ${h}:${min}${ampm}`;
+	};
 
 	return (
 		<div className="bg-white rounded-lg shadow-lg border border-gray-100 col-span-full overflow-hidden">
