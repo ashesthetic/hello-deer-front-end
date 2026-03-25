@@ -103,16 +103,7 @@ const LiveTankVolumeCard: React.FC = () => {
 
 	useEffect(() => { fetchLatest(); }, [fetchLatest]);
 
-	const formatDatetime = (dt: string) => {
-		try {
-			return new Date(dt).toLocaleString([], {
-				year: 'numeric', month: 'short', day: 'numeric',
-				hour: '2-digit', minute: '2-digit',
-			});
-		} catch {
-			return dt;
-		}
-	};
+	const formatDatetime = (dt: string) => dt;
 
 	return (
 		<div className="bg-white rounded-lg shadow-lg border border-gray-100 col-span-full overflow-hidden">
