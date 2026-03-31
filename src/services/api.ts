@@ -284,6 +284,7 @@ export const dailySalesApi = {
 			include_credit: includeCredit
 		}),
 	getSettlementDates: () => api.get('/settlement-dates'),
+	getApproximateSettlement: () => api.get('/daily-sales/approximate-settlement'),
 	updateSettlementDates: (debitDate: string, creditDate: string) =>
 		api.put('/settlement-dates', {
 			debit_date: debitDate,

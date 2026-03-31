@@ -30,6 +30,14 @@ const SettlementReportPage: React.FC = () => {
   const [editCreditDate, setEditCreditDate] = useState('');
   const [savingDates, setSavingDates] = useState(false);
 
+  // Approximate settlement state
+  const [approxSettlement, setApproxSettlement] = useState<{
+    debit: { from_date: string | null; to_date: string; net: number };
+    credit: { from_date: string | null; to_date: string; net: number };
+    total_pending: number;
+  } | null>(null);
+  const [approxLoading, setApproxLoading] = useState(false);
+
   const handleGenerate = async () => {
     if (!fromDate || !toDate) {
       setError('Please select both from and to dates');
@@ -98,6 +106,18 @@ const SettlementReportPage: React.FC = () => {
 
   const totals = calculateTotals();
 
+  const fetchApproxSettlement = async () => {
+    setApproxLoading(true);
+    try {
+      const response = await dailySalesApi.getApproximateSettlement();
+      setApproxSettlement(response.data);
+    } catch (err) {
+      console.error('Failed to fetch approximate settlement:', err);
+    } finally {
+      setApproxLoading(false);
+    }
+  };
+
   // Fetch settlement dates on component mount
   useEffect(() => {
     const fetchSettlementDates = async () => {
@@ -110,6 +130,7 @@ const SettlementReportPage: React.FC = () => {
       }
     };
     fetchSettlementDates();
+    fetchApproxSettlement();
   }, []);
 
   const formatDateDisplay = (dateString: string | null) => {
@@ -144,6 +165,7 @@ const SettlementReportPage: React.FC = () => {
       setLastDebitDate(response.data.debit_date);
       setLastCreditDate(response.data.credit_date);
       setShowEditModal(false);
+      fetchApproxSettlement();
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to update settlement dates');
     } finally {
@@ -242,6 +264,51 @@ const SettlementReportPage: React.FC = () => {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Approximate Settlement Amount Section */}
+        <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg border border-green-200 shadow-sm p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Approximate Settlement Amount</h2>
+          {approxLoading ? (
+            <div className="text-sm text-gray-500">Loading...</div>
+          ) : approxSettlement ? (
+            <div className="space-y-3">
+              <div className="bg-white rounded-lg p-4 shadow-sm flex justify-between items-center">
+                <div>
+                  <div className="text-xs font-medium text-gray-600 mb-1">Debit</div>
+                  <div className="text-xs text-gray-400">
+                    {approxSettlement.debit.from_date
+                      ? `${approxSettlement.debit.from_date} to ${approxSettlement.debit.to_date}`
+                      : 'No start date set'}
+                  </div>
+                </div>
+                <div className="text-sm font-semibold text-gray-900">
+                  {formatCurrency(approxSettlement.debit.net)}
+                </div>
+              </div>
+              <div className="bg-white rounded-lg p-4 shadow-sm flex justify-between items-center">
+                <div>
+                  <div className="text-xs font-medium text-gray-600 mb-1">Credit</div>
+                  <div className="text-xs text-gray-400">
+                    {approxSettlement.credit.from_date
+                      ? `${approxSettlement.credit.from_date} to ${approxSettlement.credit.to_date}`
+                      : 'No start date set'}
+                  </div>
+                </div>
+                <div className="text-sm font-semibold text-gray-900">
+                  {formatCurrency(approxSettlement.credit.net)}
+                </div>
+              </div>
+              <div className="bg-green-100 rounded-lg p-4 flex justify-between items-center">
+                <div className="text-sm font-semibold text-gray-900">Total Pending</div>
+                <div className="text-base font-bold text-green-800">
+                  {formatCurrency(approxSettlement.total_pending)}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="text-sm text-gray-500">Unable to load approximate settlement data.</div>
+          )}
         </div>
 
         {/* Form Section */}

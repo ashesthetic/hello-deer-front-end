@@ -1047,7 +1047,7 @@ const SalesReportPage: React.FC = () => {
 									</p>
 								</div>
 
-								<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+								<div className="grid grid-cols-1 gap-6">
 									{/* Sales by Month */}
 									<div className="bg-white rounded-lg shadow-lg p-6">
 										<h3 className="text-lg font-semibold text-gray-900 mb-4">Sales by Month</h3>
@@ -1103,7 +1103,9 @@ const SalesReportPage: React.FC = () => {
 												options={monthlyTrendChartOptions}
 											/>
 										</div>
-									</div>									{/* Lottery Sales by Month */}
+									</div>
+
+									{/* Lottery Sales by Month */}
 									<div className="bg-white rounded-lg shadow-lg p-6">
 										<h3 className="text-lg font-semibold text-gray-900 mb-4">Lottery Sales by Month</h3>
 										<div className="h-80">
