@@ -160,7 +160,7 @@ const SettlementReportPage: React.FC = () => {
     fetchSettlementDates();
     fetchInvoiceDate();
     fetchApproxSettlement(true);
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const formatDateDisplay = (dateString: string | null) => {
     if (!dateString) return 'Not set';
