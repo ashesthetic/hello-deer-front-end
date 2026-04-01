@@ -34,9 +34,13 @@ const SettlementReportPage: React.FC = () => {
   const [approxSettlement, setApproxSettlement] = useState<{
     debit: { from_date: string | null; to_date: string; net: number };
     credit: { from_date: string | null; to_date: string; net: number };
+    invoice_date: string | null;
     total_pending: number;
   } | null>(null);
   const [approxLoading, setApproxLoading] = useState(false);
+  const [invoiceDate, setInvoiceDate] = useState('');
+  const [creditUpToInvoice, setCreditUpToInvoice] = useState(true);
+  const [savingInvoiceDate, setSavingInvoiceDate] = useState(false);
 
   const handleGenerate = async () => {
     if (!fromDate || !toDate) {
@@ -106,15 +110,29 @@ const SettlementReportPage: React.FC = () => {
 
   const totals = calculateTotals();
 
-  const fetchApproxSettlement = async () => {
+  const fetchApproxSettlement = async (useInvoice?: boolean) => {
     setApproxLoading(true);
     try {
-      const response = await dailySalesApi.getApproximateSettlement();
+      const useInvoiceDate = useInvoice !== undefined ? useInvoice : creditUpToInvoice;
+      const response = await dailySalesApi.getApproximateSettlement(useInvoiceDate);
       setApproxSettlement(response.data);
     } catch (err) {
       console.error('Failed to fetch approximate settlement:', err);
     } finally {
       setApproxLoading(false);
+    }
+  };
+
+  const handleSaveInvoiceDate = async () => {
+    if (!invoiceDate) return;
+    setSavingInvoiceDate(true);
+    try {
+      await dailySalesApi.updateInvoiceDate(invoiceDate);
+      fetchApproxSettlement();
+    } catch (err) {
+      console.error('Failed to save invoice date:', err);
+    } finally {
+      setSavingInvoiceDate(false);
     }
   };
 
@@ -129,8 +147,19 @@ const SettlementReportPage: React.FC = () => {
         console.error('Failed to fetch settlement dates:', err);
       }
     };
+    const fetchInvoiceDate = async () => {
+      try {
+        const response = await dailySalesApi.getInvoiceDate();
+        if (response.data.invoice_date) {
+          setInvoiceDate(response.data.invoice_date);
+        }
+      } catch (err) {
+        console.error('Failed to fetch invoice date:', err);
+      }
+    };
     fetchSettlementDates();
-    fetchApproxSettlement();
+    fetchInvoiceDate();
+    fetchApproxSettlement(true);
   }, []);
 
   const formatDateDisplay = (dateString: string | null) => {
@@ -165,7 +194,7 @@ const SettlementReportPage: React.FC = () => {
       setLastDebitDate(response.data.debit_date);
       setLastCreditDate(response.data.credit_date);
       setShowEditModal(false);
-      fetchApproxSettlement();
+      fetchApproxSettlement(creditUpToInvoice);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to update settlement dates');
     } finally {
@@ -269,6 +298,39 @@ const SettlementReportPage: React.FC = () => {
         {/* Approximate Settlement Amount Section */}
         <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg border border-green-200 shadow-sm p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Approximate Settlement Amount</h2>
+
+          {/* Invoice Date + Checkbox */}
+          <div className="bg-white rounded-lg p-4 shadow-sm mb-4 flex flex-col sm:flex-row sm:items-end gap-3">
+            <div className="flex-1">
+              <label className="block text-xs font-medium text-gray-600 mb-1">Invoice Date</label>
+              <input
+                type="date"
+                value={invoiceDate}
+                onChange={(e) => setInvoiceDate(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+              />
+            </div>
+            <button
+              onClick={handleSaveInvoiceDate}
+              disabled={!invoiceDate || savingInvoiceDate}
+              className="px-4 py-2 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+            >
+              {savingInvoiceDate ? 'Saving...' : 'Save'}
+            </button>
+            <label className="flex items-center gap-2 whitespace-nowrap pb-1">
+              <input
+                type="checkbox"
+                checked={creditUpToInvoice}
+                onChange={(e) => {
+                  setCreditUpToInvoice(e.target.checked);
+                  fetchApproxSettlement(e.target.checked);
+                }}
+                className="rounded border-gray-300 text-green-600 shadow-sm focus:border-green-300 focus:ring focus:ring-green-200 focus:ring-opacity-50"
+              />
+              <span className="text-sm text-gray-700">Credit Up to Invoice Date</span>
+            </label>
+          </div>
+
           {approxLoading ? (
             <div className="text-sm text-gray-500">Loading...</div>
           ) : approxSettlement ? (

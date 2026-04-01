@@ -284,7 +284,11 @@ export const dailySalesApi = {
 			include_credit: includeCredit
 		}),
 	getSettlementDates: () => api.get('/settlement-dates'),
-	getApproximateSettlement: () => api.get('/daily-sales/approximate-settlement'),
+	getApproximateSettlement: (useInvoiceDate?: boolean) =>
+		api.get('/daily-sales/approximate-settlement', { params: { use_invoice_date: useInvoiceDate } }),
+	getInvoiceDate: () => api.get('/settlement-invoice-date'),
+	updateInvoiceDate: (invoiceDate: string) =>
+		api.put('/settlement-invoice-date', { invoice_date: invoiceDate }),
 	updateSettlementDates: (debitDate: string, creditDate: string) =>
 		api.put('/settlement-dates', {
 			debit_date: debitDate,
