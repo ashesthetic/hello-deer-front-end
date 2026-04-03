@@ -117,6 +117,7 @@ import DocumentsPage from './pages/DocumentsPage';
 import DocumentFormPage from './pages/DocumentFormPage';
 import StaffDocumentsPage from './pages/StaffDocumentsPage';
 import GasBuddyPage from './pages/GasBuddyPage';
+import ShiftReportPage from './pages/ShiftReportPage';
 
 const App: React.FC = () => {
 	const dispatch = useDispatch();
@@ -715,6 +716,12 @@ const App: React.FC = () => {
 					<Route
 						path="/settings/gasbuddy"
 						element={isAuthenticated ? <Layout><GasBuddyPage /></Layout> : <Navigate to="/login" />}
+					/>
+
+					{/* Shift Report Settings Route */}
+					<Route
+						path="/settings/shift-report"
+						element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="admin"><ShiftReportPage /></ProtectedRoute></Layout> : <Navigate to="/login" />}
 					/>
 
 					{/* Legacy Routes - Redirect to new structure */}
