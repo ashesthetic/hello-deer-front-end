@@ -8,7 +8,7 @@ const HelloDeerDataPage: React.FC = () => {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Hello Deer Data</h1>
         </div>
-        <LiveTankVolumeCard />
+        <LiveTankVolumeCard staffMode={true} />
       </div>
     </div>
   );

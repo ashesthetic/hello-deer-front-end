@@ -1198,6 +1198,7 @@ export interface RegularFuelVolumeRecord {
 
 export const regularFuelVolumeApi = {
 	getLatest: () => api.get<{ data: RegularFuelVolumeRecord[] }>('/regular-fuel-volumes?per_page=1&sort_by=datetime&sort_direction=desc'),
+	getLatestForStaff: () => api.get<{ data: RegularFuelVolumeRecord[] }>('/staff/regular-fuel-volumes?per_page=1&sort_by=datetime&sort_direction=desc'),
 	getAll: (params?: any) => api.get('/regular-fuel-volumes', { params }),
 	getByMonth: (year: number, month: number) => api.get(`/regular-fuel-volumes/month/${year}/${month}`),
 	getByDate: (date: string) => api.get(`/regular-fuel-volumes/date/${date}`),

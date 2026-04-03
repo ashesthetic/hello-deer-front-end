@@ -82,7 +82,11 @@ const TankRow: React.FC<TankRowProps> = ({
 	);
 };
 
-const LiveTankVolumeCard: React.FC = () => {
+interface LiveTankVolumeCardProps {
+	staffMode?: boolean;
+}
+
+const LiveTankVolumeCard: React.FC<LiveTankVolumeCardProps> = ({ staffMode = false }) => {
 	const [record, setRecord] = useState<RegularFuelVolumeRecord | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
@@ -91,7 +95,7 @@ const LiveTankVolumeCard: React.FC = () => {
 		try {
 			setLoading(true);
 			setError(null);
-			const res = await regularFuelVolumeApi.getLatest();
+			const res = await (staffMode ? regularFuelVolumeApi.getLatestForStaff() : regularFuelVolumeApi.getLatest());
 			const items = res.data?.data ?? [];
 			setRecord(items.length > 0 ? items[0] : null);
 		} catch (err: any) {
