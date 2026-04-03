@@ -119,6 +119,7 @@ import StaffDocumentsPage from './pages/StaffDocumentsPage';
 import GasBuddyPage from './pages/GasBuddyPage';
 import ShiftReportPage from './pages/ShiftReportPage';
 import HelloDeerDataPage from './pages/HelloDeerDataPage';
+import MyHoursPage from './pages/MyHoursPage';
 
 const App: React.FC = () => {
 	const dispatch = useDispatch();
@@ -723,6 +724,12 @@ const App: React.FC = () => {
 				<Route
 					path="/hello-deer-data"
 					element={isAuthenticated ? <Layout><HelloDeerDataPage /></Layout> : <Navigate to="/login" />}
+				/>
+
+				{/* My Hours Route */}
+				<Route
+					path="/my-hours"
+					element={isAuthenticated ? <Layout><MyHoursPage /></Layout> : <Navigate to="/login" />}
 				/>
 
 				{/* Shift Report Settings Route */}
