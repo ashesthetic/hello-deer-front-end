@@ -103,7 +103,7 @@ const LiveTankVolumeCard: React.FC<LiveTankVolumeCardProps> = ({ staffMode = fal
 		} finally {
 			setLoading(false);
 		}
-	}, []);
+	}, [staffMode]);
 
 	useEffect(() => { fetchLatest(); }, [fetchLatest]);
 
