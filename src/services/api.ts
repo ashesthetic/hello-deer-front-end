@@ -1328,4 +1328,12 @@ export const documentApi = {
 	}),
 };
 
+export const fuelDeliveryApi = {
+	getAll: (params?: any) => api.get('/fuel-deliveries', { params }),
+	getById: (id: number) => api.get(`/fuel-deliveries/${id}`),
+	create: (data: any) => api.post('/fuel-deliveries', data),
+	update: (id: number, data: any) => api.put(`/fuel-deliveries/${id}`, data),
+	delete: (id: number) => api.delete(`/fuel-deliveries/${id}`),
+};
+
 export default api;

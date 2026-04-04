@@ -120,6 +120,11 @@ import GasBuddyPage from './pages/GasBuddyPage';
 import ShiftReportPage from './pages/ShiftReportPage';
 import HelloDeerDataPage from './pages/HelloDeerDataPage';
 import MyHoursPage from './pages/MyHoursPage';
+import FuelDeliveryPage from './pages/FuelDeliveryPage';
+import FuelDeliveryAddPage from './pages/FuelDeliveryAddPage';
+import FuelDeliveryViewPage from './pages/FuelDeliveryViewPage';
+import FuelDeliveryEditPage from './pages/FuelDeliveryEditPage';
+import CrossLeasePage from './pages/CrossLeasePage';
 
 const App: React.FC = () => {
 	const dispatch = useDispatch();
@@ -455,6 +460,30 @@ const App: React.FC = () => {
 					<Route
 						path="/resolve-pos"
 						element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="admin"><ResolvePoPage /></ProtectedRoute></Layout> : <Navigate to="/login" />}
+					/>
+
+					{/* Cross Lease Route (Admin only) */}
+					<Route
+						path="/resolve/cross-lease"
+						element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="admin"><CrossLeasePage /></ProtectedRoute></Layout> : <Navigate to="/login" />}
+					/>
+
+					{/* Fuel Delivery Routes */}
+					<Route
+						path="/fuel-delivery"
+						element={isAuthenticated ? <Layout><FuelDeliveryPage /></Layout> : <Navigate to="/login" />}
+					/>
+					<Route
+						path="/fuel-delivery/add"
+						element={isAuthenticated ? <Layout><FuelDeliveryAddPage /></Layout> : <Navigate to="/login" />}
+					/>
+					<Route
+						path="/fuel-delivery/:id"
+						element={isAuthenticated ? <Layout><FuelDeliveryViewPage /></Layout> : <Navigate to="/login" />}
+					/>
+					<Route
+						path="/fuel-delivery/:id/edit"
+						element={isAuthenticated ? <Layout><FuelDeliveryEditPage /></Layout> : <Navigate to="/login" />}
 					/>
 
 					<Route

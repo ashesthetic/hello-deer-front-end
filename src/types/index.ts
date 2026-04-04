@@ -654,3 +654,21 @@ export interface ContactSubmissionStats {
 	this_week: number;
 	this_month: number;
 }
+
+export interface FuelDelivery {
+	id?: number;
+	delivery_date: string;
+	invoice_number?: string;
+	regular?: number | null;
+	premium?: number | null;
+	diesel?: number | null;
+	total?: number | null;
+	amount?: number | null;
+	issued: boolean;
+	issued_date?: string | null;
+	resolved: boolean;
+	resolved_date?: string | null;
+	note?: string | null;
+	created_at?: string;
+	updated_at?: string;
+}
