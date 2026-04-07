@@ -225,6 +225,13 @@ interface TransactionDay {
   store: number | null;
 }
 
+const toLocalISO = (d: Date) => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+};
+
 const DashboardStatsCards: React.FC = () => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -232,72 +239,58 @@ const DashboardStatsCards: React.FC = () => {
   const [transactionHistory, setTransactionHistory] = useState<TransactionDay[]>([]);
 
   useEffect(() => {
-    fetchDashboardStats();
+    const fetchStats = async () => {
+      try {
+        setLoading(true);
+        const response = await api.get('/dashboard/stats');
+        setStats(response.data);
+      } catch (err) {
+        console.error('Error fetching dashboard stats:', err);
+        setError(err instanceof Error ? err.message : 'An error occurred');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const fetchTransactionHistory = async () => {
+      const today = new Date();
+      const endDate = toLocalISO(today);
+      const startDate = new Date(today);
+      startDate.setDate(startDate.getDate() - 13);
+      const startDateStr = toLocalISO(startDate);
+
+      const days: TransactionDay[] = [];
+      for (let i = 0; i < 14; i++) {
+        const d = new Date(today);
+        d.setDate(d.getDate() - i);
+        const iso = toLocalISO(d);
+        const month = d.toLocaleDateString('en-CA', { month: 'long' });
+        const day = String(d.getDate()).padStart(2, '0');
+        const weekday = d.toLocaleDateString('en-CA', { weekday: 'short' });
+        days.push({ date: iso, label: `${month} ${day}, ${weekday}`, total: null, fuel: null, store: null });
+      }
+
+      try {
+        const response = await dailySalesApi.getAll({ start_date: startDateStr, end_date: endDate, per_page: 14 });
+        const sales: any[] = response.data?.data ?? response.data ?? [];
+        const byDate: Record<string, any> = {};
+        sales.forEach((s: any) => {
+          const raw: string = s.date ?? '';
+          const key = raw.includes('T') ? toLocalISO(new Date(raw)) : raw.substring(0, 10);
+          byDate[key] = s;
+        });
+        setTransactionHistory(days.map(d => {
+          const s = byDate[d.date];
+          return s ? { ...d, total: s.total_transactions ?? null, fuel: s.fuel_transactions ?? null, store: s.store_transactions ?? null } : d;
+        }));
+      } catch {
+        setTransactionHistory(days);
+      }
+    };
+
+    fetchStats();
     fetchTransactionHistory();
   }, []);
-
-  const fetchDashboardStats = async () => {
-    try {
-      setLoading(true);
-      const response = await api.get('/dashboard/stats');
-      setStats(response.data);
-    } catch (err) {
-      console.error('Error fetching dashboard stats:', err);
-      setError(err instanceof Error ? err.message : 'An error occurred');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const toLocalISO = (d: Date) => {
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${y}-${m}-${day}`;
-  };
-
-  const fetchTransactionHistory = async () => {
-
-    const today = new Date();
-    const endDate = toLocalISO(today);
-    const startDate = new Date(today);
-    startDate.setDate(startDate.getDate() - 13);
-    const startDateStr = toLocalISO(startDate);
-
-    // Build the 14-day slots (most recent first)
-    const days: TransactionDay[] = [];
-    for (let i = 0; i < 14; i++) {
-      const d = new Date(today);
-      d.setDate(d.getDate() - i);
-      const iso = toLocalISO(d);
-      const month = d.toLocaleDateString('en-CA', { month: 'long' });
-      const day = String(d.getDate()).padStart(2, '0');
-      const weekday = d.toLocaleDateString('en-CA', { weekday: 'short' });
-      days.push({ date: iso, label: `${month} ${day}, ${weekday}`, total: null, fuel: null, store: null });
-    }
-
-    try {
-      const response = await dailySalesApi.getAll({ start_date: startDateStr, end_date: endDate, per_page: 14 });
-      const sales: any[] = response.data?.data ?? response.data ?? [];
-      const byDate: Record<string, any> = {};
-      sales.forEach((s: any) => {
-        // Parse the date as local to avoid UTC rollback
-        const raw: string = s.date ?? '';
-        const key = raw.includes('T') ? toLocalISO(new Date(raw)) : raw.substring(0, 10);
-        byDate[key] = s;
-      });
-      const filled = days.map(d => {
-        const s = byDate[d.date];
-        if (s) {
-          return { ...d, total: s.total_transactions ?? null, fuel: s.fuel_transactions ?? null, store: s.store_transactions ?? null };
-        }
-        return d;
-      });
-      setTransactionHistory(filled);
-    } catch {
-      setTransactionHistory(days);
-    }
-  };
 
   if (loading) {
     return (
