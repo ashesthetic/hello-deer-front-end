@@ -92,6 +92,11 @@ export interface DailySale {
 	afd_interac_debit: number | undefined;
 	afd_debit_transaction_count: number | undefined;
 
+	// Transaction Summary
+	total_transactions?: number | undefined;
+	fuel_transactions?: number | undefined;
+	store_transactions?: number | undefined;
+
 	// Loyalty Section
 	journey_discount: number | undefined;
 	aeroplan_discount: number | undefined;

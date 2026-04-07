@@ -335,6 +335,25 @@ const DailySalesDetail: React.FC<DailySalesDetailProps> = ({
         </div>
       </div>
 
+      {/* Transaction Summary Section */}
+      <div className="bg-teal-50 p-4 rounded-lg mb-6">
+        <h3 className="text-lg font-semibold mb-4 text-gray-800">Transaction Summary</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">TOTAL TRANSACTIONS</label>
+            <p className="font-semibold text-teal-700">{sale.total_transactions || 0}</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">FUEL TRANSACTIONS</label>
+            <p className="font-semibold text-teal-700">{sale.fuel_transactions || 0}</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">STORE TRANSACTIONS</label>
+            <p className="font-semibold text-teal-700">{sale.store_transactions || 0}</p>
+          </div>
+        </div>
+      </div>
+
       {/* Loyalty Section */}
       <div className="bg-indigo-50 p-4 rounded-lg mb-6">
         <div className="flex justify-between items-center mb-4">

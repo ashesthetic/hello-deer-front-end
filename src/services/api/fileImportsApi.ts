@@ -104,6 +104,10 @@ export interface SftProcessResult {
     // Loyalty Discounts
     journey_discount: number;
     aeroplan_discount: number;
+    // Transaction Counts
+    total_transactions: number;
+    fuel_transactions: number;
+    store_transactions: number;
     // Fuel Volume Data
     diesel_volume: number;
     diesel_total: number;
@@ -156,6 +160,10 @@ export interface SftProcessResult {
       // Loyalty Discounts
       journey_discount: number;
       aeroplan_discount: number;
+      // Transaction Counts
+      total_transactions: number;
+      fuel_transactions: number;
+      store_transactions: number;
       // Fuel Volume Data
       diesel_volume: number;
       diesel_total: number;

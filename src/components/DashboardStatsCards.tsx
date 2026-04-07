@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
+import { dailySalesApi } from '../services/api';
 
 interface BankAccount {
   id: number;
@@ -216,19 +217,28 @@ interface DashboardStats {
   };
 }
 
+interface TransactionDay {
+  date: string; // YYYY-MM-DD
+  label: string; // "April 04, Sat"
+  total: number | null;
+  fuel: number | null;
+  store: number | null;
+}
+
 const DashboardStatsCards: React.FC = () => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [transactionHistory, setTransactionHistory] = useState<TransactionDay[]>([]);
 
   useEffect(() => {
     fetchDashboardStats();
+    fetchTransactionHistory();
   }, []);
 
   const fetchDashboardStats = async () => {
     try {
       setLoading(true);
-      
       const response = await api.get('/dashboard/stats');
       setStats(response.data);
     } catch (err) {
@@ -236,6 +246,56 @@ const DashboardStatsCards: React.FC = () => {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const toLocalISO = (d: Date) => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  };
+
+  const fetchTransactionHistory = async () => {
+
+    const today = new Date();
+    const endDate = toLocalISO(today);
+    const startDate = new Date(today);
+    startDate.setDate(startDate.getDate() - 13);
+    const startDateStr = toLocalISO(startDate);
+
+    // Build the 14-day slots (most recent first)
+    const days: TransactionDay[] = [];
+    for (let i = 0; i < 14; i++) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      const iso = toLocalISO(d);
+      const month = d.toLocaleDateString('en-CA', { month: 'long' });
+      const day = String(d.getDate()).padStart(2, '0');
+      const weekday = d.toLocaleDateString('en-CA', { weekday: 'short' });
+      days.push({ date: iso, label: `${month} ${day}, ${weekday}`, total: null, fuel: null, store: null });
+    }
+
+    try {
+      const response = await dailySalesApi.getAll({ start_date: startDateStr, end_date: endDate, per_page: 14 });
+      const sales: any[] = response.data?.data ?? response.data ?? [];
+      const byDate: Record<string, any> = {};
+      sales.forEach((s: any) => {
+        // Parse the date as local to avoid UTC rollback
+        const raw: string = s.date ?? '';
+        const key = raw.includes('T') ? toLocalISO(new Date(raw)) : raw.substring(0, 10);
+        byDate[key] = s;
+      });
+      const filled = days.map(d => {
+        const s = byDate[d.date];
+        if (s) {
+          return { ...d, total: s.total_transactions ?? null, fuel: s.fuel_transactions ?? null, store: s.store_transactions ?? null };
+        }
+        return d;
+      });
+      setTransactionHistory(filled);
+    } catch {
+      setTransactionHistory(days);
     }
   };
 
@@ -927,6 +987,42 @@ const DashboardStatsCards: React.FC = () => {
               No data available for last month ({stats.last_month_data.formatted_period})
             </div>
           )}
+        </div>
+      </div>
+
+      {/* Eighth Row - Transactions History */}
+      <div className="grid grid-cols-1 gap-6">
+        <div className="bg-gradient-to-br from-slate-50 to-gray-50 rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow border border-slate-100">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Transactions History</h3>
+            <div className="w-12 h-12 bg-slate-100 rounded-lg flex items-center justify-center">
+              <svg className="w-6 h-6 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+            </div>
+          </div>
+          <div className="text-sm text-gray-500 mb-4">Last 14 days — most recent first</div>
+          {[0, 1].map(row => (
+            <div key={row} className={`grid grid-cols-7 gap-2${row === 0 ? ' mb-2' : ''}`}>
+              {transactionHistory.slice(row * 7, row * 7 + 7).map(day => (
+                <div key={day.date} className="bg-white rounded-lg p-3 shadow-sm border border-gray-100 text-center">
+                  <div className="text-xs font-semibold text-gray-700 mb-2 leading-tight">{day.label}</div>
+                  {day.total !== null ? (
+                    <>
+                      <div className="text-xs text-gray-500">Total</div>
+                      <div className="text-sm font-bold text-gray-900 mb-1">{day.total}</div>
+                      <div className="text-xs text-gray-500">Fuel</div>
+                      <div className="text-sm font-bold text-blue-600 mb-1">{day.fuel ?? 0}</div>
+                      <div className="text-xs text-gray-500">Store</div>
+                      <div className="text-sm font-bold text-green-600">{day.store ?? 0}</div>
+                    </>
+                  ) : (
+                    <div className="text-xs text-gray-400 italic mt-2">No data</div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ))}
         </div>
       </div>
     </div>

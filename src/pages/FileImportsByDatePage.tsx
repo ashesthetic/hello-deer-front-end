@@ -469,6 +469,29 @@ const FileImportsByDatePage: React.FC = () => {
                     </div>
                   </div>
                   
+                  {/* Transaction Summary */}
+                  <div className="bg-teal-50 p-6 rounded-lg border border-teal-200 mt-6">
+                    <h4 className="text-md font-medium text-gray-900 mb-4">Transaction Summary</h4>
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full">
+                        <tbody className="divide-y divide-teal-200">
+                          <tr>
+                            <td className="py-2 px-4 text-sm font-medium text-teal-900">Total Transactions</td>
+                            <td className="py-2 px-4 text-sm text-teal-900">{sftProcessResult.data.total_transactions}</td>
+                            <td className="py-2 px-4 text-sm font-medium text-teal-900">Fuel Transactions</td>
+                            <td className="py-2 px-4 text-sm text-teal-900">{sftProcessResult.data.fuel_transactions}</td>
+                          </tr>
+                          <tr>
+                            <td className="py-2 px-4 text-sm font-medium text-teal-900">Store Transactions</td>
+                            <td className="py-2 px-4 text-sm text-teal-900">{sftProcessResult.data.store_transactions}</td>
+                            <td></td>
+                            <td></td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
                   {/* Department Totals */}
                   <div className="bg-green-50 p-6 rounded-lg border border-green-200 mt-6">
                     <h4 className="text-md font-medium text-gray-900 mb-4">Department Totals</h4>
@@ -608,6 +631,18 @@ const FileImportsByDatePage: React.FC = () => {
                           <div className="flex justify-between">
                             <span className="text-gray-600">Safedrops:</span>
                             <span className="font-medium">{mappedData.salesData.number_of_safedrops || 0} (${(mappedData.salesData.safedrops_amount || 0).toFixed(2)})</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Total Transactions:</span>
+                            <span className="font-medium">{mappedData.salesData.total_transactions || 0}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Fuel Transactions:</span>
+                            <span className="font-medium">{mappedData.salesData.fuel_transactions || 0}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Store Transactions:</span>
+                            <span className="font-medium">{mappedData.salesData.store_transactions || 0}</span>
                           </div>
                         </div>
                       </div>

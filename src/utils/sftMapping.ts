@@ -56,6 +56,11 @@ export function mapSftDataToForms(sftData: SftProcessResult['data'], date: strin
     // Loyalty Discounts
     journey_discount: sftData.journey_discount || 0,
     aeroplan_discount: sftData.aeroplan_discount || 0,
+
+    // Transaction Summary
+    total_transactions: sftData.total_transactions || 0,
+    fuel_transactions: sftData.fuel_transactions || 0,
+    store_transactions: sftData.store_transactions || 0,
     
     // Low Margin Items (using department totals)
     tobacco_25: sftData.tobacco_25 || 0,

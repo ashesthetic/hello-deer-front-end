@@ -50,6 +50,9 @@ const DailySalesForm: React.FC<DailySalesFormProps> = ({
 		afd_discover: undefined,
 		afd_interac_debit: undefined,
 		afd_debit_transaction_count: undefined,
+		total_transactions: undefined,
+		fuel_transactions: undefined,
+		store_transactions: undefined,
 		journey_discount: undefined,
 		aeroplan_discount: undefined,
 		tobacco_25: undefined,
@@ -115,6 +118,9 @@ const DailySalesForm: React.FC<DailySalesFormProps> = ({
 				afd_discover: initialData.afd_discover,
 				afd_interac_debit: initialData.afd_interac_debit,
 				afd_debit_transaction_count: initialData.afd_debit_transaction_count,
+				total_transactions: initialData.total_transactions,
+				fuel_transactions: initialData.fuel_transactions,
+				store_transactions: initialData.store_transactions,
 				journey_discount: initialData.journey_discount,
 				aeroplan_discount: initialData.aeroplan_discount,
 				tobacco_25: initialData.tobacco_25,
@@ -266,6 +272,9 @@ const DailySalesForm: React.FC<DailySalesFormProps> = ({
 			afd_discover: formData.afd_discover || 0,
 			afd_interac_debit: formData.afd_interac_debit || 0,
 			afd_debit_transaction_count: formData.afd_debit_transaction_count || 0,
+			total_transactions: formData.total_transactions || 0,
+			fuel_transactions: formData.fuel_transactions || 0,
+			store_transactions: formData.store_transactions || 0,
 			journey_discount: formData.journey_discount || 0,
 			aeroplan_discount: formData.aeroplan_discount || 0,
 			tobacco_25: formData.tobacco_25 || 0,
@@ -766,6 +775,49 @@ const DailySalesForm: React.FC<DailySalesFormProps> = ({
 						</div>
 						<div className="mt-2 text-right">
 							<span className="text-sm text-gray-600">AFD Total: {formatCurrency(totalAfdTransactions)}</span>
+						</div>
+					</div>
+				</div>
+
+				{/* Transaction Summary Section */}
+				<div className="bg-teal-50 p-4 rounded-lg">
+					<h3 className="text-lg font-semibold mb-4 text-gray-800">Transaction Summary</h3>
+					<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+						<div>
+							<label className="block text-sm font-medium text-gray-700 mb-2">TOTAL TRANSACTIONS</label>
+							<input
+								type="number"
+								min="0"
+								required
+								value={formData.total_transactions ?? ''}
+								onChange={(e) => handleInputChange('total_transactions', e.target.value === '' ? undefined : parseInt(e.target.value))}
+								className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+								placeholder="0"
+							/>
+						</div>
+						<div>
+							<label className="block text-sm font-medium text-gray-700 mb-2">FUEL TRANSACTIONS</label>
+							<input
+								type="number"
+								min="0"
+								required
+								value={formData.fuel_transactions ?? ''}
+								onChange={(e) => handleInputChange('fuel_transactions', e.target.value === '' ? undefined : parseInt(e.target.value))}
+								className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+								placeholder="0"
+							/>
+						</div>
+						<div>
+							<label className="block text-sm font-medium text-gray-700 mb-2">STORE TRANSACTIONS</label>
+							<input
+								type="number"
+								min="0"
+								required
+								value={formData.store_transactions ?? ''}
+								onChange={(e) => handleInputChange('store_transactions', e.target.value === '' ? undefined : parseInt(e.target.value))}
+								className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+								placeholder="0"
+							/>
 						</div>
 					</div>
 				</div>
