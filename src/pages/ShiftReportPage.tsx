@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { shiftReportApi, SftFileInfo } from '../services/api/shiftReportApi';
 import { SftProcessResult } from '../services/api/fileImportsApi';
-import { dailySalesApi, dailyFuelsApi } from '../services/api';
+import { dailySalesApi, dailyFuelsApi, profitApi, ProfitPercentages } from '../services/api';
 import { mapSftDataToForms, validateMappedData } from '../utils/sftMapping';
 import { SftToFormMapping } from '../types/sftMapping';
 
@@ -16,6 +16,20 @@ const ShiftReportPage: React.FC = () => {
   const [savingData, setSavingData] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [profitPercentages, setProfitPercentages] = useState<ProfitPercentages | null>(null);
+
+  useEffect(() => {
+    profitApi.getPercentages()
+      .then(res => setProfitPercentages(res.data))
+      .catch(() => setProfitPercentages({
+        fuel_percentage: 4,
+        tobacco_25_percentage: 8,
+        tobacco_20_percentage: 8,
+        lottery_percentage: 2,
+        prepay_percentage: 1,
+        store_sale_percentage: 50,
+      }));
+  }, []);
 
   const formatFileSize = (bytes: number): string => {
     if (bytes === 0) return '0 Bytes';
@@ -344,6 +358,62 @@ const ShiftReportPage: React.FC = () => {
                       </table>
                     </div>
                   </div>
+
+                  {/* Approximate Profit */}
+                  {profitPercentages && (() => {
+                    const d = sftProcessResult.data!;
+                    const storeSaleCalc = d.item_sales - d.tobacco_25 - d.tobacco_20 - d.lottery_total - d.prepay_total - d.gst;
+                    const fuelProfit = (d.fuel_sales * profitPercentages.fuel_percentage) / 100;
+                    const tobacco25Profit = (d.tobacco_25 * profitPercentages.tobacco_25_percentage) / 100;
+                    const tobacco20Profit = (d.tobacco_20 * profitPercentages.tobacco_20_percentage) / 100;
+                    const lotteryProfit = (d.lottery_total * profitPercentages.lottery_percentage) / 100;
+                    const prepayProfit = (d.prepay_total * profitPercentages.prepay_percentage) / 100;
+                    const storeSaleProfit = (storeSaleCalc * profitPercentages.store_sale_percentage) / 100;
+                    const totalProfit = fuelProfit + tobacco25Profit + tobacco20Profit + lotteryProfit + prepayProfit + storeSaleProfit;
+                    return (
+                      <div className="bg-green-50 p-6 rounded-lg border border-green-200 mt-6">
+                        <div className="flex justify-between items-center mb-4">
+                          <h4 className="text-md font-medium text-gray-900">Approximate Profit</h4>
+                          <div className="text-right">
+                            <div className="text-sm text-gray-600">Total Profit</div>
+                            <div className="text-xl font-bold text-green-600">${totalProfit.toFixed(2)}</div>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">Fuel Profit ({profitPercentages.fuel_percentage}%)</label>
+                            <p className="text-sm text-gray-600">Amount: ${d.fuel_sales.toFixed(2)}</p>
+                            <p className="text-lg font-semibold text-green-600">Profit: ${fuelProfit.toFixed(2)}</p>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">Tobacco 25 Profit ({profitPercentages.tobacco_25_percentage}%)</label>
+                            <p className="text-sm text-gray-600">Amount: ${d.tobacco_25.toFixed(2)}</p>
+                            <p className="text-lg font-semibold text-green-600">Profit: ${tobacco25Profit.toFixed(2)}</p>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">Tobacco 20 Profit ({profitPercentages.tobacco_20_percentage}%)</label>
+                            <p className="text-sm text-gray-600">Amount: ${d.tobacco_20.toFixed(2)}</p>
+                            <p className="text-lg font-semibold text-green-600">Profit: ${tobacco20Profit.toFixed(2)}</p>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">Lottery Profit ({profitPercentages.lottery_percentage}%)</label>
+                            <p className="text-sm text-gray-600">Amount: ${d.lottery_total.toFixed(2)}</p>
+                            <p className="text-lg font-semibold text-green-600">Profit: ${lotteryProfit.toFixed(2)}</p>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">Prepay Profit ({profitPercentages.prepay_percentage}%)</label>
+                            <p className="text-sm text-gray-600">Amount: ${d.prepay_total.toFixed(2)}</p>
+                            <p className="text-lg font-semibold text-green-600">Profit: ${prepayProfit.toFixed(2)}</p>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">Store Sale Profit ({profitPercentages.store_sale_percentage}%)</label>
+                            <p className="text-sm text-gray-600">Amount: ${storeSaleCalc.toFixed(2)}</p>
+                            <p className="text-lg font-semibold text-green-600">Profit: ${storeSaleProfit.toFixed(2)}</p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
 
                   {/* Transaction Details */}
                   <div className="bg-purple-50 p-6 rounded-lg border border-purple-200 mt-6">
