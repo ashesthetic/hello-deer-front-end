@@ -125,6 +125,10 @@ import FuelDeliveryAddPage from './pages/FuelDeliveryAddPage';
 import FuelDeliveryViewPage from './pages/FuelDeliveryViewPage';
 import FuelDeliveryEditPage from './pages/FuelDeliveryEditPage';
 import CrossLeasePage from './pages/CrossLeasePage';
+import DepartmentsPage from './pages/DepartmentsPage';
+import ProductsPage from './pages/ProductsPage';
+import ItemSalesPage from './pages/ItemSalesPage';
+import DepartmentSalesPage from './pages/DepartmentSalesPage';
 
 const App: React.FC = () => {
 	const dispatch = useDispatch();
@@ -579,6 +583,24 @@ const App: React.FC = () => {
 					<Route
 						path="/entry/post/add"
 						element={isAuthenticated ? <Layout><PostAddPage /></Layout> : <Navigate to="/login" />}
+					/>
+
+					{/* Departments, Products, Item Sales, Department Sales routes (Admin only) */}
+					<Route
+						path="/entry/departments"
+						element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="admin"><DepartmentsPage /></ProtectedRoute></Layout> : <Navigate to="/login" />}
+					/>
+					<Route
+						path="/entry/products"
+						element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="admin"><ProductsPage /></ProtectedRoute></Layout> : <Navigate to="/login" />}
+					/>
+					<Route
+						path="/entry/item-sales"
+						element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="admin"><ItemSalesPage /></ProtectedRoute></Layout> : <Navigate to="/login" />}
+					/>
+					<Route
+						path="/entry/department-sales"
+						element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="admin"><DepartmentSalesPage /></ProtectedRoute></Layout> : <Navigate to="/login" />}
 					/>
 
 					{/* Documents routes (Admin only) */}

@@ -16,4 +16,9 @@ export const shiftReportApi = {
     const response = await api.post('/shift-report/process', { date });
     return response.data;
   },
+
+  saveItemSales: async (date: string): Promise<{ success: boolean; message: string; data?: { departments_saved: number; items_saved: number; items_without_product: number; errors: string[] } }> => {
+    const response = await api.post('/shift-report/save-item-sales', { date });
+    return response.data;
+  },
 };

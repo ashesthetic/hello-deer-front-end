@@ -37,7 +37,9 @@ interface MonthlyTrendData {
 	tobacco_25: number;
 	tobacco_20: number;
 	lottery: number;
+	prepay: number;
 	fuel_quantity?: number;
+	store_sale?: number;
 }
 
 const SalesReportPage: React.FC = () => {
@@ -1082,6 +1084,46 @@ const SalesReportPage: React.FC = () => {
 											</div>
 										</div>
 									)}
+
+									{/* Store Sales by Month */}
+									<div className="bg-white rounded-lg shadow-lg p-6">
+										<h3 className="text-lg font-semibold text-gray-900 mb-4">Store Sales by Month</h3>
+										<div className="h-80">
+											<Bar
+												data={createMonthlyTrendChartData('store_sale', 'Store Sales', '#06B6D4')}
+												options={monthlyTrendChartOptions}
+											/>
+										</div>
+									</div>
+
+									{/* High Margin Sale by Month */}
+									<div className="bg-white rounded-lg shadow-lg p-6">
+										<h3 className="text-lg font-semibold text-gray-900 mb-4">High Margin Sale by Month</h3>
+										<p className="text-sm text-gray-500 mb-4">Store Sale − Tobacco 25 − Tobacco 20 − Lottery − Prepay</p>
+										<div className="h-80">
+											<Bar
+												data={{
+													labels: monthlyTrends.map(m => m.month_name),
+													datasets: [{
+														label: 'High Margin Sale',
+														data: monthlyTrends.map(m =>
+															(Number(m.store_sale) || 0)
+															- (Number(m.tobacco_25) || 0)
+															- (Number(m.tobacco_20) || 0)
+															- (Number(m.lottery) || 0)
+															- (Number(m.prepay) || 0)
+														),
+														backgroundColor: '#10B981',
+														borderColor: '#10B981',
+														borderWidth: 1,
+														borderRadius: 4,
+														borderSkipped: false,
+													}]
+												}}
+												options={monthlyTrendChartOptions}
+											/>
+										</div>
+									</div>
 
 									{/* Tobacco Sales by Month (Tobacco 25 + Tobacco 20) */}
 									<div className="bg-white rounded-lg shadow-lg p-6">

@@ -1336,4 +1336,67 @@ export const fuelDeliveryApi = {
 	delete: (id: number) => api.delete(`/fuel-deliveries/${id}`),
 };
 
+export interface Department {
+	department_number: number;
+	name: string;
+	created_at: string;
+	updated_at: string;
+}
+
+export const departmentsApi = {
+	getAll: (params?: any) => api.get('/departments', { params }),
+	getById: (departmentNumber: number) => api.get(`/departments/${departmentNumber}`),
+};
+
+export interface Product {
+	id: number;
+	item_number: string;
+	name: string;
+	price: string;
+	department_number: number;
+	department?: Department;
+	created_at: string;
+	updated_at: string;
+}
+
+export const productsApi = {
+	getAll: (params?: any) => api.get('/products', { params }),
+	getById: (id: number) => api.get(`/products/${id}`),
+};
+
+export interface ItemSale {
+	id: number;
+	item_number: string;
+	department_number: number | null;
+	name: string;
+	qty: string;
+	price: string;
+	date: string;
+	product?: Product;
+	department?: Department;
+	created_at: string;
+	updated_at: string;
+}
+
+export const itemSalesApi = {
+	getAll: (params?: any) => api.get('/item-sales', { params }),
+	getById: (id: number) => api.get(`/item-sales/${id}`),
+};
+
+export interface DepartmentSale {
+	id: number;
+	department_number: number;
+	qty: string;
+	price: string;
+	date?: string | null;
+	department?: Department;
+	created_at: string;
+	updated_at: string;
+}
+
+export const departmentSalesApi = {
+	getAll: (params?: any) => api.get('/department-sales', { params }),
+	getById: (id: number) => api.get(`/department-sales/${id}`),
+};
+
 export default api;

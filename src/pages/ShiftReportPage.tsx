@@ -146,6 +146,9 @@ const ShiftReportPage: React.FC = () => {
         }
       }
 
+      // Save item sales and department sales from SFT files
+      await shiftReportApi.saveItemSales(selectedDate);
+
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
     } catch (error: any) {
