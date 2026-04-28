@@ -149,6 +149,13 @@ const DailySalesDetail: React.FC<DailySalesDetailProps> = ({
               <p className="text-sm text-gray-600">Amount: {formatCurrency(safeNumber(sale.store_sale_calculated))}</p>
               <p className="text-lg font-semibold text-green-600">Profit: {formatCurrency((safeNumber(sale.store_sale_calculated) * profitPercentages.store_sale_percentage) / 100)}</p>
             </div>
+            {safeNumber(sale.cashback_payout) > 0 && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Cashback Payout (Deduction)</label>
+                <p className="text-sm text-gray-600">Amount: {formatCurrency(safeNumber(sale.cashback_payout))}</p>
+                <p className="text-lg font-semibold text-red-600">- {formatCurrency(safeNumber(sale.cashback_payout))}</p>
+              </div>
+            )}
           </div>
         ) : (
           <div className="text-center py-4">

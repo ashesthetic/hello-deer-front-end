@@ -390,7 +390,8 @@ const ShiftReportPage: React.FC = () => {
                     const lotteryProfit = (d.lottery_total * profitPercentages.lottery_percentage) / 100;
                     const prepayProfit = (d.prepay_total * profitPercentages.prepay_percentage) / 100;
                     const storeSaleProfit = (storeSaleCalc * profitPercentages.store_sale_percentage) / 100;
-                    const totalProfit = fuelProfit + tobacco25Profit + tobacco20Profit + lotteryProfit + prepayProfit + storeSaleProfit;
+                    const cashbackDeduction = d.cashback_payout || 0;
+                    const totalProfit = fuelProfit + tobacco25Profit + tobacco20Profit + lotteryProfit + prepayProfit + storeSaleProfit - cashbackDeduction;
                     return (
                       <div className="bg-green-50 p-6 rounded-lg border border-green-200 mt-6">
                         <div className="flex justify-between items-center mb-4">
@@ -431,6 +432,13 @@ const ShiftReportPage: React.FC = () => {
                             <p className="text-sm text-gray-600">Amount: ${storeSaleCalc.toFixed(2)}</p>
                             <p className="text-lg font-semibold text-green-600">Profit: ${storeSaleProfit.toFixed(2)}</p>
                           </div>
+                          {cashbackDeduction > 0 && (
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700">Cashback Payout (Deduction)</label>
+                              <p className="text-sm text-gray-600">Amount: ${cashbackDeduction.toFixed(2)}</p>
+                              <p className="text-lg font-semibold text-red-600">- ${cashbackDeduction.toFixed(2)}</p>
+                            </div>
+                          )}
                         </div>
                       </div>
                     );
