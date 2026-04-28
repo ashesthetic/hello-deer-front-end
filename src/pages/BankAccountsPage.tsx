@@ -98,6 +98,18 @@ const BankAccountsPage: React.FC = () => {
     }
   };
 
+  const handleSetDefault = async (bankAccount: BankAccount) => {
+    setLoading(true);
+    try {
+      await bankAccountsApi.setDefault(bankAccount.id!);
+      await fetchBankAccounts(currentPage);
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to set default bank account');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
@@ -200,6 +212,7 @@ const BankAccountsPage: React.FC = () => {
           onEdit={handleEditBankAccount}
           onView={handleViewBankAccount}
           onDelete={handleDeleteBankAccount}
+          onSetDefault={currentUser?.role === 'admin' ? handleSetDefault : undefined}
           searchTerm={searchTerm}
           onSearchChange={handleSearchChange}
           sortBy={sortField}

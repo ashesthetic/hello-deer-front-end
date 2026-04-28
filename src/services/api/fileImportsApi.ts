@@ -77,6 +77,11 @@ export interface SftProcessResult {
     cash_on_hand: number;
     fuel_tax_gst: number;
     payouts: number;
+    pos_payout: number;
+    lotto_payout: number;
+    cashback_payout: number;
+    uhaul_payout: number;
+    vendor_payout: number;
     loyalty_discounts: number;
     // POS Transaction Details
     pos_visa: number;
@@ -133,6 +138,11 @@ export interface SftProcessResult {
       cash_on_hand: number;
       fuel_tax_gst: number;
       payouts: number;
+      pos_payout: number;
+      lotto_payout: number;
+      cashback_payout: number;
+      uhaul_payout: number;
+      vendor_payout: number;
       loyalty_discounts: number;
       // POS Transaction Details
       pos_visa: number;

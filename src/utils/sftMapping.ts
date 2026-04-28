@@ -25,7 +25,12 @@ export function mapSftDataToForms(sftData: SftProcessResult['data'], date: strin
     // Breakdown Section (use total_pos as card for now)
     card: sftData.total_pos || 0,
     cash: sftData.canadian_cash || 0,
-    lottery_payout: sftData.payouts || 0,
+    payouts: sftData.payouts || 0,
+    lottery_payout: sftData.lotto_payout || 0,
+    pos_payout: sftData.pos_payout || 0,
+    cashback_payout: sftData.cashback_payout || 0,
+    uhaul_payout: sftData.uhaul_payout || 0,
+    vendor_payout: sftData.vendor_payout || 0,
     
     // General Section
     reported_total: sftData.total_sales || 0,

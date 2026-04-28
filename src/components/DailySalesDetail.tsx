@@ -59,9 +59,9 @@ const DailySalesDetail: React.FC<DailySalesDetailProps> = ({
                      safeNumber(sale.store_discount) + safeNumber(sale.gst) + 
                      safeNumber(sale.penny_rounding);
   
-  const breakdownTotal = safeNumber(sale.card) + safeNumber(sale.cash) + 
-                         safeNumber(sale.coupon) + safeNumber(sale.delivery) + 
-                         safeNumber(sale.lottery_payout);
+  const breakdownTotal = safeNumber(sale.card) + safeNumber(sale.cash) +
+                         safeNumber(sale.coupon) + safeNumber(sale.delivery) +
+                         safeNumber(sale.payouts);
   
   const totalPosTransactions = safeNumber(sale.pos_visa) + safeNumber(sale.pos_mastercard) + 
                               safeNumber(sale.pos_amex) + safeNumber(sale.pos_commercial) + 
@@ -240,8 +240,35 @@ const DailySalesDetail: React.FC<DailySalesDetailProps> = ({
             <p className="text-lg font-semibold text-yellow-600">{formatCurrencyValue(sale.delivery)}</p>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Lottery Payout</label>
-            <p className="text-lg font-semibold text-yellow-600">{formatCurrencyValue(sale.lottery_payout)}</p>
+            <label className="block text-sm font-medium text-gray-700">Payouts</label>
+            <p className="text-lg font-semibold text-yellow-600">{formatCurrencyValue(sale.payouts)}</p>
+          </div>
+        </div>
+
+        {/* Payouts Breakdown Sub-section */}
+        <div className="mt-4 pt-4 border-t border-yellow-200">
+          <h4 className="text-sm font-semibold text-gray-700 mb-3">Payouts Breakdown</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">POS Payout</label>
+              <p className="text-lg font-semibold text-yellow-600">{formatCurrencyValue(sale.pos_payout)}</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Lotto Payout</label>
+              <p className="text-lg font-semibold text-yellow-600">{formatCurrencyValue(sale.lottery_payout)}</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Cashback Payout</label>
+              <p className="text-lg font-semibold text-yellow-600">{formatCurrencyValue(sale.cashback_payout)}</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Uhaul Payout</label>
+              <p className="text-lg font-semibold text-yellow-600">{formatCurrencyValue(sale.uhaul_payout)}</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Vendor Payout</label>
+              <p className="text-lg font-semibold text-yellow-600">{formatCurrencyValue(sale.vendor_payout)}</p>
+            </div>
           </div>
         </div>
       </div>

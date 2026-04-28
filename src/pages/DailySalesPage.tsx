@@ -142,6 +142,7 @@ const DailySalesPage: React.FC = () => {
       gst: totals.gst + (parseFloat(sale.gst?.toString() || '0')),
       card: totals.card + (parseFloat(sale.card?.toString() || '0')),
       cash: totals.cash + (parseFloat(sale.cash?.toString() || '0')),
+      pos_payout: totals.pos_payout + (parseFloat(sale.pos_payout?.toString() || '0')),
       reported_total: totals.reported_total + (parseFloat(sale.reported_total?.toString() || '0')),
       approximate_profit: totals.approximate_profit + (parseFloat(sale.approximate_profit?.toString() || '0')),
     }), {
@@ -150,6 +151,7 @@ const DailySalesPage: React.FC = () => {
       gst: 0,
       card: 0,
       cash: 0,
+      pos_payout: 0,
       reported_total: 0,
       approximate_profit: 0,
     });

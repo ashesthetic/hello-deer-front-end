@@ -24,6 +24,7 @@ interface DailySalesListProps {
     gst: number;
     card: number;
     cash: number;
+    pos_payout: number;
     reported_total: number;
     approximate_profit: number;
   };
@@ -109,6 +110,11 @@ const DailySalesList: React.FC<DailySalesListProps> = ({
     },
 
     {
+      key: 'pos_payout',
+      header: 'POS Payout',
+      render: (sale: DailySale) => formatCurrency(sale.pos_payout ?? 0)
+    },
+    {
       key: 'reported_total',
       header: 'Grand Total',
       sortable: !!onSort,
@@ -176,7 +182,7 @@ const DailySalesList: React.FC<DailySalesListProps> = ({
             <td className="table-cell">{formatCurrency(totals.gst ?? 0)}</td>
             <td className="table-cell">{formatCurrency(totals.card ?? 0)}</td>
             <td className="table-cell">{formatCurrency(totals.cash ?? 0)}</td>
-
+            <td className="table-cell">{formatCurrency(totals.pos_payout ?? 0)}</td>
             <td className="table-cell">{formatCurrency(totals.reported_total ?? 0)}</td>
             <td className="table-cell text-green-600 font-bold">{formatCurrency(totals.approximate_profit ?? 0)}</td>
             <td className="table-cell"></td>

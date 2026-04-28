@@ -8,6 +8,7 @@ interface BankAccountListProps {
   onEdit: (bankAccount: BankAccount) => void;
   onView: (bankAccount: BankAccount) => void;
   onDelete: (bankAccount: BankAccount) => void;
+  onSetDefault?: (bankAccount: BankAccount) => void;
   searchTerm: string;
   onSearchChange: (term: string) => void;
   sortBy: string;
@@ -28,6 +29,7 @@ const BankAccountList: React.FC<BankAccountListProps> = ({
   onEdit,
   onView,
   onDelete,
+  onSetDefault,
   searchTerm,
   onSearchChange,
   sortBy,
@@ -191,7 +193,14 @@ const BankAccountList: React.FC<BankAccountListProps> = ({
                   </td>
 
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    <div className="text-sm text-gray-900">{bankAccount.account_name}</div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-900">{bankAccount.account_name}</span>
+                      {bankAccount.is_default && (
+                        <span className="inline-flex px-2 py-0.5 text-xs font-semibold rounded-full bg-indigo-100 text-indigo-800">
+                          Default
+                        </span>
+                      )}
+                    </div>
                   </td>
 
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -243,6 +252,14 @@ const BankAccountList: React.FC<BankAccountListProps> = ({
                           className="text-green-600 hover:text-green-900"
                         >
                           Edit
+                        </button>
+                      )}
+                      {onSetDefault && !bankAccount.is_default && (
+                        <button
+                          onClick={() => onSetDefault(bankAccount)}
+                          className="text-indigo-600 hover:text-indigo-900"
+                        >
+                          Set Default
                         </button>
                       )}
                       {canDelete && (

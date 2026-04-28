@@ -29,7 +29,12 @@ const DailySalesForm: React.FC<DailySalesFormProps> = ({
 		cash: undefined,
 		coupon: undefined,
 		delivery: undefined,
+		payouts: undefined,
 		lottery_payout: undefined,
+		pos_payout: undefined,
+		cashback_payout: undefined,
+		uhaul_payout: undefined,
+		vendor_payout: undefined,
 		reported_total: undefined,
 		number_of_safedrops: undefined,
 		safedrops_amount: undefined,
@@ -98,7 +103,12 @@ const DailySalesForm: React.FC<DailySalesFormProps> = ({
 				cash: initialData.cash,
 				coupon: initialData.coupon,
 				delivery: initialData.delivery,
+				payouts: initialData.payouts,
 				lottery_payout: initialData.lottery_payout,
+				pos_payout: initialData.pos_payout,
+				cashback_payout: initialData.cashback_payout,
+				uhaul_payout: initialData.uhaul_payout,
+				vendor_payout: initialData.vendor_payout,
 				reported_total: initialData.reported_total,
 				safedrops_amount: initialData.safedrops_amount,
 				cash_on_hand: initialData.cash_on_hand,
@@ -312,7 +322,7 @@ const DailySalesForm: React.FC<DailySalesFormProps> = ({
 
 	const breakdownTotal = (Number(formData.card) || 0) + (Number(formData.cash) || 0) +
 		(Number(formData.coupon) || 0) + (Number(formData.delivery) || 0) +
-		(Number(formData.lottery_payout) || 0);
+		(Number(formData.payouts) || 0);
 
 	const totalPosTransactions = (Number(formData.pos_visa) || 0) + (Number(formData.pos_mastercard) || 0) +
 		(Number(formData.pos_amex) || 0) + (Number(formData.pos_commercial) || 0) +
@@ -505,7 +515,7 @@ const DailySalesForm: React.FC<DailySalesFormProps> = ({
 						</div>
 					</div>
 					<div className="text-sm text-gray-600 mb-3">
-						Total = POS Sale + Cash + Loyalty Coupon + Delivery + Lottery Payout
+						Total = POS Sale + Cash + Loyalty Coupon + Delivery + Payouts
 					</div>
 					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
 						<div>
@@ -562,16 +572,88 @@ const DailySalesForm: React.FC<DailySalesFormProps> = ({
 						</div>
 						<div>
 							<label className="block text-sm font-medium text-gray-700 mb-2">
-								Lottery Payout (CAD) *
+								Payouts (CAD) *
 							</label>
 							<input
 								type="text"
 								required
-								value={formData.lottery_payout !== undefined ? Number(formData.lottery_payout).toFixed(2) : ''}
-								onChange={(e) => handleCurrencyInputChange('lottery_payout', e.target.value)}
+								value={formData.payouts !== undefined ? Number(formData.payouts).toFixed(2) : ''}
+								onChange={(e) => handleCurrencyInputChange('payouts', e.target.value)}
 								className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
 								placeholder="0.00"
 							/>
+						</div>
+					</div>
+
+					{/* Payouts Breakdown Sub-section */}
+					<div className="mt-4 pt-4 border-t border-yellow-200">
+						<h4 className="text-sm font-semibold text-gray-700 mb-3">Payouts Breakdown</h4>
+						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+							<div>
+								<label className="block text-sm font-medium text-gray-700 mb-2">
+									POS Payout (CAD) *
+								</label>
+								<input
+									type="text"
+									required
+									value={formData.pos_payout !== undefined ? Number(formData.pos_payout).toFixed(2) : ''}
+									onChange={(e) => handleCurrencyInputChange('pos_payout', e.target.value)}
+									className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+									placeholder="0.00"
+								/>
+							</div>
+							<div>
+								<label className="block text-sm font-medium text-gray-700 mb-2">
+									Lotto Payout (CAD) *
+								</label>
+								<input
+									type="text"
+									required
+									value={formData.lottery_payout !== undefined ? Number(formData.lottery_payout).toFixed(2) : ''}
+									onChange={(e) => handleCurrencyInputChange('lottery_payout', e.target.value)}
+									className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+									placeholder="0.00"
+								/>
+							</div>
+							<div>
+								<label className="block text-sm font-medium text-gray-700 mb-2">
+									Cashback Payout (CAD) *
+								</label>
+								<input
+									type="text"
+									required
+									value={formData.cashback_payout !== undefined ? Number(formData.cashback_payout).toFixed(2) : ''}
+									onChange={(e) => handleCurrencyInputChange('cashback_payout', e.target.value)}
+									className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+									placeholder="0.00"
+								/>
+							</div>
+							<div>
+								<label className="block text-sm font-medium text-gray-700 mb-2">
+									Uhaul Payout (CAD) *
+								</label>
+								<input
+									type="text"
+									required
+									value={formData.uhaul_payout !== undefined ? Number(formData.uhaul_payout).toFixed(2) : ''}
+									onChange={(e) => handleCurrencyInputChange('uhaul_payout', e.target.value)}
+									className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+									placeholder="0.00"
+								/>
+							</div>
+							<div>
+								<label className="block text-sm font-medium text-gray-700 mb-2">
+									Vendor Payout (CAD) *
+								</label>
+								<input
+									type="text"
+									required
+									value={formData.vendor_payout !== undefined ? Number(formData.vendor_payout).toFixed(2) : ''}
+									onChange={(e) => handleCurrencyInputChange('vendor_payout', e.target.value)}
+									className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+									placeholder="0.00"
+								/>
+							</div>
 						</div>
 					</div>
 				</div>

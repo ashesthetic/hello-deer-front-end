@@ -471,6 +471,7 @@ export const bankAccountsApi = {
 	update: (id: number, data: UpdateBankAccountData) => api.put(`/bank-accounts/${id}`, data),
 	delete: (id: number) => api.delete(`/bank-accounts/${id}`),
 	getSummary: () => api.get('/bank-accounts/summary'),
+	setDefault: (id: number) => api.post(`/bank-accounts/${id}/set-default`),
 };
 
 // Employee API

@@ -63,7 +63,12 @@ export interface DailySale {
 	cash: number | undefined;
 	coupon: number | undefined;
 	delivery: number | undefined;
+	payouts: number | undefined;
 	lottery_payout: number | undefined;
+	pos_payout: number | undefined;
+	cashback_payout: number | undefined;
+	uhaul_payout: number | undefined;
+	vendor_payout: number | undefined;
 	breakdown_total?: number;
 
 	// General Section
@@ -399,6 +404,7 @@ export interface BankAccount {
 	currency: string;
 	balance: number | string;
 	is_active: boolean;
+	is_default: boolean;
 	notes?: string;
 	user_id?: number;
 	user?: User;

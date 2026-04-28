@@ -357,6 +357,24 @@ const ShiftReportPage: React.FC = () => {
                             <td className="py-2 px-4 text-sm font-medium text-gray-900">Loyalty Discounts</td>
                             <td className="py-2 px-4 text-sm text-gray-900">${sftProcessResult.data.loyalty_discounts.toFixed(2)}</td>
                           </tr>
+                          <tr>
+                            <td className="py-2 px-4 text-sm font-medium text-gray-900">POS Payout</td>
+                            <td className="py-2 px-4 text-sm text-gray-900">${(sftProcessResult.data.pos_payout || 0).toFixed(2)}</td>
+                            <td className="py-2 px-4 text-sm font-medium text-gray-900">Lotto Payout</td>
+                            <td className="py-2 px-4 text-sm text-gray-900">${(sftProcessResult.data.lotto_payout || 0).toFixed(2)}</td>
+                          </tr>
+                          <tr>
+                            <td className="py-2 px-4 text-sm font-medium text-gray-900">Cashback Payout</td>
+                            <td className="py-2 px-4 text-sm text-gray-900">${(sftProcessResult.data.cashback_payout || 0).toFixed(2)}</td>
+                            <td className="py-2 px-4 text-sm font-medium text-gray-900">Uhaul Payout</td>
+                            <td className="py-2 px-4 text-sm text-gray-900">${(sftProcessResult.data.uhaul_payout || 0).toFixed(2)}</td>
+                          </tr>
+                          <tr>
+                            <td className="py-2 px-4 text-sm font-medium text-gray-900">Vendor Payout</td>
+                            <td className="py-2 px-4 text-sm text-gray-900">${(sftProcessResult.data.vendor_payout || 0).toFixed(2)}</td>
+                            <td></td>
+                            <td></td>
+                          </tr>
                         </tbody>
                       </table>
                     </div>
@@ -657,6 +675,30 @@ const ShiftReportPage: React.FC = () => {
                           <div className="flex justify-between">
                             <span className="text-gray-600">Safedrops:</span>
                             <span className="font-medium">{mappedData.salesData.number_of_safedrops || 0} (${(mappedData.salesData.safedrops_amount || 0).toFixed(2)})</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Payouts:</span>
+                            <span className="font-medium">${(mappedData.salesData.payouts || 0).toFixed(2)}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">POS Payout:</span>
+                            <span className="font-medium">${(mappedData.salesData.pos_payout || 0).toFixed(2)}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Lotto Payout:</span>
+                            <span className="font-medium">${(mappedData.salesData.lottery_payout || 0).toFixed(2)}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Cashback Payout:</span>
+                            <span className="font-medium">${(mappedData.salesData.cashback_payout || 0).toFixed(2)}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Uhaul Payout:</span>
+                            <span className="font-medium">${(mappedData.salesData.uhaul_payout || 0).toFixed(2)}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Vendor Payout:</span>
+                            <span className="font-medium">${(mappedData.salesData.vendor_payout || 0).toFixed(2)}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-gray-600">Total Transactions:</span>
