@@ -78,12 +78,14 @@ const ItemSalesPage: React.FC = () => {
 		setCurrentPage(1);
 	};
 
-	const formatDate = (dateStr: string) =>
-		new Date(dateStr).toLocaleDateString('en-GB', {
+	const formatDate = (dateStr: string) => {
+		const [year, month, day] = dateStr.split('-').map(Number);
+		return new Date(year, month - 1, day).toLocaleDateString('en-GB', {
 			day: 'numeric',
 			month: 'short',
 			year: '2-digit',
 		});
+	};
 
 	return (
 		<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -173,15 +175,12 @@ const ItemSalesPage: React.FC = () => {
 										<th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
 											Price
 										</th>
-										<th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-											Total
-										</th>
 									</tr>
 								</thead>
 								<tbody className="bg-white divide-y divide-gray-200">
 									{itemSales.length === 0 ? (
 										<tr>
-											<td colSpan={showQty ? 7 : 6} className="px-4 py-8 text-center text-gray-500 text-sm">
+											<td colSpan={showQty ? 6 : 5} className="px-4 py-8 text-center text-gray-500 text-sm">
 												No item sales found
 											</td>
 										</tr>
@@ -209,9 +208,6 @@ const ItemSalesPage: React.FC = () => {
 												)}
 												<td className="px-4 py-3 text-sm text-gray-900 text-right whitespace-nowrap">
 													${Number(sale.price).toFixed(2)}
-												</td>
-												<td className="px-4 py-3 text-sm font-semibold text-blue-700 text-right whitespace-nowrap">
-													${(Number(sale.qty) * Number(sale.price)).toFixed(2)}
 												</td>
 											</tr>
 										))
