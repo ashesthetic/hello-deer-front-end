@@ -7,6 +7,7 @@ interface BankAccount {
   account_number: string;
   bank_name: string;
   is_active: boolean;
+  is_default: boolean;
 }
 
 interface LoanPaymentModalProps {
@@ -51,10 +52,10 @@ const LoanPaymentModal: React.FC<LoanPaymentModalProps> = ({
       const accounts = response.data.data || response.data;
       setBankAccounts(accounts);
       
-      // Set first active account as default
-      const activeAccount = accounts.find((acc: BankAccount) => acc.is_active);
-      if (activeAccount && !formData.bank_account_id) {
-        setFormData(prev => ({ ...prev, bank_account_id: activeAccount.id }));
+      const defaultAccount = accounts.find((acc: BankAccount) => acc.is_default && acc.is_active)
+        ?? accounts.find((acc: BankAccount) => acc.is_active);
+      if (defaultAccount && !formData.bank_account_id) {
+        setFormData(prev => ({ ...prev, bank_account_id: defaultAccount.id }));
       }
     } catch (error) {
       console.error('Error fetching bank accounts:', error);

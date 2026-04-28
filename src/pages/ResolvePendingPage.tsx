@@ -434,7 +434,8 @@ const BatchSafedropResolutionModal: React.FC<BatchSafedropResolutionModalProps> 
 	onClose,
 	onSuccess
 }) => {
-	const [selectedBankAccount, setSelectedBankAccount] = useState<number>(0);
+	const defaultId = (bankAccounts.find(a => a.is_default && a.is_active) ?? bankAccounts.find(a => a.is_active))?.id ?? 0;
+	const [selectedBankAccount, setSelectedBankAccount] = useState<number>(defaultId);
 	const [notes, setNotes] = useState('');
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
@@ -629,7 +630,8 @@ const BatchCashResolutionModal: React.FC<BatchCashResolutionModalProps> = ({
 	onClose,
 	onSuccess
 }) => {
-	const [selectedBankAccount, setSelectedBankAccount] = useState<number>(0);
+	const defaultId = (bankAccounts.find(a => a.is_default && a.is_active) ?? bankAccounts.find(a => a.is_active))?.id ?? 0;
+	const [selectedBankAccount, setSelectedBankAccount] = useState<number>(defaultId);
 	const [notes, setNotes] = useState('');
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);

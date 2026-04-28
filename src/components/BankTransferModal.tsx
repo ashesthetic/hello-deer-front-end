@@ -50,6 +50,10 @@ const BankTransferModal: React.FC<BankTransferModalProps> = ({ isOpen, onClose, 
       
       console.log('Fetched bank accounts:', accounts);
       setBankAccounts(accounts);
+      const defaultAccount = accounts.find((a: BankAccount) => a.is_default && a.is_active) ?? accounts.find((a: BankAccount) => a.is_active);
+      if (defaultAccount) {
+        setFormData(prev => ({ ...prev, from_bank_account_id: defaultAccount.id! }));
+      }
     } catch (error) {
       console.error('Error fetching bank accounts:', error);
       setBankAccounts([]);

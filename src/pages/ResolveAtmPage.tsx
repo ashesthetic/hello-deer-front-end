@@ -21,6 +21,7 @@ interface BankAccount {
   balance: string;
   currency: string;
   is_active: boolean;
+  is_default: boolean;
 }
 
 const ResolveAtmPage: React.FC = () => {
@@ -58,7 +59,10 @@ const ResolveAtmPage: React.FC = () => {
     try {
       const response = await bankAccountsApi.getAll({ per_page: 1000 });
       const accounts = response.data.data || response.data;
-      setBankAccounts(Array.isArray(accounts) ? accounts.filter((account: BankAccount) => account.is_active) : []);
+      const filtered: BankAccount[] = Array.isArray(accounts) ? accounts.filter((account: BankAccount) => account.is_active) : [];
+      setBankAccounts(filtered);
+      const def = filtered.find(a => a.is_default) ?? filtered[0];
+      if (def) setSelectedBankAccount(def.id);
     } catch (err: any) {
       console.error('Failed to fetch bank accounts:', err);
     }
@@ -67,7 +71,8 @@ const ResolveAtmPage: React.FC = () => {
   const handleResolveClick = (atm: DailyAtm) => {
     setSelectedAtm(atm);
     setShowResolveModal(true);
-    setSelectedBankAccount(null);
+    const def = bankAccounts.find(a => a.is_default) ?? bankAccounts[0];
+    setSelectedBankAccount(def?.id ?? null);
     setNotes('');
   };
 

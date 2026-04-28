@@ -20,6 +20,7 @@ interface BankAccount {
 	balance: string;
 	currency: string;
 	is_active: boolean;
+	is_default: boolean;
 }
 
 const ResolvePoPage: React.FC = () => {
@@ -55,7 +56,10 @@ const ResolvePoPage: React.FC = () => {
 		try {
 			const response = await bankAccountsApi.getAll({ per_page: 1000 });
 			const accounts = response.data.data || response.data;
-			setBankAccounts(Array.isArray(accounts) ? accounts.filter((account: BankAccount) => account.is_active) : []);
+			const filtered: BankAccount[] = Array.isArray(accounts) ? accounts.filter((account: BankAccount) => account.is_active) : [];
+			setBankAccounts(filtered);
+			const def = filtered.find(a => a.is_default) ?? filtered[0];
+			if (def) setSelectedBankAccount(def.id);
 		} catch (err: any) {
 			console.error('Failed to fetch bank accounts:', err);
 		}
@@ -65,7 +69,8 @@ const ResolvePoPage: React.FC = () => {
 		setSelectedPo(po);
 		setResolveAmount(parseFloat(po.amount).toFixed(2));
 		setShowResolveModal(true);
-		setSelectedBankAccount(null);
+		const def = bankAccounts.find(a => a.is_default) ?? bankAccounts[0];
+		setSelectedBankAccount(def?.id ?? null);
 		setNotes('');
 	};
 

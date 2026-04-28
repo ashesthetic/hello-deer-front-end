@@ -17,9 +17,10 @@ const ResolutionModal: React.FC<ResolutionModalProps> = ({
 	onClose,
 	onSuccess
 }) => {
-	const [resolutions, setResolutions] = useState<ResolutionData[]>([
-		{ bank_account_id: 0, amount: 0, notes: '' }
-	]);
+	const [resolutions, setResolutions] = useState<ResolutionData[]>(() => {
+		const def = bankAccounts.find(a => a.is_default && a.is_active) ?? bankAccounts.find(a => a.is_active);
+		return [{ bank_account_id: def?.id ?? 0, amount: 0, notes: '' }];
+	});
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 
@@ -38,7 +39,8 @@ const ResolutionModal: React.FC<ResolutionModalProps> = ({
 	};
 
 	const addResolution = () => {
-		setResolutions([...resolutions, { bank_account_id: 0, amount: 0, notes: '' }]);
+		const def = bankAccounts.find(a => a.is_default && a.is_active) ?? bankAccounts.find(a => a.is_active);
+		setResolutions([...resolutions, { bank_account_id: def?.id ?? 0, amount: 0, notes: '' }]);
 	};
 
 	const removeResolution = (index: number) => {
