@@ -383,15 +383,15 @@ const ShiftReportPage: React.FC = () => {
                   {/* Approximate Profit */}
                   {profitPercentages && (() => {
                     const d = sftProcessResult.data!;
-                    const storeSaleCalc = d.item_sales - d.tobacco_25 - d.tobacco_20 - d.lottery_total - d.prepay_total - d.gst;
+                    const cashbackDeduction = d.cashback_payout || 0;
+                    const storeSaleCalc = d.item_sales - d.tobacco_25 - d.tobacco_20 - d.lottery_total - d.prepay_total - d.gst - cashbackDeduction;
                     const fuelProfit = (d.fuel_sales * profitPercentages.fuel_percentage) / 100;
                     const tobacco25Profit = (d.tobacco_25 * profitPercentages.tobacco_25_percentage) / 100;
                     const tobacco20Profit = (d.tobacco_20 * profitPercentages.tobacco_20_percentage) / 100;
                     const lotteryProfit = (d.lottery_total * profitPercentages.lottery_percentage) / 100;
                     const prepayProfit = (d.prepay_total * profitPercentages.prepay_percentage) / 100;
                     const storeSaleProfit = (storeSaleCalc * profitPercentages.store_sale_percentage) / 100;
-                    const cashbackDeduction = d.cashback_payout || 0;
-                    const totalProfit = fuelProfit + tobacco25Profit + tobacco20Profit + lotteryProfit + prepayProfit + storeSaleProfit - cashbackDeduction;
+                    const totalProfit = fuelProfit + tobacco25Profit + tobacco20Profit + lotteryProfit + prepayProfit + storeSaleProfit;
                     return (
                       <div className="bg-green-50 p-6 rounded-lg border border-green-200 mt-6">
                         <div className="flex justify-between items-center mb-4">
