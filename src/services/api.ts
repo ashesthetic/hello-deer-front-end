@@ -1400,4 +1400,72 @@ export const departmentSalesApi = {
 	getById: (id: number) => api.get(`/department-sales/${id}`),
 };
 
+export interface PosTransactionItem {
+	id: number;
+	pos_transaction_id: number;
+	plu_code: string;
+	item_number: string | null;
+	department_number: string | null;
+	plu_modifier: string | null;
+	line_sequence: number;
+	description: string;
+	merchandise_code: string | null;
+	entry_method: string | null;
+	quantity: string;
+	actual_sale_price: string;
+	regular_sell_price: string;
+	sales_amount: string;
+	tax_level_id: string | null;
+	tax_collected_amount: string;
+	taxable_sales_amount: string;
+	item_type_code: string | null;
+	item_type_sub_code: string | null;
+	sku?: { item_number: string; english_description: string; french_description: string | null; price: string };
+	department?: { department_number: string; description: string };
+}
+
+export interface PosTransactionTender {
+	id: number;
+	pos_transaction_id: number;
+	tender_code: string;
+	tender_sub_code: string | null;
+	tender_amount: string;
+	is_change: boolean;
+}
+
+export interface PosTransaction {
+	id: number;
+	naxml_import_id: number;
+	store_location_id: string;
+	shift_id: string;
+	register_id: string;
+	cashier_id: string;
+	transaction_id: string;
+	sequence_number: string;
+	business_date: string;
+	started_at: string | null;
+	ended_at: string | null;
+	receipt_at: string | null;
+	is_training: boolean;
+	is_outside_sale: boolean;
+	is_offline: boolean;
+	is_suspended: boolean;
+	total_gross_amount: string;
+	total_net_amount: string;
+	total_tax_exempt_amount: string;
+	total_tax_amount: string;
+	total_grand_amount: string;
+	items_count?: number;
+	items?: PosTransactionItem[];
+	tenders?: PosTransactionTender[];
+	import?: { id: number; filename: string; shift_id: string; store_location_id: string };
+	created_at: string;
+	updated_at: string;
+}
+
+export const posTransactionsApi = {
+	getAll: (params?: any) => api.get('/pos-transactions', { params }),
+	getById: (id: number) => api.get(`/pos-transactions/${id}`),
+};
+
 export default api;
