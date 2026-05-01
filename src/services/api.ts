@@ -1468,4 +1468,24 @@ export const posTransactionsApi = {
 	getById: (id: number) => api.get(`/pos-transactions/${id}`),
 };
 
+export const productsReportApi = {
+	getPbDepartments: () => api.get('/naxml/pb-departments'),
+
+	getTopProducts: (params: {
+		from: string;
+		to: string;
+		limit?: number;
+		order?: 'asc' | 'desc';
+		sort_by?: 'qty' | 'revenue';
+		department_number?: string;
+		exclude_departments?: string;
+	}) => api.get('/naxml/stats/top-products', { params }),
+
+	getByDepartment: (params: {
+		from: string;
+		to: string;
+		exclude_departments?: string;
+	}) => api.get('/naxml/stats/products-by-department', { params }),
+};
+
 export default api;

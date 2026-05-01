@@ -63,6 +63,7 @@ import ResolveHoursPage from './pages/ResolveHoursPage';
 import WorkHoursListPage from './pages/WorkHoursListPage';
 import ExpenseReportPage from './pages/ExpenseReportPage';
 import IncomeReportPage from './pages/IncomeReportPage';
+import ProductsReportPage from './pages/ProductsReportPage';
 import WorkHoursEditPage from './pages/WorkHoursEditPage';
 import WorkHoursViewPage from './pages/WorkHoursViewPage';
 import WorkSchedulesPage from './pages/WorkSchedulesPage';
@@ -390,6 +391,10 @@ const App: React.FC = () => {
 					<Route
 						path="/reports/income"
 						element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><IncomeReportPage /></ProtectedRoute></Layout> : <Navigate to="/login" />}
+					/>
+					<Route
+						path="/reports/products"
+						element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><ProductsReportPage /></ProtectedRoute></Layout> : <Navigate to="/login" />}
 					/>
 
 					{/* Accounting Routes */}
