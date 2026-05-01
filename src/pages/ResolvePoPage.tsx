@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { dailyPosApi, bankAccountsApi } from '../services/api';
 import { formatDateForDisplay } from '../utils/dateUtils';
 
@@ -8,6 +8,7 @@ interface DailyPo {
 	amount: string;
 	resolved: boolean;
 	resolved_amount?: string | null;
+	difference?: number | null;
 	notes?: string;
 	created_at: string;
 	updated_at: string;
@@ -104,6 +105,16 @@ const ResolvePoPage: React.FC = () => {
 		}
 	};
 
+	const posWithBalance = useMemo(() => {
+		const sorted = [...allPos].sort((a, b) => a.date.localeCompare(b.date));
+		let running = 0;
+		const withBalance = sorted.map(po => {
+			if (po.difference != null) running += po.difference;
+			return { ...po, balance: running };
+		});
+		return withBalance.sort((a, b) => b.date.localeCompare(a.date));
+	}, [allPos]);
+
 	if (loading) {
 		return (
 			<div className="flex justify-center items-center h-64">
@@ -144,6 +155,12 @@ const ResolvePoPage: React.FC = () => {
 										Resolved Amount
 									</th>
 									<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+										Difference
+									</th>
+									<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+										Balance
+									</th>
+									<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
 										Status
 									</th>
 									<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -155,43 +172,63 @@ const ResolvePoPage: React.FC = () => {
 								</tr>
 							</thead>
 							<tbody className="bg-white divide-y divide-gray-200">
-								{allPos.map((po) => (
-									<tr key={po.id} className="hover:bg-gray-50">
-										<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-											{formatDateForDisplay(po.date)}
-										</td>
-										<td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-											${parseFloat(po.amount).toFixed(2)}
-										</td>
-										<td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-											{po.resolved_amount ? `$${parseFloat(po.resolved_amount).toFixed(2)}` : '—'}
-										</td>
-										<td className="px-6 py-4 whitespace-nowrap text-sm">
-											{po.resolved ? (
-												<span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-													Resolved
-												</span>
-											) : (
-												<span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-													Pending
-												</span>
-											)}
-										</td>
-										<td className="px-6 py-4 text-sm text-gray-600">
-											{po.notes || '—'}
-										</td>
-										<td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-											{!po.resolved && (
-												<button
-													onClick={() => handleResolveClick(po)}
-													className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
-												>
-													Resolve
-												</button>
-											)}
-										</td>
-									</tr>
-								))}
+								{posWithBalance.map((po) => {
+									const diff = po.difference ?? null;
+									const diffColor = diff == null || diff === 0
+										? 'text-gray-500'
+										: diff > 0 ? 'text-red-600' : 'text-green-600';
+									const balColor = po.balance === 0
+										? 'text-gray-500'
+										: po.balance > 0 ? 'text-red-600' : 'text-green-600';
+									const fmtDiff = diff == null
+										? '—'
+										: `${diff > 0 ? '+' : ''}$${Math.abs(diff).toFixed(2)}`;
+									const fmtBal = `${po.balance > 0 ? '+' : po.balance < 0 ? '-' : ''}$${Math.abs(po.balance).toFixed(2)}`;
+
+									return (
+										<tr key={po.id} className="hover:bg-gray-50">
+											<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+												{formatDateForDisplay(po.date)}
+											</td>
+											<td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
+												${parseFloat(po.amount).toFixed(2)}
+											</td>
+											<td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
+												{po.resolved_amount ? `$${parseFloat(po.resolved_amount).toFixed(2)}` : '—'}
+											</td>
+											<td className={`px-6 py-4 whitespace-nowrap text-sm font-semibold ${diffColor}`}>
+												{fmtDiff}
+											</td>
+											<td className={`px-6 py-4 whitespace-nowrap text-sm font-semibold ${balColor}`}>
+												{fmtBal}
+											</td>
+											<td className="px-6 py-4 whitespace-nowrap text-sm">
+												{po.resolved ? (
+													<span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+														Resolved
+													</span>
+												) : (
+													<span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+														Pending
+													</span>
+												)}
+											</td>
+											<td className="px-6 py-4 text-sm text-gray-600">
+												{po.notes || '—'}
+											</td>
+											<td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+												{!po.resolved && (
+													<button
+														onClick={() => handleResolveClick(po)}
+														className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+													>
+														Resolve
+													</button>
+												)}
+											</td>
+										</tr>
+									);
+								})}
 							</tbody>
 						</table>
 					</div>
