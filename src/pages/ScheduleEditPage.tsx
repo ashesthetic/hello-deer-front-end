@@ -52,8 +52,8 @@ const ScheduleEditPage: React.FC = () => {
 
   function generateTimeOptions(): string[] {
     const options: string[] = [];
-    // Generate times from 6:00 AM to 10:00 PM with 15-minute intervals
-    for (let hour = 6; hour <= 22; hour++) {
+    // Generate times from 6:00 AM to 11:45 PM with 15-minute intervals
+    for (let hour = 6; hour <= 23; hour++) {
       for (let minute = 0; minute < 60; minute += 15) {
         const h = hour.toString().padStart(2, '0');
         const m = minute.toString().padStart(2, '0');
