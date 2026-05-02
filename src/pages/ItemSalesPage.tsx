@@ -198,7 +198,7 @@ const ItemSalesPage: React.FC = () => {
 												</td>
 												<td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">
 													{sale.department
-														? `${sale.department.department_number} — ${sale.department.name}`
+														? `${sale.department.department_number} — ${sale.department.description}`
 														: sale.department_number ?? '—'}
 												</td>
 												{showQty && (

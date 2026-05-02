@@ -1344,6 +1344,15 @@ export interface Department {
 	updated_at: string;
 }
 
+export interface PbDepartment {
+	department_number: string;
+	description: string;
+	shift_report_flag?: boolean;
+	sales_summary_report?: boolean;
+	created_at: string;
+	updated_at: string;
+}
+
 export const departmentsApi = {
 	getAll: (params?: any) => api.get('/departments', { params }),
 	getById: (departmentNumber: number) => api.get(`/departments/${departmentNumber}`),
@@ -1368,13 +1377,13 @@ export const productsApi = {
 export interface ItemSale {
 	id: number;
 	item_number: string;
-	department_number: number | null;
+	department_number: string | null;
 	name: string;
 	qty: string;
 	price: string;
 	date: string;
 	product?: Product;
-	department?: Department;
+	department?: PbDepartment;
 	created_at: string;
 	updated_at: string;
 }
@@ -1386,11 +1395,11 @@ export const itemSalesApi = {
 
 export interface DepartmentSale {
 	id: number;
-	department_number: number;
+	department_number: string;
 	qty: string;
 	price: string;
 	date?: string | null;
-	department?: Department;
+	department?: PbDepartment;
 	created_at: string;
 	updated_at: string;
 }
