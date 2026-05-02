@@ -1472,9 +1472,16 @@ export interface PosTransaction {
 	updated_at: string;
 }
 
+export interface PosTransactionDateSummary {
+	date: string;
+	transaction_count: number;
+	total_grand_amount: string;
+}
+
 export const posTransactionsApi = {
 	getAll: (params?: any) => api.get('/pos-transactions', { params }),
 	getById: (id: number) => api.get(`/pos-transactions/${id}`),
+	getDates: (params?: any) => api.get('/pos-transactions/dates', { params }),
 };
 
 export const productsReportApi = {
