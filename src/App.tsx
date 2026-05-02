@@ -63,6 +63,7 @@ import ResolveHoursPage from './pages/ResolveHoursPage';
 import WorkHoursListPage from './pages/WorkHoursListPage';
 import ExpenseReportPage from './pages/ExpenseReportPage';
 import IncomeReportPage from './pages/IncomeReportPage';
+import ProductsReportPage from './pages/ProductsReportPage';
 import WorkHoursEditPage from './pages/WorkHoursEditPage';
 import WorkHoursViewPage from './pages/WorkHoursViewPage';
 import WorkSchedulesPage from './pages/WorkSchedulesPage';
@@ -129,6 +130,8 @@ import DepartmentsPage from './pages/DepartmentsPage';
 import ProductsPage from './pages/ProductsPage';
 import ItemSalesPage from './pages/ItemSalesPage';
 import DepartmentSalesPage from './pages/DepartmentSalesPage';
+import PosTransactionsPage from './pages/PosTransactionsPage';
+import PosTransactionViewPage from './pages/PosTransactionViewPage';
 
 const App: React.FC = () => {
 	const dispatch = useDispatch();
@@ -388,6 +391,10 @@ const App: React.FC = () => {
 					<Route
 						path="/reports/income"
 						element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><IncomeReportPage /></ProtectedRoute></Layout> : <Navigate to="/login" />}
+					/>
+					<Route
+						path="/reports/products"
+						element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="notStaff"><ProductsReportPage /></ProtectedRoute></Layout> : <Navigate to="/login" />}
 					/>
 
 					{/* Accounting Routes */}
@@ -787,6 +794,14 @@ const App: React.FC = () => {
 					<Route
 						path="/settings/shift-report"
 						element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="admin"><ShiftReportPage /></ProtectedRoute></Layout> : <Navigate to="/login" />}
+					/>
+					<Route
+						path="/tools/pos-transactions"
+						element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="admin"><PosTransactionsPage /></ProtectedRoute></Layout> : <Navigate to="/login" />}
+					/>
+					<Route
+						path="/tools/pos-transactions/:id"
+						element={isAuthenticated ? <Layout><ProtectedRoute requiredPermission="admin"><PosTransactionViewPage /></ProtectedRoute></Layout> : <Navigate to="/login" />}
 					/>
 
 					{/* Legacy Routes - Redirect to new structure */}
