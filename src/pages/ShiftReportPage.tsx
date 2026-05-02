@@ -6,10 +6,11 @@ import { mapSftDataToForms, validateMappedData } from '../utils/sftMapping';
 import { SftToFormMapping } from '../types/sftMapping';
 
 const ShiftReportPage: React.FC = () => {
-  const [selectedDate, setSelectedDate] = useState('');
-  const [foundFiles, setFoundFiles] = useState<SftFileInfo[] | null>(null);
-  const [scanning, setScanning] = useState(false);
-  const [scanError, setScanError] = useState<string | null>(null);
+  const [allFiles, setAllFiles] = useState<SftFileInfo[]>([]);
+  const [loadingFiles, setLoadingFiles] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
+  const [saveDate, setSaveDate] = useState('');
   const [processing, setProcessing] = useState(false);
   const [sftProcessResult, setSftProcessResult] = useState<SftProcessResult | null>(null);
   const [mappedData, setMappedData] = useState<SftToFormMapping | null>(null);
@@ -29,6 +30,11 @@ const ShiftReportPage: React.FC = () => {
         prepay_percentage: 1,
         store_sale_percentage: 50,
       }));
+
+    shiftReportApi.listFiles()
+      .then(res => setAllFiles(res.data))
+      .catch(() => setLoadError('Failed to load SFT files from receive directory.'))
+      .finally(() => setLoadingFiles(false));
   }, []);
 
   const formatFileSize = (bytes: number): string => {
@@ -39,33 +45,51 @@ const ShiftReportPage: React.FC = () => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  const handleScan = async () => {
-    if (!selectedDate) return;
-
-    setScanning(true);
-    setScanError(null);
-    setFoundFiles(null);
-    setSftProcessResult(null);
-    setMappedData(null);
-    setSaveSuccess(false);
-
+  const formatDate = (dateStr: string | null): string => {
+    if (!dateStr) return '—';
     try {
-      const result = await shiftReportApi.scanFiles(selectedDate);
-      setFoundFiles(result.data);
-      if (result.data.length === 0) {
-        setScanError(`No .sft files found in pos/data/${selectedDate}/receive/`);
+      return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-CA', {
+        year: 'numeric', month: 'short', day: 'numeric'
+      });
+    } catch {
+      return dateStr;
+    }
+  };
+
+  const handleToggleFile = (fileName: string, fileDate: string | null) => {
+    setSelectedFiles(prev => {
+      const next = new Set(prev);
+      if (next.has(fileName)) {
+        next.delete(fileName);
+      } else {
+        next.add(fileName);
       }
-    } catch (error: any) {
-      const msg = error.response?.data?.message || 'Failed to scan directory.';
-      setScanError(msg);
-      setFoundFiles([]);
-    } finally {
-      setScanning(false);
+      // Auto-populate saveDate from first selected file with a date
+      if (next.size > 0 && !saveDate) {
+        const firstWithDate = allFiles.find(f => next.has(f.name) && f.date);
+        if (firstWithDate?.date) setSaveDate(firstWithDate.date);
+      } else if (next.size === 1 && fileDate) {
+        setSaveDate(fileDate);
+      }
+      return next;
+    });
+  };
+
+  const handleSelectAll = () => {
+    if (selectedFiles.size === allFiles.length) {
+      setSelectedFiles(new Set());
+    } else {
+      const allNames = new Set(allFiles.map(f => f.name));
+      setSelectedFiles(allNames);
+      if (!saveDate) {
+        const firstWithDate = allFiles.find(f => f.date);
+        if (firstWithDate?.date) setSaveDate(firstWithDate.date);
+      }
     }
   };
 
   const handleProcess = async () => {
-    if (!selectedDate) return;
+    if (selectedFiles.size === 0) return;
 
     setProcessing(true);
     setSftProcessResult(null);
@@ -73,11 +97,11 @@ const ShiftReportPage: React.FC = () => {
     setSaveSuccess(false);
 
     try {
-      const result = await shiftReportApi.processFiles(selectedDate);
+      const result = await shiftReportApi.processFiles(Array.from(selectedFiles));
       setSftProcessResult(result);
 
       if (result.success && result.data) {
-        const mapped = mapSftDataToForms(result.data, selectedDate);
+        const mapped = mapSftDataToForms(result.data, saveDate);
         setMappedData(mapped);
       }
     } catch (error: any) {
@@ -92,7 +116,7 @@ const ShiftReportPage: React.FC = () => {
   };
 
   const handleSaveMappedData = async () => {
-    if (!mappedData || !selectedDate) return;
+    if (!mappedData || !saveDate) return;
 
     const validation = validateMappedData(mappedData);
     if (!validation.valid) {
@@ -104,20 +128,22 @@ const ShiftReportPage: React.FC = () => {
     setSaveSuccess(false);
     setSaveError(null);
 
+    const salesDataWithDate = { ...mappedData.salesData, date: saveDate };
+    const fuelDataWithDate = { ...mappedData.fuelData, date: saveDate };
+
     const isDateConflict = (err: any) =>
       err.response?.status === 422 && err.response?.data?.errors?.date;
 
     try {
-      // Save daily sales — create or update if date already exists
       if (mappedData.salesData) {
         try {
-          await dailySalesApi.create(mappedData.salesData as any);
+          await dailySalesApi.create(salesDataWithDate as any);
         } catch (err: any) {
           if (isDateConflict(err)) {
-            const existing = await dailySalesApi.getAll({ start_date: selectedDate, end_date: selectedDate });
+            const existing = await dailySalesApi.getAll({ start_date: saveDate, end_date: saveDate });
             const record = existing.data?.data?.[0] ?? existing.data?.[0];
             if (record?.id) {
-              await dailySalesApi.update(record.id, mappedData.salesData as any);
+              await dailySalesApi.update(record.id, salesDataWithDate as any);
             } else {
               throw err;
             }
@@ -127,16 +153,15 @@ const ShiftReportPage: React.FC = () => {
         }
       }
 
-      // Save daily fuels — create or update if date already exists
       if (mappedData.fuelData) {
         try {
-          await dailyFuelsApi.create(mappedData.fuelData as any);
+          await dailyFuelsApi.create(fuelDataWithDate as any);
         } catch (err: any) {
           if (isDateConflict(err)) {
-            const existing = await dailyFuelsApi.getAll({ start_date: selectedDate, end_date: selectedDate });
+            const existing = await dailyFuelsApi.getAll({ start_date: saveDate, end_date: saveDate });
             const record = existing.data?.data?.[0] ?? existing.data?.[0];
             if (record?.id) {
-              await dailyFuelsApi.update(record.id, mappedData.fuelData as any);
+              await dailyFuelsApi.update(record.id, fuelDataWithDate as any);
             } else {
               throw err;
             }
@@ -146,8 +171,7 @@ const ShiftReportPage: React.FC = () => {
         }
       }
 
-      // Save item sales and department sales from SFT files
-      await shiftReportApi.saveItemSales(selectedDate);
+      await shiftReportApi.saveItemSales(saveDate, Array.from(selectedFiles));
 
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
@@ -166,6 +190,9 @@ const ShiftReportPage: React.FC = () => {
     }
   };
 
+  const allSelected = allFiles.length > 0 && selectedFiles.size === allFiles.length;
+  const someSelected = selectedFiles.size > 0 && selectedFiles.size < allFiles.length;
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-6xl mx-auto">
@@ -173,102 +200,100 @@ const ShiftReportPage: React.FC = () => {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Shift Report</h1>
           <p className="text-gray-600">
-            Select a date to find and process shift (.sft) files from the POS data directory.
+            Select shift files from the receive directory and process them.
           </p>
         </div>
 
-        {/* Date Picker + Find */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-          <div className="flex flex-col sm:flex-row items-start sm:items-end gap-4">
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Select Date
-              </label>
-              <input
-                type="date"
-                value={selectedDate}
-                onChange={(e) => {
-                  setSelectedDate(e.target.value);
-                  setFoundFiles(null);
-                  setScanError(null);
-                  setSftProcessResult(null);
-                  setMappedData(null);
-                  setSaveSuccess(false);
-                }}
-                className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-              />
-            </div>
+        {/* SFT File List */}
+        <div className="bg-white rounded-lg shadow-md overflow-hidden mb-8">
+          <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+            <h2 className="text-lg font-medium text-gray-900">
+              {loadingFiles ? 'Loading files…' : `${allFiles.length} SFT file${allFiles.length !== 1 ? 's' : ''} in receive directory`}
+            </h2>
             <button
-              onClick={handleScan}
-              disabled={!selectedDate || scanning}
-              className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium py-2 px-6 rounded-md transition-colors"
+              onClick={handleProcess}
+              disabled={selectedFiles.size === 0 || processing}
+              className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-md transition-colors"
             >
-              {scanning ? (
+              {processing ? (
                 <>
                   <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  Searching...
+                  Processing…
                 </>
               ) : (
-                'Find'
+                `Process${selectedFiles.size > 0 ? ` (${selectedFiles.size})` : ''}`
               )}
             </button>
           </div>
-        </div>
 
-        {/* Scan Error */}
-        {scanError && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-            <p className="text-yellow-800 text-sm">{scanError}</p>
-          </div>
-        )}
-
-        {/* Found Files */}
-        {foundFiles !== null && foundFiles.length > 0 && (
-          <div className="bg-white rounded-lg shadow-md overflow-hidden mb-8">
-            <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-              <h2 className="text-lg font-medium text-gray-900">
-                Found {foundFiles.length} SFT file{foundFiles.length !== 1 ? 's' : ''} for {selectedDate}
-              </h2>
-              <button
-                onClick={handleProcess}
-                disabled={processing}
-                className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-md transition-colors"
-              >
-                {processing ? (
-                  <>
-                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Processing...
-                  </>
-                ) : (
-                  'Process'
-                )}
-              </button>
+          {loadError && (
+            <div className="px-6 py-4 bg-red-50 border-b border-red-200">
+              <p className="text-red-800 text-sm">{loadError}</p>
             </div>
+          )}
+
+          {loadingFiles ? (
+            <div className="px-6 py-8 text-center text-gray-500">
+              <svg className="animate-spin mx-auto h-6 w-6 text-gray-400 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Loading…
+            </div>
+          ) : allFiles.length === 0 && !loadError ? (
+            <div className="px-6 py-8 text-center text-gray-500 text-sm">
+              No .sft files found in the receive directory.
+            </div>
+          ) : (
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left">
+                      <input
+                        type="checkbox"
+                        checked={allSelected}
+                        ref={el => { if (el) el.indeterminate = someSelected; }}
+                        onChange={handleSelectAll}
+                        className="h-4 w-4 text-blue-600 border-gray-300 rounded cursor-pointer"
+                      />
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       File Name
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Date
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Size
                     </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {foundFiles.map((file, index) => (
-                    <tr key={index} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
+                  {allFiles.map((file, index) => (
+                    <tr
+                      key={index}
+                      className={`cursor-pointer hover:bg-gray-50 ${selectedFiles.has(file.name) ? 'bg-blue-50' : ''}`}
+                      onClick={() => handleToggleFile(file.name, file.date)}
+                    >
+                      <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
+                        <input
+                          type="checkbox"
+                          checked={selectedFiles.has(file.name)}
+                          onChange={() => handleToggleFile(file.name, file.date)}
+                          className="h-4 w-4 text-blue-600 border-gray-300 rounded cursor-pointer"
+                        />
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">{file.name}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+                        {formatDate(file.date)}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
                         {formatFileSize(file.size)}
                       </td>
                     </tr>
@@ -276,8 +301,8 @@ const ShiftReportPage: React.FC = () => {
                 </tbody>
               </table>
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* SFT Process Results */}
         {sftProcessResult && (
@@ -621,20 +646,29 @@ const ShiftReportPage: React.FC = () => {
               {mappedData && (
                 <div className="mt-6">
                   <div className="bg-blue-50 p-6 rounded-lg border border-blue-200">
-                    <div className="flex items-center justify-between mb-4">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
                       <h4 className="text-lg font-medium text-gray-900">Mapped Data for Forms</h4>
-                      <div className="flex items-center space-x-4">
+                      <div className="flex flex-wrap items-center gap-3">
                         {saveSuccess && (
                           <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
                             ✓ Data saved successfully!
                           </span>
                         )}
+                        <div className="flex items-center gap-2">
+                          <label className="text-sm font-medium text-gray-700 whitespace-nowrap">Save date:</label>
+                          <input
+                            type="date"
+                            value={saveDate}
+                            onChange={e => setSaveDate(e.target.value)}
+                            className="border border-gray-300 rounded-md shadow-sm py-1.5 px-2 text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                          />
+                        </div>
                         <button
                           onClick={handleSaveMappedData}
-                          disabled={savingData}
+                          disabled={savingData || !saveDate}
                           className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-6 py-2 rounded-md font-medium transition-colors"
                         >
-                          {savingData ? 'Saving...' : 'Save Data'}
+                          {savingData ? 'Saving…' : 'Save Data'}
                         </button>
                       </div>
                     </div>
@@ -650,7 +684,7 @@ const ShiftReportPage: React.FC = () => {
                         <div className="space-y-2 text-sm">
                           <div className="flex justify-between">
                             <span className="text-gray-600">Date:</span>
-                            <span className="font-medium">{mappedData.salesData.date}</span>
+                            <span className="font-medium">{saveDate || mappedData.salesData.date}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-gray-600">Fuel Sale:</span>
@@ -728,7 +762,7 @@ const ShiftReportPage: React.FC = () => {
                         <div className="space-y-2 text-sm">
                           <div className="flex justify-between">
                             <span className="text-gray-600">Date:</span>
-                            <span className="font-medium">{mappedData.fuelData.date}</span>
+                            <span className="font-medium">{saveDate || mappedData.fuelData.date}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-gray-600">Regular:</span>
