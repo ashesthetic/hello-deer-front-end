@@ -160,6 +160,7 @@ const SalesReportPage: React.FC = () => {
 			const endDateObj = new Date(finalEndDate);
 			const startDateObj = new Date(endDateObj);
 			startDateObj.setMonth(startDateObj.getMonth() - 11); // 12 months including current
+			startDateObj.setDate(1); // always start from the 1st of that month
 			const trendsStartDate = startDateObj.toISOString().split('T')[0];
 
 			const trendsResponse = await dailySalesApi.getMonthlyTrends(trendsStartDate, finalEndDate);
