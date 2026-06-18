@@ -92,7 +92,7 @@ const ScheduleEditPage: React.FC = () => {
     currentWeekMonday.setDate(today.getDate() + daysToMonday);
     currentWeekMonday.setHours(0, 0, 0, 0); // Reset time to start of day
     
-    for (let i = 0; i < 5; i++) {
+    for (let i = -4; i < 5; i++) {
       const weekStart = new Date(currentWeekMonday);
       weekStart.setDate(currentWeekMonday.getDate() + (i * 7));
       const weekEnd = new Date(weekStart);
